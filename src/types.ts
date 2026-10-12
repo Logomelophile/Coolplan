@@ -39,9 +39,19 @@ export interface ViewerOptions {
   locale?: Locale;
   stackCount?: number;
   pixelRatio?: number;
+  /** Positive tone-mapping exposure. Default 1; lower values retain photographic albedo contrast. */
+  exposure?: number;
   dimensions?: boolean;
   textureBaseUrl?: string;
   discoverMaps?: boolean;
+  /** Composite the rendered plank over the host page instead of an opaque studio background. */
+  transparent?: boolean;
+  /** Keep mouse drag rotation while allowing the wheel and vertical touch gestures to scroll the page. */
+  scrollControls?: boolean;
+  /** Disable click/Enter explosion toggles when an external timeline owns the layer state. Default true. */
+  clickToExplode?: boolean;
+  /** Show built-in layer labels, leader lines and dimensions. Default true. */
+  labels?: boolean;
 }
 export interface ViewerEventMap {
   ready: { productId: string };

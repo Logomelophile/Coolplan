@@ -32,6 +32,9 @@
     "build:room": "npm run typecheck && vite build --mode room",
     "preview:room": "vite preview --outDir room-dist --host 127.0.0.1",
     "test:room": "node tests/room-browser.mjs",
+    "build:website": "npm run typecheck && vite build --mode website",
+    "preview:website": "vite preview --outDir website-dist --host 127.0.0.1",
+    "test:website": "node tests/website-browser.mjs",
     "test": "tsx --test tests/*.test.ts",
     "test:browser": "node tests/browser.mjs"
   },

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f7f3f0" />
+  <meta name="description" content="COOLPLAN พื้น SPC ลายไม้ สำรวจสีพื้นและชั้นวัสดุ 3D ลองพื้นในห้องของคุณ พร้อมคำนวณค่าวัสดุและค่าติดตั้ง ติดต่อคุณคะน้า 0846707551" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='8' fill='%237e6197'/%3E%3Ctext x='10' y='29' fill='white' font-size='27' font-family='Arial'%3EC%3C/text%3E%3C/svg%3E" />
+  <title>COOLPLAN — พื้นสวย ให้ทุกวันของคุณน่าอยู่กว่าเดิม</title>
+</head>
+<body class="home-page">
+  <div id="site-header"></div>
+  <main id="main">
+    <section id="hero" class="home-hero" aria-labelledby="hero-heading">
+      <div class="hero-copy">
+        <h1 id="hero-heading">พื้นสวย<br />ให้ทุกวันของคุณ<br />น่าอยู่กว่าเดิม</h1>
+        <p>พื้น SPC คุณภาพสูง ลายไม้เสมือนจริง<br />แข็งแรง ทนทาน ตอบโจทย์ทุกพื้นที่ของชีวิต</p>
+        <a class="primary-button" href="#products">ดูสินค้าทั้งหมด <span data-icon="arrow"></span></a>
+        <div class="hero-smallprint"><i></i>REAL WOOD LOOK<br />FOR A BETTER TOMORROW</div>
+      </div>
+      <div class="hero-3d-shell" id="hero-3d-shell">
+        <div id="hero-viewer" aria-label="แผ่นพื้นสามมิติ เลื่อนหน้าเพื่อแยกชั้น ลากเมาส์เพื่อหมุนดู"></div>
+        <div class="hero-3d-tools">
+          <button id="layers-toggle" type="button" aria-label="แยกชั้นวัสดุ" title="แยกชั้นวัสดุ"><span data-icon="layers"></span></button>
+          <input id="layer-slider" type="range" min="0" max="100" value="65" aria-label="ระยะแยกชั้นวัสดุ" />
+          <button id="hero-reset" type="button" aria-label="กลับมุมเริ่มต้น" title="กลับมุมเริ่มต้น"><span data-icon="reset"></span></button>
+          <button id="hero-expand" type="button" aria-label="ดู 3D เต็มจอ" title="ดู 3D เต็มจอ"><span data-icon="expand"></span></button>
+        </div>
+        <p class="hero-3d-hint" id="hero-hint">ตัวอย่างชั้นวัสดุ · เลื่อนเพื่อแยกชั้น · ลากเพื่อหมุนดู</p>
+        <aside class="hero-layer-key" aria-label="โครงสร้างพื้น SPC"><strong>รู้จักทุกชั้นของพื้น</strong><span><i>01</i> ชั้นเคลือบป้องกันผิว</span><span><i>02</i> ฟิล์มลวดลายไม้</span><span><i>03</i> แกนกลาง SPC</span><span><i>04</i> ชั้นรองพื้น IXPE</span><small>แสดงชิ้นตัวอย่างตัดหน้าพื้น<br />ระยะห่างระหว่างชั้นขยายเพื่อให้เห็นโครงสร้าง</small></aside>
+        <button class="hero-fullscreen-close" id="hero-fullscreen-close" type="button" hidden aria-label="ปิดภาพเต็มจอ"><span data-icon="close"></span></button>
+      </div>
+      <div class="hero-signature" aria-hidden="true">More<br />than just<br />a floor</div>
+      <div class="benefits">
+        <div><span data-icon="diamond"></span><strong>ลายไม้เสมือนจริง</strong><span>สวย เป็นธรรมชาติ</span></div>
+        <div><span data-icon="shield"></span><strong>แข็งแรง ทนรอยขีดข่วน</strong><span>ใช้งานได้ยาวนาน</span></div>
+        <div><span data-icon="drop"></span><strong>กันน้ำ หมดกังวล</strong><span>เหมาะกับทุกพื้นที่ในบ้าน</span></div>
+        <div><span data-icon="leaf"></span><strong>ปลอดภัย ไร้กังวล</strong><span>เป็นมิตรต่อสิ่งแวดล้อม</span></div>
+      </div>
+    </section>
+    <section class="configurator" aria-label="เลือกพื้นสำหรับห้องของคุณ">
+      <div class="room-collection" id="rooms">
+        <div class="section-heading"><h2>ตัวอย่างห้อง</h2><button id="all-rooms" type="button">ดูทั้งหมด <span data-icon="arrow"></span></button></div>
+        <div class="room-choices" id="room-choices" role="group" aria-label="เลือกห้องตัวอย่าง"></div>
+      </div>
+      <div class="configurator-grid" id="products">
+        <div class="floor-selector">
+          <h2>1. เลือกสีพื้น</h2>
+          <div class="color-filters" id="color-filters" role="group" aria-label="กรองโทนสี"></div>
+          <div class="product-grid" id="product-grid" role="group" aria-label="เลือกพื้น SPC"></div>
+          <p class="filter-empty" id="filter-empty" hidden>ไม่พบสีพื้นในโทนนี้</p>
+        </div>
+        <div class="preview-column">
+          <h2>2. ดูผลลัพธ์ในห้องของคุณ</h2>
+          <div class="preview-tabs" role="group" aria-label="เลือกรูปห้อง">
+            <button class="active" id="sample-tab" type="button" aria-pressed="true"><span data-icon="room"></span>เลือกรูปห้องตัวอย่าง</button>
+            <button id="upload-tab" type="button" aria-pressed="false"><span data-icon="camera"></span>อัปโหลดรูปห้องของคุณ</button>
+          </div>
+          <input type="file" id="room-file" accept="image/jpeg,image/png,image/webp" hidden />
+          <div class="room-preview-shell" id="room-preview-shell">
+            <div id="room-preview" role="img" aria-label="ภาพห้องตัวอย่างพร้อมสีพื้นที่เลือก"></div>
+            <button id="compare-toggle" class="compare-toggle" type="button" aria-pressed="false"><span data-icon="compare"></span>เปรียบเทียบ</button>
+            <button id="previous-room" class="preview-arrow previous" type="button" aria-label="ห้องก่อนหน้า">‹</button>
+            <button id="next-room" class="preview-arrow next" type="button" aria-label="ห้องถัดไป">›</button>
+            <button id="preview-expand" class="preview-expand" type="button" aria-label="ดูห้องเต็มจอ"><span data-icon="expand"></span></button>
+            <button class="preview-close" id="preview-close" type="button" hidden aria-label="ปิดภาพเต็มจอ"><span data-icon="close"></span></button>
+          </div>
+          <div class="view-thumbnails" id="view-thumbnails" role="group" aria-label="เลือกมุมห้อง"></div>
+          <div class="preview-hint-row"><p id="preview-hint" role="status" aria-live="polite"></p><button id="reset-upload" type="button" hidden>เลือกมุมพื้นใหม่</button></div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="home-footer"><p>“ พื้นที่ดี...เริ่มต้นจากพื้นฐานที่ดีกว่า ”</p><div><span>COOLPLAN SPC FLOORING</span><nav aria-label="เครื่องมือเพิ่มเติม"><a href="/calculator/">คำนวณราคา</a><a href="/">Material Studio</a><a href="/room/">Room Motion</a></nav></div></footer>
+  <dialog id="room-gallery" class="site-dialog gallery-dialog" aria-labelledby="gallery-heading"><button id="gallery-close" class="dialog-close" type="button" aria-label="ปิดแกลเลอรี"><span data-icon="close"></span></button><span class="dialog-eyebrow">FIND YOUR INSPIRATION</span><h2 id="gallery-heading">เลือกห้องในสไตล์ของคุณ</h2><div id="gallery-grid" class="gallery-grid"></div></dialog>
+  <script type="module" src="/src/website/main.ts"></script>
+</body>
+</html>

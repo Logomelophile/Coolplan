@@ -19,3 +19,13 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+
+COOLPLAN website assets
+----------------------
+Noto Sans Thai and Caveat are distributed under the SIL Open Font License.
+Their full notices accompany the fonts in public/website/assets/FONT-LICENSE.txt
+and public/website/assets/CAVEAT-LICENSE.txt.
+
+The room photographs, prototype screenshots, and material reference sheets are
+user-supplied project media. They are not covered by the source-code MIT license.
+See docs/WEBSITE-HANDOFF.md for their runtime cropping and preview use.

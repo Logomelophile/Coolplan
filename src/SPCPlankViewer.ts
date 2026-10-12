@@ -74,6 +74,9 @@ export class SPCPlankViewer extends EventTarget {
 
   constructor(private container: HTMLElement, private options: ViewerOptions = {}) {
     super();
+    if (options.exposure !== undefined && (!Number.isFinite(options.exposure) || options.exposure <= 0)) {
+      throw new Error('Exposure must be a positive finite number.');
+    }
     this.catalog = options.products ?? products;
     if (!this.catalog.length) throw new Error('The product catalog must not be empty.');
     this.catalog.forEach(validateProduct);
@@ -85,6 +88,8 @@ export class SPCPlankViewer extends EventTarget {
     this.stackCount = Math.max(1, Math.min(6, Math.round(options.stackCount ?? 3)));
     this.element = document.createElement('div');
     this.element.className = 'spc-root';
+    if (options.transparent) this.element.style.background = 'transparent';
+    if (options.scrollControls) this.element.style.touchAction = 'pan-y';
     this.element.setAttribute('role', 'region');
     this.element.setAttribute('aria-label', this._locale === 'th' ? 'แสดงแผ่นพื้นสามมิติ' : 'Interactive flooring viewer');
     const style = document.createElement('style');
@@ -96,6 +101,10 @@ export class SPCPlankViewer extends EventTarget {
     container.append(this.element);
     this.labels = new LayerLabels(this.element, id => this.selectLayer(id));
     this.scene.add(this.labels.group);
+    if (options.labels === false) {
+      this.labels.group.visible = false;
+      this.element.querySelectorAll<HTMLElement | SVGElement>('.spc-labels, .spc-lines, .spc-dimension').forEach(node => { node.style.display = 'none'; });
+    }
     this.observer = new ResizeObserver(() => this.resize());
     this.observer.observe(this.container);
     this.intersection = new IntersectionObserver(entries => { this.visible = entries[0]?.isIntersecting ?? true; });
@@ -103,9 +112,9 @@ export class SPCPlankViewer extends EventTarget {
     let supported = false;
     try {
       const canvas = document.createElement('canvas');
-      const context = canvas.getContext('webgl2', { antialias: true, alpha: false, preserveDrawingBuffer: true });
+      const context = canvas.getContext('webgl2', { antialias: true, alpha: options.transparent ?? false, preserveDrawingBuffer: true });
       if (context) {
-        this.renderer = new WebGLRenderer({canvas, context, antialias: true, alpha: false, preserveDrawingBuffer: true});
+        this.renderer = new WebGLRenderer({canvas, context, antialias: true, alpha: options.transparent ?? false, preserveDrawingBuffer: true});
         supported = true;
       }
     } catch { supported = false; }
@@ -118,15 +127,20 @@ export class SPCPlankViewer extends EventTarget {
     }
     this.renderer.outputColorSpace = SRGBColorSpace;
     this.renderer.toneMapping = ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1;
+    this.renderer.toneMappingExposure = options.exposure ?? 1;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = PCFSoftShadowMap;
     this.renderer.setPixelRatio(Math.min(2, options.pixelRatio ?? window.devicePixelRatio ?? 1));
     const canvas = this.renderer.domElement;
     canvas.tabIndex = 0;
-    canvas.setAttribute('aria-label', 'Rotate: drag. Zoom: scroll. Explode: click. Views: keys 1 to 7.');
+    canvas.setAttribute('aria-label', ['Rotate: drag.', options.scrollControls ? 'Scroll: page.' : 'Zoom: scroll.', options.clickToExplode === false ? '' : 'Explode: click.', 'Views: keys 1 to 7.'].filter(Boolean).join(' '));
     this.element.prepend(canvas);
     this.studio = createStudio(this.scene, this.renderer);
+    if (options.transparent) {
+      this.scene.background = null;
+      this.renderer.setClearColor(0x000000, 0);
+      canvas.style.background = 'transparent';
+    }
     this.configureControls();
     this.bindInteraction();
     this.resize();
@@ -160,6 +174,7 @@ export class SPCPlankViewer extends EventTarget {
       bounds: bounds ? bounds.getSize(new Vector3()).toArray() : null,
       memory: info ? {...info.memory} : null,
       calls: info?.render.calls ?? 0,
+      cameraPosition: this.camera.position.toArray(),
       fps: this.samples.length ? Math.round(1000 / (this.samples.reduce((a,b) => a+b,0) / this.samples.length)) : 0,
     };
   }
@@ -221,6 +236,26 @@ export class SPCPlankViewer extends EventTarget {
     if (next === 0) this.selectLayer(null);
     this.emit('explodechange', {amount: next, mode});
   }
+  /**
+   * Set the exact layer separation for a scroll or media timeline. Unlike
+   * setExplode(), this does not change the camera, active preset or orbit pose.
+   * Initialize with view: 'exploded' to fit the complete layer range in advance.
+   */
+  setExplodeProgress(amount: number, mode: ExplodeMode = this.mode): void {
+    this.assertActive();
+    if (!Number.isFinite(amount)) throw new Error('Explode progress must be finite.');
+    if (!['lift', 'stair'].includes(mode)) throw new Error(`Unsupported explode mode: ${mode}`);
+    const next = Math.max(0, Math.min(1, amount));
+    const changed = next !== this.explodeTarget || mode !== this.mode;
+    this.mode = mode;
+    this.amount = this.explodeFrom = this.explodeTarget = next;
+    this.explodeStart = performance.now();
+    this.stairBlend = mode === 'stair' ? 1 : 0;
+    if (this.current) this.updateLayers(this.current);
+    if (this.outgoing) this.updateLayers(this.outgoing);
+    if (next === 0) this.selectLayer(null);
+    if (changed) this.emit('explodechange', {amount: next, mode});
+  }
   setLayerVisible(layerId: string, visible: boolean): void {
     this.assertActive();
     if (!this._product.layers.some(layer => layer.id === layerId)) throw new Error(`Unknown layer: ${layerId}`);
@@ -273,6 +308,10 @@ export class SPCPlankViewer extends EventTarget {
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.08;
     this.controls.enablePan = false;
+    // OrbitControls exits its wheel handler before preventDefault when zoom is
+    // disabled. This preserves ordinary page scrolling over a hero canvas.
+    this.controls.enableZoom = !this.options.scrollControls;
+    if (this.options.scrollControls) this.renderer.domElement.style.touchAction = 'pan-y';
     this.controls.minDistance = 8;
     this.controls.maxDistance = 450;
     this.controls.minZoom = 0.3;
@@ -352,7 +391,7 @@ export class SPCPlankViewer extends EventTarget {
     const temp = new PerspectiveCamera(fov,aspect,0.1,1600);
     const direction = position.clone().sub(target).normalize();
     const right = new Vector3().crossVectors(up,direction).normalize();
-    const reserve = view === 'exploded' ? (this.width<=600?162:232) : 0;
+    const reserve = view === 'exploded' && this.options.labels !== false ? (this.width<=600?162:232) : 0;
     const desiredCenter = -reserve/this.width;
     const halfWidth = (1-reserve/this.width)*0.88;
     const center = new Vector3(0,view==='exploded'?layerHeight/2:view==='stacked'?(this.stackCount-1)*1.05:0,0);
@@ -455,6 +494,10 @@ export class SPCPlankViewer extends EventTarget {
       this.lastInteraction = performance.now();
       if (this.pointerStart.distanceTo(new Vector2(e.clientX,e.clientY)) > 5) return;
       const mesh = this.intersect(e);
+      if (this.options.clickToExplode === false) {
+        this.selectLayer(mesh && this.amount > 0.1 ? mesh.userData.layerId as string : null);
+        return;
+      }
       if (mesh) {
         if (this.explodeTarget < 0.1) this.setExplode(true);
         else this.selectLayer(mesh.userData.layerId as string);
@@ -473,7 +516,7 @@ export class SPCPlankViewer extends EventTarget {
       const index = Number(e.key)-1;
       if (index >= 0 && index < viewPresets.length) { e.preventDefault(); this.setView(viewPresets[index]); }
       if (e.key === 'Escape') this.setView('perspective34');
-      if (e.key === 'Enter' && e.target === canvas) { e.preventDefault(); this.setExplode(this.explodeTarget < 0.5); }
+      if (e.key === 'Enter' && e.target === canvas && this.options.clickToExplode !== false) { e.preventDefault(); this.setExplode(this.explodeTarget < 0.5); }
     }, opts);
     canvas.addEventListener('webglcontextlost', e => {
       e.preventDefault();
@@ -512,7 +555,7 @@ export class SPCPlankViewer extends EventTarget {
       this.controls.update(delta);
     }
     const duration = this.reducedMotion ? 1 : 650;
-    const t = easeInOut(Math.min(1,(now-this.explodeStart)/duration));
+    const t = easeInOut(Math.max(0,Math.min(1,(now-this.explodeStart)/duration)));
     this.amount = this.explodeFrom + (this.explodeTarget-this.explodeFrom)*t;
     this.stairBlend += ((this.mode === 'stair' ? 1 : 0)-this.stairBlend)*(this.reducedMotion ? 1 : 1-Math.exp(-delta*10));
     if (this.current) this.updateLayers(this.current);
@@ -529,9 +572,9 @@ export class SPCPlankViewer extends EventTarget {
     }
     this.scene.updateMatrixWorld(true);
     this.camera.updateMatrixWorld();
-    if (this.current) this.labels.update(this.camera,this._product,this.amount,this._view,this.options.dimensions ?? true);
+    if (this.current && this.options.labels !== false) this.labels.update(this.camera,this._product,this.amount,this._view,this.options.dimensions ?? true);
     this.renderer.render(this.scene,this.camera);
-    this.labels.renderer.render(this.scene,this.camera);
+    if (this.options.labels !== false) this.labels.renderer.render(this.scene,this.camera);
   }
   private release(state: ModelState) {
     state.stacks.forEach(group => group.removeFromParent());

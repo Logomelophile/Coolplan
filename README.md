@@ -6,6 +6,10 @@ The plank studio opens with Light Natural Oak. No image, model, HDR, or other bi
 
 ## Run locally
 
+The prototype-based COOLPLAN website is available at `/website/`, with the working estimate calculator at `/calculator/`. It includes scroll-driven WebGL construction layers, drag rotation, six finishes, seven room examples, local photo previews, and quotation/contact actions. The original `/` and `/room/` demos remain available. See [Website handoff](docs/WEBSITE-HANDOFF.md) for content, asset provenance, pricing assumptions and limitations.
+
+Build this addition with `npm run build:website`, preview using `npm run preview:website -- --port 5185`, and check it with `npm run test:website`. Its independent static output is `website-dist/`; merge it with retained demo output when deploying all four routes.
+
 Use Node.js **22.12 or newer**. In this directory:
 
 ```sh
