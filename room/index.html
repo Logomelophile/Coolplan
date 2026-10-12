@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f5f2ed" />
+    <meta name="description" content="สัมผัสบรรยากาศห้องที่เปลี่ยนไปกับพื้นทั้งหกเฉดสี เลื่อนเพื่อสำรวจลายพื้น แสง และมุมมองใน Coolplan Room Motion" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23655278'/%3E%3Cpath d='m6 12 10-6 10 6-10 6-10-6Zm0 6 10 6 10-6' fill='none' stroke='%23ffffff' stroke-width='1.5'/%3E%3C/svg%3E" />
+    <title>Coolplan — The Room in Motion</title>
+    <link rel="stylesheet" href="/src/room/room.css" />
+  </head>
+  <body class="room-page">
+    <a class="room-skip-link" href="#room-afterword">ข้ามไปท้ายเรื่อง</a>
+    <header class="room-navigation" aria-label="เมนูหลัก">
+      <a class="room-brand" href="../" aria-label="Coolplan กลับสู่ Material Studio">
+        <svg class="room-brand-mark" viewBox="0 0 32 34" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 11 12-7 12 7-12 7-12-7Z"/><path d="m4 17 12 7 12-7M4 23l12 7 12-7"/></svg>
+        <span>coolplan<small>ROOM IN MOTION</small></span>
+      </a>
+      <a class="room-studio-link" href="../">สำรวจแผ่นพื้น <span aria-hidden="true">↗</span></a>
+      <div class="room-navigation-actions">
+        <button id="reference-toggle" class="room-text-button" type="button" aria-controls="reference-panel" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="1"/><circle cx="8" cy="9" r="1.5"/><path d="m4 17 5-5 3 3 3-4 5 6"/></svg>
+          <span>ภาพอ้างอิง</span>
+        </button>
+        <button id="motion-toggle" class="room-motion-button" type="button" aria-pressed="false" aria-label="หยุดการเคลื่อนไหว">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M9 6v12M15 6v12"/></svg>
+          <span>หยุดการเคลื่อนไหว</span>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section id="room-story" class="room-story" aria-label="ห้องเดียว หกเฉดสีพื้น">
+        <div class="room-stage">
+          <div id="room-canvas" class="room-canvas" role="img" aria-label="ภาพห้องสามมิติที่เปลี่ยนสีพื้นตามการเลื่อนหน้า"></div>
+          <div class="room-scene-shade" aria-hidden="true"></div>
+
+          <div class="room-intro">
+            <p class="room-eyebrow"><span aria-hidden="true"></span>THE ROOM IN MOTION</p>
+            <h1>ทุกเฉดสี<br />เปลี่ยนความรู้สึกของห้อง</h1>
+            <p class="room-intro-note">ห้องเดิม แสงเดิม กับความรู้สึกใหม่ในทุกพื้นผิว</p>
+            <p class="room-scroll-hint"><span class="room-scroll-line" aria-hidden="true"></span>เลื่อนเพื่อเปลี่ยนพื้น</p>
+          </div>
+
+          <div class="room-finish-information">
+            <div class="finish-meta" aria-live="polite" aria-atomic="true">
+              <p class="room-meta-eyebrow">A DIFFERENT FEELING</p>
+              <h2 id="finish-name">พื้นปก 1</h2>
+              <p id="finish-subtitle">เริ่มต้นจากสัมผัสที่เป็นธรรมชาติ</p>
+            </div>
+            <div class="room-story-position" aria-label="ลำดับการสำรวจ">
+              <span id="motion-status" class="room-motion-status">เลื่อนเพื่อสำรวจห้อง</span>
+              <span id="finish-count" class="room-finish-count">01 <span>/ 06</span></span>
+            </div>
+          </div>
+
+          <div class="room-finish-tray">
+            <div class="room-progress-track" aria-hidden="true"><div id="story-progress" class="room-progress-fill"></div></div>
+            <div id="finish-picker" class="room-finish-picker" role="group" aria-label="เลือกสีพื้น"></div>
+            <p class="room-picker-caption"><span>หกเฉดสี หนึ่งพื้นที่ของคุณ</span><span class="room-picker-interaction">เลื่อนหน้า หรือเลือกเฉดสี</span></p>
+          </div>
+
+          <div id="room-loading" class="room-loading" role="status" aria-live="polite">
+            <span class="room-loading-orbit" aria-hidden="true"></span>
+            <p id="loading-text">กำลังเตรียมห้องของคุณ</p>
+            <span class="room-loading-caption">COOLPLAN · MATERIAL EXPERIENCE</span>
+          </div>
+
+          <aside id="reference-panel" class="room-reference-panel" aria-labelledby="reference-title" hidden>
+            <div class="room-reference-heading"><div><p class="room-eyebrow">THE ORIGINAL PERSPECTIVE</p><h2 id="reference-title">ภาพอ้างอิง</h2></div><button id="reference-close" type="button" aria-label="ปิดภาพอ้างอิง"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div>
+            <div class="room-reference-image-wrap"><img id="reference-image" alt="ภาพห้องอ้างอิงสำหรับเปรียบเทียบสีพื้นและบรรยากาศ" /></div>
+            <p class="room-reference-note">มองภาพต้นแบบ พร้อมสำรวจเฉดสีในห้องสามมิติ</p>
+          </aside>
+        </div>
+      </section>
+
+      <footer id="room-afterword" class="room-afterword" tabindex="-1">
+        <p class="room-eyebrow">MAKE SPACE FOR YOUR FEELING</p>
+        <h2>พื้นที่ของคุณ<br /><span>เริ่มต้นจากความรู้สึกที่ใช่</span></h2>
+        <p>ให้สีและสัมผัสของพื้นเติมบรรยากาศที่คุณอยากกลับมาอยู่ทุกวัน<br class="room-desktop-break" /> สำรวจรายละเอียดของแต่ละแผ่น แล้วเลือกเฉดที่เข้ากับพื้นที่ของคุณ</p>
+        <div class="room-afterword-actions"><a href="../" class="room-primary-link">สำรวจแผ่นพื้น <span aria-hidden="true">↗</span></a><button id="replay" class="room-replay" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8a8 8 0 1 1-1 7M5 3v5h5"/></svg>ชมอีกครั้ง</button></div>
+        <div class="room-footer-line"><span>COOLPLAN · ROOM IN MOTION</span><p>สีบนหน้าจออาจแตกต่างจากวัสดุจริง กรุณาเทียบตัวอย่างสินค้าก่อนเลือกสี</p><span>© 2026 COOLPLAN</span></div>
+      </footer>
+    </main>
+    <script type="module" src="/src/room/main.ts"></script>
+  </body>
+</html>

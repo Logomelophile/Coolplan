@@ -2,7 +2,7 @@
 
 A reusable Three.js material studio for seven SPC flooring finishes. The framework-independent viewer uses real dimensions, deterministic procedural PBR textures, a configurable layer stack, animated cameras, and an accessible Thai/English interface.
 
-The demo opens with Light Natural Oak. No image, model, HDR, or other binary asset is required to run it. The reference product sheets are visual guidance; their printed 4–5 mm thickness is overridden by the supplied **5.3 mm** specification.
+The plank studio opens with Light Natural Oak. No image, model, HDR, or other binary asset is required to render its products. The reference product sheets are visual guidance; their printed 4–5 mm thickness is overridden by the supplied **5.3 mm** specification. A separate [Room Motion demo](docs/room-motion.md) is available at `/room/`.
 
 ## Run locally
 
@@ -29,6 +29,21 @@ The build emits:
 - `demo-dist/`: the static studio site, with relative asset paths for deployment beneath a repository path.
 
 `npm run preview` serves `demo-dist`. A local HTTP server is required; opening `index.html` directly with `file://` does not load an ES-module application correctly. The source package is not automatically published to npm.
+
+## Room Motion
+
+Open `/room/` after `npm run dev` to explore a native Three.js room with six floor finishes, ordered **พื้นปก1 → พื้นปก2 → พื้นปก3 → พื้นปก4 → พื้นปก5 → พื้นปก6**. Normal page scrolling drives the floor choreography; scrolling back reverses the same sequence. The swatch tray jumps to a finish, the motion control pauses the movement, and the optional reference panel shows the supplied image for comparison.
+
+The room and furniture are actual 3D geometry built from estimated dimensions and the supplied composition, rather than a photogrammetric reconstruction. All six floor surfaces are procedural approximations matched to the room references' colour and grain character. Room sizes and visual colour matching are not measured product specifications. The original plank studio and its seven-product catalog remain separate.
+
+```sh
+npm run dev
+npm run build:room
+npm run preview:room
+npm run test:room
+```
+
+The room build emits `room-dist/`; serve that directory and open `/room/`. Run the browser test with the development server running. See [docs/room-motion.md](docs/room-motion.md) for the reference mapping, scene structure, scrolling behavior, and asset policy. Seven user-supplied room reference images are included for this feature's optional comparison panel; the older product sheets and motion clip are not redistributed.
 
 ## Release package
 
@@ -338,4 +353,4 @@ For any static host, upload the contents of `demo-dist`. No backend is required.
 
 ## License
 
-MIT for the project source. Three.js and other dependencies retain their respective licenses. The supplied reference images and motion clip are not redistributed in the package.
+MIT for the project source. Three.js and other dependencies retain their respective licenses. The original seven product sheets and motion clip are not redistributed. The separate seven room reference images explicitly supplied for Room Motion are included under `public/room/references/` for the optional comparison panel; those images remain user-provided reference media, separate from the source-code license.

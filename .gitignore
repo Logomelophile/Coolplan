@@ -1,6 +1,7 @@
 node_modules/
 dist/
 demo-dist/
+room-dist/
 test-results/
 playwright-report/
 .DS_Store
