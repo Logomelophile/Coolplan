@@ -1,7 +1,6 @@
 import './shared.css';
 import './home.css';
-import { SPCPlankViewer } from '../SPCPlankViewer';
-import { getProduct } from '../data/products';
+import { FloorScrollStory } from './FloorScrollStory';
 import { RoomPreview, type RoomPreviewDiagnostics } from './roomPreview';
 import { icon, mountHeader, mountContactDialog, sprite } from './shared';
 
@@ -19,9 +18,7 @@ const rooms=['ห้องนั่งเล่น','ห้องนอน','ห
 const roomCrops:Crop[]=[[62,733,130,104],[207,733,131,104],[351,733,130,104],[496,733,130,104],[641,733,130,104],[786,733,130,104],[931,733,131,104]];
 const viewCrops:Crop[]=[[567,1227,75,56],[652,1227,77,56],[738,1227,77,56],[825,1227,78,56],[914,1227,81,56],[1005,1227,50,56]];
 const state={finish:0,room:0,view:0,filter:0,compare:false,progress:.65,disposed:false};
-let viewer:SPCPlankViewer|undefined;
-let pendingProduct=0;
-let frame=0;
+let story:FloorScrollStory|undefined;
 const abort = new AbortController();
 const listen = (node:EventTarget,event:string,callback:EventListener) => node.addEventListener(event,callback,{signal:abort.signal});
 
@@ -87,9 +84,7 @@ function renderProducts(){
 async function selectFloor(index:number){
   state.finish=index;preview.setFinish(index);renderProducts();
   $('room-preview').setAttribute('aria-label',`${rooms[state.room]} พร้อมพื้น ${floors[index].name}`);
-  const token=++pendingProduct;
-  try {if(viewer){await loadSampleMap(index);if(state.disposed||token!==pendingProduct)return;await viewer.setProduct(floors[index].id);if(!state.disposed&&token===pendingProduct)viewer.setExplodeProgress(state.progress);}}
-  catch {if(!state.disposed)$('hero-hint').textContent='โหลดวัสดุไม่สำเร็จ กรุณาเลือกสีอีกครั้ง';}
+  story?.selectFinish(index);
 }
 ['ทั้งหมด','โทนธรรมชาติ','โทนอ่อน','โทนคลาสสิก','โทนเทา','โทนเข้ม'].forEach((label,index)=>{
   const button=document.createElement('button');button.type='button';button.textContent=label;button.dataset.filter=String(index);button.setAttribute('aria-pressed',String(index===0));
@@ -129,56 +124,20 @@ document.addEventListener('keydown',event=>{
 },{signal:abort.signal,capture:true});
 
 function setProgress(value:number){
-  state.progress=Math.max(0,Math.min(1,value));viewer?.setExplodeProgress(state.progress);
+  state.progress=Math.max(0,Math.min(1,value));story?.setExplode(state.progress);
   $<HTMLInputElement>('layer-slider').value=String(Math.round(state.progress*100));
   $('layers-toggle').setAttribute('aria-pressed',String(state.progress>.5));
 }
-function scrollProgress(){frame=0;if(!state.disposed)setProgress(.65+window.scrollY/Math.max(250,$('hero').offsetHeight*.65)*.35);}
-listen(window,'scroll',()=>{if(!frame)frame=requestAnimationFrame(scrollProgress);});
 listen($('layer-slider'),'input',()=>setProgress(Number($<HTMLInputElement>('layer-slider').value)/100));
 listen($('layers-toggle'),'click',()=>setProgress(state.progress>.5?0:1));
-listen($('hero-reset'),'click',()=>{viewer?.setView('exploded');setProgress(.65);});
-
-const patches:[number,Crop][]=[[1,[46,115,186,791]],[7,[91,135,178,900]],[5,[78,122,174,660]],[2,[77,144,166,731]],[6,[90,137,147,697]],[3,[81,122,185,826]]];
-const heroCatalog=floors.map(floor=>{
-    const product=structuredClone(getProduct(floor.id));
-    // A cutaway material sample, not a dimensioned full-length sales plank.
-    product.dimensions.lengthMm=600;product.dimensions.widthMm=300;
-    const wear=product.layers.find(layer=>layer.material.kind==='wear');if(wear)wear.material.opacity=.18;
-    product.name=floor.name;product.nameTh=floor.name;
-    return product;
-});
-const mapLoads=new Map<number,Promise<void>>();
-function loadSampleMap(index:number):Promise<void>{
-  const cached=mapLoads.get(index);if(cached)return cached;
-  const promise=(async()=>{
-    const [sheet,[x,y,w,h]]=patches[index];
-    const reference=new Image();reference.src=`/website/assets/material-${sheet}.jpg`;await reference.decode();
-    if(state.disposed)return;
-    const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=512;
-    const ctx=canvas.getContext('2d')!;
-    ctx.translate(512,256);ctx.rotate(-Math.PI/2);
-    ctx.drawImage(reference,x,y,w,h,-256,-512,512,1024);
-    heroCatalog[index].maps={albedo:canvas.toDataURL('image/png')};
-  })().catch(error=>{mapLoads.delete(index);throw error;});
-  mapLoads.set(index,promise);return promise;
-}
+listen($('hero-reset'),'click',()=>story?.resetView());
 
 const ready=(async()=>{
-  try{
-    await loadSampleMap(0);if(state.disposed)return;
-    viewer=new SPCPlankViewer($('hero-viewer'),{products:heroCatalog,productId:floors[0].id,view:'exploded',transparent:true,exposure:.65,scrollControls:true,clickToExplode:false,labels:false,dimensions:false,autoRotate:false,discoverMaps:false});
-    await viewer.ready;if(state.disposed)return;
-    if(viewer.diagnostics.webgl){scrollProgress();if(state.finish)await selectFloor(state.finish);}
-    else{
-      sprite($('hero-viewer'),[450,332,397,209]);$('hero-viewer').style.backgroundRepeat='no-repeat';
-      $('hero-hint').textContent='ภาพอ้างอิง · เปิดด้วยเบราว์เซอร์ที่รองรับ WebGL 2 เพื่อหมุนดู 3D';
-      document.querySelectorAll<HTMLButtonElement|HTMLInputElement>('.hero-3d-tools button,.hero-3d-tools input').forEach(el=>el.disabled=true);
-    }
-  }catch{if(!state.disposed)$('hero-hint').textContent='ไม่สามารถโหลด 3D ได้ กรุณาโหลดหน้านี้ใหม่';}
+  story=new FloorScrollStory({onFinish:index=>{if(state.disposed)return;state.finish=index;preview.setFinish(index);renderProducts();},onFrame:frame=>{state.progress=frame.explode;$<HTMLInputElement>('layer-slider').value=String(Math.round(frame.explode*100));$('layers-toggle').setAttribute('aria-pressed',String(frame.explode>.5));}});
+  await story.ready;
   await preview.ready;
 })();
 
-function dispose(){if(state.disposed)return;closeExpanded();state.disposed=true;pendingProduct++;cancelAnimationFrame(frame);abort.abort();viewer?.dispose();preview.dispose();}
+function dispose(){if(state.disposed)return;closeExpanded();state.disposed=true;abort.abort();story?.dispose();preview.dispose();}
 listen(window,'pagehide',event=>{if(!(event as PageTransitionEvent).persisted)dispose();});
-Object.assign(window,{websiteDemo:{ready,get state(){return {...state};},get diagnostics(){return {viewer:viewer?.diagnostics,preview:preview.diagnostics};},setProgress,dispose}});
+Object.assign(window,{websiteDemo:{ready,get state(){return {...state};},get diagnostics(){return {viewer:story?.diagnostics.scene,preview:preview.diagnostics};},get story(){return story?.state;},seekStep:(index:number,smooth=false)=>story?.seekStep(index,smooth),setProgress,dispose}});

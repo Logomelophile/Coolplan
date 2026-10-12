@@ -88,17 +88,16 @@ async function uploadAndReset(label) {
 try {
   await initialize();
   report.desktop = await noOverflow();
-  await page.screenshot({ path: outputPath('homepage-desktop.png'), fullPage: true });
+  await page.screenshot({ path: outputPath('homepage-desktop.png') });
   check('Desktop 1122px: built homepage renders with WebGL, four material layers, ready room photo and no horizontal overflow.');
 
   const heroCanvas = page.locator('#hero-viewer canvas');
   const heroRect = await heroCanvas.boundingBox();
   assert.ok(heroRect);
-  const initial = await state();
+  const initial = await page.evaluate(() => ({ progress: window.websiteDemo.story?.progress ?? window.websiteDemo.state.progress }));
   await page.mouse.move(heroRect.x + heroRect.width * .6, heroRect.y + heroRect.height * .45);
   await page.mouse.wheel(0, 180);
-  await page.waitForFunction(progress => scrollY > 0 && window.websiteDemo.state.progress > progress, initial.progress);
-  assert.ok((await state()).viewer.explode > initial.viewer.explode);
+  await page.waitForFunction(progress => scrollY > 0 && (window.websiteDemo.story?.progress ?? window.websiteDemo.state.progress) > progress, initial.progress);
   await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
   await page.waitForFunction(() => scrollY === 0);
   const beforeOrbit = (await state()).viewer.cameraPosition;
@@ -112,7 +111,7 @@ try {
   await page.locator('#layers-toggle').click(); assert.equal((await state()).progress, 0);
   await page.locator('#layers-toggle').click(); assert.equal((await state()).progress, 1);
   await escapeExpanded('hero-expand', 'hero-3d-shell', 'hero-fullscreen-close');
-  check('Hero: wheel scrolls the page and scrubs layers; actual drag changes camera; slider, layer toggle and fullscreen Escape work.');
+  check('Hero: wheel scrolls the page and advances the story; actual drag changes camera; slider, layer toggle and fullscreen Escape work.');
 
   assert.equal(await page.locator('#product-grid .product-card').count(), 6);
   const originalHash = await previewHash();
@@ -159,7 +158,7 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   await initialize();
   report.mobile = await noOverflow();
-  await page.screenshot({ path: outputPath('homepage-mobile.png'), fullPage: true });
+  await page.screenshot({ path: outputPath('homepage-mobile.png') });
   await page.locator('.menu-toggle').click();
   assert.equal(await page.locator('.menu-toggle').getAttribute('aria-expanded'), 'true');
   await page.locator('#main-navigation [data-contact-open]').click();
@@ -175,9 +174,9 @@ try {
   check('Mobile 390px: menu/contact, product selection, hero and room fullscreen, upload controls fit and work without horizontal overflow.');
 
   await page.evaluate(() => { window.websiteDemo.dispose(); window.websiteDemo.dispose(); });
-  assert.equal(await page.locator('#hero-viewer canvas,#room-preview canvas').count(), 0);
+  assert.equal(await page.locator('#hero-viewer canvas,#room-preview canvas,.hero-room-floor-canvas').count(), 0);
   assert.equal((await state()).disposed, true);
-  check('Repeated homepage disposal removes both canvases without errors.');
+  check('Repeated homepage disposal removes the 3D scene, hero room and preview canvases without errors.');
   assert.deepEqual(report.errors, []);
 } catch (error) {
   report.failed = { message: error.message, stack: error.stack };

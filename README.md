@@ -6,9 +6,19 @@ The plank studio opens with Light Natural Oak. No image, model, HDR, or other bi
 
 ## Run locally
 
-The prototype-based COOLPLAN website is available at `/website/`, with the working estimate calculator at `/calculator/`. It includes scroll-driven WebGL construction layers, drag rotation, six finishes, seven room examples, local photo previews, and quotation/contact actions. The original `/` and `/room/` demos remain available. See [Website handoff](docs/WEBSITE-HANDOFF.md) for content, asset provenance, pricing assumptions and limitations.
+The prototype-based COOLPLAN website is available at `/website/`, with the working estimate calculator at `/calculator/`. Its opening section is a 12-step scroll story with synchronized room-floor and WebGL finish changes, an enlarged 5 MM construction sample, progressive layer explanations, and mouse orbit controls. It also includes seven room examples, local photo previews, and quotation/contact actions. The original `/` and `/room/` demos remain available. See [Website handoff](docs/WEBSITE-HANDOFF.md) for content, asset provenance, pricing assumptions and limitations.
 
-Build this addition with `npm run build:website`, preview using `npm run preview:website -- --port 5185`, and check it with `npm run test:website`. Its independent static output is `website-dist/`; merge it with retained demo output when deploying all four routes.
+Build this addition with `npm run build:website`, preview using `npm run preview:website -- --port 5185`, and check it with `npm run test:website` and `npm run test:story`. Its independent static output is `website-dist/`; merge it with retained demo output when deploying all four routes.
+
+### Homepage scroll story
+
+Native page scroll drives a sticky stage at **0.78 viewport heights per step**. Steps 1–6 change the photographed room floor and the live 3D sample together through Light Natural Oak, Warm Oak, Honey Oak, Classic Oak, Grey Oak and Walnut Brown. Step 7 enlarges the assembled sample into a shallow side view with a thickness leader and **5 MM**. Steps 8–11 separate the layers and progressively explain Wear Layer, Decor Film, SPC Core and IXPE Backing. Step 12 shows the complete construction before the stage releases into the room selector. Internal timeline indices are 0–11.
+
+Scrolling backward reverses the same timeline. Dragging orbits the actual WebGL sample; the projected layer leaders follow it. Previous/next buttons and individual step buttons provide direct navigation, and the skip link goes straight to the room selector. The browser retains native page scrolling. With `prefers-reduced-motion: reduce` or a viewport height below 580 CSS pixels, the stage is static rather than pinned and all steps remain available through the buttons.
+
+The homepage uses a **600 × 300 mm cutaway sample with a 5 mm total thickness**. It is an explanatory sample, not a manufacturing specification for individual products or layers; the original studio's 5.3 mm catalog is unchanged. Separation distances are enlarged for readability, and the thickness leader measures the assembled sample. The background is the supplied room photograph recolored only inside a floor mask, retaining its furniture, grain and shadows. It is not a full 3D room reconstruction; the separate `/room/` demo remains the native 3D room.
+
+`src/website/storyTimeline.ts` defines the sequence, `FloorScrollStory.ts` connects it to scrolling and labels, `FloorStoryScene.ts` renders the sample, and `HeroRoomFloor.ts` caches the six photo-floor finishes. Browser checks and screenshots from `npm run test:story` are written to `test-results/story/`. The test uses `http://127.0.0.1:5185/website/` by default and accepts `SPC_WEBSITE_URL`; `npm test` includes the deterministic timeline checks.
 
 Use Node.js **22.12 or newer**. In this directory:
 
