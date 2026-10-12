@@ -23,6 +23,8 @@ Validation date: 12 October 2026. This report covers the supplied seven-product 
 - `npm run test:browser`: seven-product switching; seven camera presets; stack/explode/selection/visibility; TH/EN; texture/geometry count stability; resize; screenshot; disposal; React; mobile overflow; browser errors.
 - `node tests/advanced-browser.mjs`: actual canvas pointer/keyboard/zoom input; idle rotation; mobile profile; fifth layer; explicit albedo override; built Web Component attribute updates, disposal and reconnection; unavailable-WebGL fallback.
 - `node tests/final-visual.mjs`: built production demo, mobile labels and SVG overlay bounds, underside/marble images, and single-viewer frame sampling at device pixel ratios 1 and 2.
+- Fresh directory cloned from the offline Git bundle: `npm ci --no-audit --no-fund`, `npm run build`, and `npm test` all pass. The checkout starts without image maps or generated build files. This confirms that the committed source and lockfile are sufficient for installation and rebuilding.
+- Packaged SDK installed into an independent temporary consumer: strict TypeScript imports of `SPCPlankViewer`, `products`, and `ProductConfig` pass using ESNext/bundler resolution. Node.js dynamic import also passes with no `document` or `customElements` globals. Archive inspection confirms the built module, declarations, data/schema, examples, documentation, MIT license, and third-party notice; no `node_modules` or reference media is included.
 
 Machine-readable reports are retained in `docs/validation/`. The handoff ZIP also includes `verification/` with full-resolution browser captures. The source repository does not require those PNG files to run.
 

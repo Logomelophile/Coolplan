@@ -1,0 +1,17 @@
+{
+  "date": "2026-10-12",
+  "freshBundleClone": {
+    "sourceCommit": "061405fc0e30ca8d9064f316a471f669b0b2dace",
+    "install": "pass: npm ci --no-audit --no-fund",
+    "build": "pass: npm run build",
+    "tests": "pass: 5 tests",
+    "requiredBinaryAssets": 0
+  },
+  "independentPackageConsumer": {
+    "install": "pass: npm install local tarball",
+    "typescript": "pass: strict ESNext/bundler consumer",
+    "nodeImportWithoutDOM": "pass: seven products and viewer class exported",
+    "archiveInspection": "pass: module, declarations, documentation, data, examples and licenses present; no node_modules or original reference media"
+  },
+  "note": "Only validation documentation is added after testing the source commit. Final delivery archive checksums are recorded alongside the release."
+}
