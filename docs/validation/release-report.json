@@ -1,0 +1,81 @@
+{
+  "production": "http://127.0.0.1:4173",
+  "checks": [
+    "Built production demo loads and switches products.",
+    "Mobile exploded labels fit inside viewport.",
+    "Leader lines occupy the full canvas despite surrounding icon CSS.",
+    "Underside lighting reveals the physical crosshatch.",
+    "Pixel ratios one and two render at the expected resolutions."
+  ],
+  "measurements": [
+    {
+      "viewport": [
+        1440,
+        900
+      ],
+      "pixelRatio": 1,
+      "canvas": [
+        1440,
+        900
+      ],
+      "meanFps": 59.9991973351527,
+      "p95FrameMs": 16.800000000000182,
+      "diagnostics": {
+        "webgl": true,
+        "disposed": false,
+        "productId": "light-natural-oak",
+        "view": "perspective34",
+        "explode": 0,
+        "mode": "lift",
+        "stackCount": 3,
+        "layerCount": 4,
+        "bounds": [
+          122,
+          0.530000001117587,
+          18
+        ],
+        "memory": {
+          "geometries": 4,
+          "textures": 11
+        },
+        "calls": 7,
+        "fps": 60
+      }
+    },
+    {
+      "viewport": [
+        1440,
+        900
+      ],
+      "pixelRatio": 2,
+      "canvas": [
+        2880,
+        1800
+      ],
+      "meanFps": 59.999197335152715,
+      "p95FrameMs": 16.800000000000182,
+      "diagnostics": {
+        "webgl": true,
+        "disposed": false,
+        "productId": "light-natural-oak",
+        "view": "perspective34",
+        "explode": 0,
+        "mode": "lift",
+        "stackCount": 3,
+        "layerCount": 4,
+        "bounds": [
+          122,
+          0.530000001117587,
+          18
+        ],
+        "memory": {
+          "geometries": 4,
+          "textures": 11
+        },
+        "calls": 7,
+        "fps": 60
+      }
+    }
+  ],
+  "errors": []
+}

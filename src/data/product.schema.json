@@ -1,0 +1,358 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/spc-plank-viewer/product.schema.json",
+  "title": "SPC plank product configuration",
+  "description": "All dimensions are millimetres. Layers are ordered top to bottom. The catalogue is an array of these objects.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "name",
+    "nameTh",
+    "description",
+    "dimensions",
+    "seed",
+    "surface",
+    "backingPattern",
+    "profile",
+    "layers"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nameTh": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "th"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "th": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "dimensions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lengthMm",
+        "widthMm",
+        "thicknessMm"
+      ],
+      "properties": {
+        "lengthMm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "widthMm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "thicknessMm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "seed": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "surface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "family",
+        "palette",
+        "grain",
+        "knots",
+        "roughness",
+        "clearcoat",
+        "clearcoatRoughness"
+      ],
+      "properties": {
+        "family": {
+          "enum": [
+            "wood",
+            "marble"
+          ]
+        },
+        "palette": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "base",
+            "light",
+            "dark"
+          ],
+          "properties": {
+            "base": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "light": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "dark": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "speckle": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            }
+          }
+        },
+        "grain": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "scale",
+            "contrast",
+            "cathedral",
+            "relief",
+            "flecks"
+          ],
+          "properties": {
+            "scale": {
+              "type": "number",
+              "minimum": 0.05,
+              "maximum": 20
+            },
+            "contrast": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "cathedral": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "relief": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "flecks": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        },
+        "knots": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "count",
+            "radius",
+            "strength"
+          ],
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 30
+            },
+            "radius": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 0.5,
+              "description": "Knot radius as a fraction of plank width."
+            },
+            "strength": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        },
+        "roughness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "clearcoat": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "clearcoatRoughness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "backingPattern": {
+      "enum": [
+        "crosshatch",
+        "pebble"
+      ]
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tongueMm",
+        "grooveMm",
+        "bevelMm",
+        "backingInsetMm"
+      ],
+      "properties": {
+        "tongueMm": {
+          "type": "number",
+          "minimum": 0
+        },
+        "grooveMm": {
+          "type": "number",
+          "minimum": 0
+        },
+        "bevelMm": {
+          "type": "number",
+          "minimum": 0
+        },
+        "backingInsetMm": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "maps": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "albedo": {
+          "type": "string",
+          "minLength": 1
+        },
+        "normal": {
+          "type": "string",
+          "minLength": 1
+        },
+        "roughness": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "layers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label",
+          "description",
+          "thicknessMm",
+          "material",
+          "order"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "label": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "en",
+              "th"
+            ],
+            "properties": {
+              "en": {
+                "type": "string",
+                "minLength": 1
+              },
+              "th": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "description": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "en",
+              "th"
+            ],
+            "properties": {
+              "en": {
+                "type": "string",
+                "minLength": 1
+              },
+              "th": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "thicknessMm": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "material": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "wear",
+                  "decor",
+                  "core",
+                  "backing",
+                  "coating"
+                ]
+              },
+              "color": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "roughness": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "opacity": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          },
+          "order": {
+            "type": "integer",
+            "description": "Unique integer ordering each layer from top to bottom."
+          }
+        }
+      }
+    }
+  }
+}

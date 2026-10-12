@@ -1,0 +1,351 @@
+{
+  "checks": [
+    "Demo renders, switches locale, and opens four labelled layers.",
+    "Seven products preserve dimensions; seven presets, stair mode, Thai labels, hover selection and layer hiding work.",
+    "Repeated product changes return to stable GPU texture and geometry counts.",
+    "Resize and screenshot export pass.",
+    "Dispose removes the canvas.",
+    "React wrapper mounts.",
+    "Mobile demo has no horizontal overflow."
+  ],
+  "errors": [],
+  "products": [
+    {
+      "webgl": true,
+      "disposed": false,
+      "productId": "light-natural-oak",
+      "view": "perspective34",
+      "explode": 0,
+      "mode": "lift",
+      "stackCount": 3,
+      "layerCount": 4,
+      "bounds": [
+        122,
+        0.530000001117587,
+        18
+      ],
+      "memory": {
+        "geometries": 4,
+        "textures": 11
+      },
+      "calls": 7,
+      "fps": 18
+    },
+    {
+      "webgl": true,
+      "disposed": false,
+      "productId": "whitewashed-ash-oak",
+      "view": "perspective34",
+      "explode": 0,
+      "mode": "lift",
+      "stackCount": 3,
+      "layerCount": 4,
+      "bounds": [
+        122,
+        0.530000001117587,
+        18
+      ],
+      "memory": {
+        "geometries": 4,
+        "textures": 11
+      },
+      "calls": 7,
+      "fps": 38
+    },
+    {
+      "webgl": true,
+      "disposed": false,
+      "productId": "dark-walnut-brown",
+      "view": "perspective34",
+      "explode": 0,
+      "mode": "lift",
+      "stackCount": 3,
+      "layerCount": 4,
+      "bounds": [
+        122,
+        0.530000001117587,
+        18
+      ],
+      "memory": {
+        "geometries": 4,
+        "textures": 11
+      },
+      "calls": 7,
+      "fps": 40
+    },
+    {
+      "webgl": true,
+      "disposed": false,
+      "productId": "white-marble",
+      "view": "perspective34",
+      "explode": 0,
+      "mode": "lift",
+      "stackCount": 3,
+      "layerCount": 4,
+      "bounds": [
+        122,
+        0.530000001117587,
+        18
+      ],
+      "memory": {
+        "geometries": 4,
+        "textures": 11
+      },
+      "calls": 7,
+      "fps": 41
+    },
+    {
+      "webgl": true,
+      "disposed": false,
+      "productId": "golden-honey-oak",
+      "view": "perspective34",
+      "explode": 0,
+      "mode": "lift",
+      "stackCount": 3,
+      "layerCount": 4,
+      "bounds": [
+        122,
+        0.530000001117587,
+        18
+      ],
+      "memory": {
+        "geometries": 4,
+        "textures": 11
+      },
+      "calls": 7,
+      "fps": 44
+    },
+    {
+      "webgl": true,
+      "disposed": false,
+      "productId": "greige-oak",
+      "view": "perspective34",
+      "explode": 0,
+      "mode": "lift",
+      "stackCount": 3,
+      "layerCount": 4,
+      "bounds": [
+        122,
+        0.530000001117587,
+        18
+      ],
+      "memory": {
+        "geometries": 4,
+        "textures": 11
+      },
+      "calls": 7,
+      "fps": 44
+    },
+    {
+      "webgl": true,
+      "disposed": false,
+      "productId": "warm-taupe-oak",
+      "view": "perspective34",
+      "explode": 0,
+      "mode": "lift",
+      "stackCount": 3,
+      "layerCount": 4,
+      "bounds": [
+        122,
+        0.530000001117587,
+        18
+      ],
+      "memory": {
+        "geometries": 4,
+        "textures": 11
+      },
+      "calls": 7,
+      "fps": 44
+    }
+  ],
+  "views": [
+    {
+      "webgl": true,
+      "disposed": false,
+      "productId": "light-natural-oak",
+      "view": "front",
+      "explode": 0,
+      "mode": "lift",
+      "stackCount": 3,
+      "layerCount": 4,
+      "bounds": [
+        122,
+        0.530000001117587,
+        18
+      ],
+      "memory": {
+        "geometries": 4,
+        "textures": 11
+      },
+      "calls": 7,
+      "fps": 46
+    },
+    {
+      "webgl": true,
+      "disposed": false,
+      "productId": "light-natural-oak",
+      "view": "perspective34",
+      "explode": 0,
+      "mode": "lift",
+      "stackCount": 3,
+      "layerCount": 4,
+      "bounds": [
+        122,
+        0.530000001117587,
+        18
+      ],
+      "memory": {
+        "geometries": 4,
+        "textures": 11
+      },
+      "calls": 7,
+      "fps": 55
+    },
+    {
+      "webgl": true,
+      "disposed": false,
+      "productId": "light-natural-oak",
+      "view": "stacked",
+      "explode": 0,
+      "mode": "lift",
+      "stackCount": 3,
+      "layerCount": 4,
+      "bounds": [
+        122,
+        0.5300000011175872,
+        18
+      ],
+      "memory": {
+        "geometries": 4,
+        "textures": 11
+      },
+      "calls": 19,
+      "fps": 60
+    },
+    {
+      "webgl": true,
+      "disposed": false,
+      "productId": "light-natural-oak",
+      "view": "closeup",
+      "explode": 0,
+      "mode": "lift",
+      "stackCount": 3,
+      "layerCount": 4,
+      "bounds": [
+        122,
+        0.530000001117587,
+        18
+      ],
+      "memory": {
+        "geometries": 4,
+        "textures": 11
+      },
+      "calls": 7,
+      "fps": 60
+    },
+    {
+      "webgl": true,
+      "disposed": false,
+      "productId": "light-natural-oak",
+      "view": "back",
+      "explode": 0,
+      "mode": "lift",
+      "stackCount": 3,
+      "layerCount": 4,
+      "bounds": [
+        122,
+        0.530000001117587,
+        18
+      ],
+      "memory": {
+        "geometries": 4,
+        "textures": 11
+      },
+      "calls": 6,
+      "fps": 58
+    },
+    {
+      "webgl": true,
+      "disposed": false,
+      "productId": "light-natural-oak",
+      "view": "exploded",
+      "explode": 1,
+      "mode": "lift",
+      "stackCount": 3,
+      "layerCount": 4,
+      "bounds": [
+        122,
+        17.930000001117584,
+        18
+      ],
+      "memory": {
+        "geometries": 5,
+        "textures": 11
+      },
+      "calls": 8,
+      "fps": 55
+    },
+    {
+      "webgl": true,
+      "disposed": false,
+      "productId": "light-natural-oak",
+      "view": "profile",
+      "explode": 0,
+      "mode": "lift",
+      "stackCount": 3,
+      "layerCount": 4,
+      "bounds": [
+        122,
+        0.530000001117587,
+        18
+      ],
+      "memory": {
+        "geometries": 5,
+        "textures": 11
+      },
+      "calls": 6,
+      "fps": 55
+    }
+  ],
+  "memory": [
+    {
+      "geometries": 5,
+      "textures": 11
+    },
+    {
+      "geometries": 4,
+      "textures": 11
+    },
+    {
+      "geometries": 4,
+      "textures": 11
+    },
+    {
+      "geometries": 4,
+      "textures": 11
+    }
+  ],
+  "performance": {
+    "webgl": true,
+    "disposed": false,
+    "productId": "light-natural-oak",
+    "view": "perspective34",
+    "explode": 0,
+    "mode": "stair",
+    "stackCount": 3,
+    "layerCount": 4,
+    "bounds": [
+      122,
+      0.530000001117587,
+      18
+    ],
+    "memory": {
+      "geometries": 4,
+      "textures": 11
+    },
+    "calls": 7,
+    "fps": 60,
+    "gpu": "ANGLE (AMD, AMD Radeon(TM) 890M Graphics (0x0000150E) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36"
+  }
+}

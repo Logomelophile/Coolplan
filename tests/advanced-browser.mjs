@@ -1,0 +1,86 @@
+import { chromium } from '@playwright/test';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import assert from 'node:assert/strict';
+const base=process.env.SPC_TEST_URL||'http://127.0.0.1:5173';
+const out=new URL('../test-results/',import.meta.url);
+await mkdir(out,{recursive:true});
+const browser=await chromium.launch({channel:'chrome',headless:true});
+const page=await browser.newPage({viewport:{width:1100,height:700}});
+const errors=[];const checks=[];
+page.on('pageerror',e=>errors.push(e.message));
+page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+try {
+  await page.goto(`${base}/tests/harness.html`);await page.evaluate(()=>window.ready);
+  const center=await page.evaluate(()=>{
+    const v=window.viewer;const mesh=v.current.model.layers.get('decor').mesh;
+    const point=mesh.position.clone().add(v.current.model.group.position).project(v.camera);
+    return {x:(point.x+1)*innerWidth/2,y:(1-point.y)*innerHeight/2};
+  });
+  await page.mouse.click(center.x,center.y);await page.waitForTimeout(850);
+  assert.equal(await page.evaluate(()=>window.viewer.explode),1);
+  assert.equal(await page.locator('.spc-label:visible').count(),4);
+  await page.mouse.click(15,15);await page.waitForTimeout(850);
+  assert.equal(await page.evaluate(()=>window.viewer.explode),0);
+  await page.locator('canvas').focus();await page.keyboard.press('7');await page.waitForTimeout(750);
+  assert.equal(await page.evaluate(()=>window.viewer.view),'profile');
+  await page.keyboard.press('2');await page.waitForTimeout(750);
+  const before=await page.evaluate(()=>window.viewer.camera.position.toArray());
+  await page.mouse.move(550,350);await page.mouse.down();await page.mouse.move(700,410,{steps:12});await page.mouse.up();await page.waitForTimeout(400);
+  assert.notDeepEqual(await page.evaluate(()=>window.viewer.camera.position.toArray()),before);
+  const distance=await page.evaluate(()=>window.viewer.camera.position.distanceTo(window.viewer.controls.target));
+  await page.mouse.wheel(0,-200);await page.waitForTimeout(350);
+  assert.ok(await page.evaluate(()=>window.viewer.camera.position.distanceTo(window.viewer.controls.target))<distance);
+  checks.push('Canvas click explodes; blank click resets; keyboard presets, actual drag orbit and wheel zoom work.');
+  await page.evaluate(()=>{window.viewer.setView('perspective34');window.viewer.setAutoRotate(true);});
+  await page.waitForTimeout(1000);
+  const rotatingBefore=await page.evaluate(()=>window.viewer.camera.position.toArray());
+  await page.waitForTimeout(3200);
+  assert.notDeepEqual(await page.evaluate(()=>window.viewer.camera.position.toArray()),rotatingBefore);
+  checks.push('Auto-rotation resumes after three idle seconds.');
+  await page.setViewportSize({width:390,height:700});
+  await page.evaluate(()=>{window.viewer.setAutoRotate(false);window.viewer.setView('profile');});await page.waitForTimeout(800);
+  const corners=await page.evaluate(()=>{
+    const v=window.viewer;const camera=v.camera;
+    return [...v.current.model.layers.values()].flatMap(({mesh})=>{
+      mesh.geometry.computeBoundingBox();const b=mesh.geometry.boundingBox;
+      return [b.min.clone(),b.max.clone()].map(p=>mesh.localToWorld(p).project(camera).toArray());
+    });
+  });
+  assert.ok(corners.every(p=>Math.abs(p[0])<1&&Math.abs(p[1])<1));
+  await page.screenshot({path:fileURLToPath(new URL('profile-mobile.png',out))});
+  checks.push('Mobile profile contains both click-lock edges.');
+  const custom=await page.evaluate(async()=>{
+    const v=window.viewer;v.dispose();const product=structuredClone(window.products[0]);product.id='custom-fifth-layer';
+    product.layers[0].order=-1;product.layers.push({id:'antibacterial',label:{en:'Antibacterial coat',th:'ชั้นเคลือบ'},description:{en:'Example configurable coating',th:'ตัวอย่างชั้นเคลือบ'},thicknessMm:0.2,material:{kind:'coating',color:'#efefef'},order:0});
+    product.dimensions.thicknessMm=5.5;
+    const canvas=document.createElement('canvas');canvas.width=canvas.height=8;const ctx=canvas.getContext('2d');ctx.fillStyle='#487354';ctx.fillRect(0,0,8,8);
+    product.maps={albedo:canvas.toDataURL()};
+    const viewer=new window.SPCPlankViewer(document.querySelector('#host'),{products:[product],productId:product.id,view:'exploded',locale:'en'});window.viewer=viewer;
+    await viewer.ready;return {layerCount:viewer.diagnostics.layerCount,mapWidth:viewer.current.bundle.materials.get('decor').map.image.width};
+  });
+  assert.equal(custom.layerCount,5);assert.equal(custom.mapWidth,8);
+  await page.waitForFunction(()=>window.viewer.diagnostics.explode>=0.999 && [...document.querySelectorAll('.spc-label')].filter(e=>e.getBoundingClientRect().width>0).length===5,undefined,{timeout:15000});
+  assert.equal(await page.locator('.spc-label:visible').count(),5);
+  await page.evaluate(()=>window.viewer.setExplode(0));await page.waitForTimeout(750);
+  assert.ok(Math.abs(await page.evaluate(()=>window.viewer.diagnostics.bounds[1])-0.55)<0.00001);
+  assert.equal(await page.evaluate(()=>window.viewer.current.model.layers.get('wear').mesh.visible),true);
+  checks.push('An added coating between wear and decor preserves 5.5 mm without overlap; five labels and explicit image overrides work.');
+  await page.goto(`${base}/tests/component.html`);await page.waitForFunction(()=>document.querySelector('spc-plank-viewer').viewer);await page.evaluate(()=>document.querySelector('spc-plank-viewer').viewer.ready);
+  assert.equal(await page.evaluate(()=>document.querySelector('spc-plank-viewer').viewer.product.id),'greige-oak');
+  await page.evaluate(()=>document.querySelector('spc-plank-viewer').setAttribute('product','white-marble'));await page.waitForTimeout(1400);
+  assert.equal(await page.evaluate(()=>document.querySelector('spc-plank-viewer').viewer.product.id),'white-marble');
+  await page.evaluate(()=>{const e=document.querySelector('spc-plank-viewer');window.savedElement=e;e.remove();});
+  assert.equal(await page.evaluate(()=>window.savedElement.viewer),undefined);
+  await page.evaluate(()=>document.body.append(window.savedElement));await page.evaluate(()=>window.savedElement.viewer.ready);
+  checks.push('Built standalone ES module Web Component renders, responds to attributes, disposes and reconnects.');
+  const fallback=await browser.newPage();
+  await fallback.addInitScript(()=>{const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){if(type==='webgl2')return null;return original.call(this,type,...args);};});
+  await fallback.goto(base);await fallback.waitForTimeout(1200);
+  assert.match(await fallback.locator('.spc-status').innerText(),/WebGL 2/);
+  assert.equal(await fallback.locator('#toggle-explode').isDisabled(),true);
+  await fallback.close();checks.push('WebGL-unavailable fallback is readable and disables unavailable controls.');
+  assert.deepEqual(errors,[]);
+} finally {
+  const report={checks,errors};await writeFile(new URL('advanced-report.json',out),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));await browser.close();
+}

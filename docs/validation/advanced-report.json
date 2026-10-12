@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "Canvas click explodes; blank click resets; keyboard presets, actual drag orbit and wheel zoom work.",
+    "Auto-rotation resumes after three idle seconds.",
+    "Mobile profile contains both click-lock edges.",
+    "An added coating between wear and decor preserves 5.5 mm without overlap; five labels and explicit image overrides work.",
+    "Built standalone ES module Web Component renders, responds to attributes, disposes and reconnects.",
+    "WebGL-unavailable fallback is readable and disables unavailable controls."
+  ],
+  "errors": []
+}

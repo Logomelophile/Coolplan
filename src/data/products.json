@@ -1,0 +1,829 @@
+[
+  {
+    "id": "light-natural-oak",
+    "name": "Light Natural Oak",
+    "nameTh": "โอ๊คธรรมชาติสีอ่อน",
+    "description": {
+      "en": "Pale blonde oak with fine flowing grain and a small natural knot.",
+      "th": "โอ๊คสีบลอนด์อ่อน ลายเส้นละเอียดและปมไม้เล็ก"
+    },
+    "dimensions": {
+      "lengthMm": 1220,
+      "widthMm": 180,
+      "thicknessMm": 5.3
+    },
+    "profile": {
+      "tongueMm": 1.4,
+      "grooveMm": 1.4,
+      "bevelMm": 0.3,
+      "backingInsetMm": 0.6
+    },
+    "layers": [
+      {
+        "id": "wear",
+        "label": {
+          "en": "Wear Layer",
+          "th": "ชั้นเคลือบป้องกันผิว"
+        },
+        "description": {
+          "en": "Transparent UV coating: scratch, stain and fade resistance",
+          "th": "ชั้นเคลือบ UV โปร่งใส ช่วยป้องกันรอยขีดข่วน คราบ และสีซีดจาง"
+        },
+        "thicknessMm": 0.5,
+        "material": {
+          "kind": "wear",
+          "color": "#F1F5FA",
+          "roughness": 0.16,
+          "opacity": 0.35
+        },
+        "order": 0
+      },
+      {
+        "id": "decor",
+        "label": {
+          "en": "Décor Film Layer",
+          "th": "ชั้นฟิล์มลวดลาย"
+        },
+        "description": {
+          "en": "High-definition wood / marble design",
+          "th": "ฟิล์มลายไม้หรือลายหินอ่อนความละเอียดสูง"
+        },
+        "thicknessMm": 0.1,
+        "material": {
+          "kind": "decor"
+        },
+        "order": 1
+      },
+      {
+        "id": "core",
+        "label": {
+          "en": "SPC Core",
+          "th": "ชั้นแกนกลาง SPC"
+        },
+        "description": {
+          "en": "Stone Plastic Composite: rigid core, waterproof",
+          "th": "แกนวัสดุผสมหินและพลาสติก แข็งแรงและกันน้ำ"
+        },
+        "thicknessMm": 3.7,
+        "material": {
+          "kind": "core",
+          "color": "#D5D7D8",
+          "roughness": 0.9
+        },
+        "order": 2
+      },
+      {
+        "id": "backing",
+        "label": {
+          "en": "Backing / Underlayment",
+          "th": "ชั้นรองพื้น IXPE"
+        },
+        "description": {
+          "en": "IXPE foam: sound absorption and added comfort",
+          "th": "โฟม IXPE ช่วยดูดซับเสียงและเพิ่มความสบายขณะเดิน"
+        },
+        "thicknessMm": 1,
+        "material": {
+          "kind": "backing",
+          "color": "#161616",
+          "roughness": 0.85
+        },
+        "order": 3
+      }
+    ],
+    "seed": 11037,
+    "surface": {
+      "family": "wood",
+      "palette": {
+        "base": "#D8B98C",
+        "light": "#E8CFA6",
+        "dark": "#B59265"
+      },
+      "grain": {
+        "scale": 1.14,
+        "contrast": 0.56,
+        "cathedral": 0.1,
+        "relief": 0.32,
+        "flecks": 0.35
+      },
+      "knots": {
+        "count": 1,
+        "radius": 0.031,
+        "strength": 0.64
+      },
+      "roughness": 0.65,
+      "clearcoat": 0.3,
+      "clearcoatRoughness": 0.42
+    },
+    "backingPattern": "crosshatch"
+  },
+  {
+    "id": "whitewashed-ash-oak",
+    "name": "Whitewashed Ash Oak",
+    "nameTh": "แอชโอ๊คฟอกขาว",
+    "description": {
+      "en": "Soft whitewashed oak with open grain and visible knots.",
+      "th": "โอ๊คโทนขาวนวล ร่องลายไม้โปร่งและปมไม้ธรรมชาติ"
+    },
+    "dimensions": {
+      "lengthMm": 1220,
+      "widthMm": 180,
+      "thicknessMm": 5.3
+    },
+    "profile": {
+      "tongueMm": 1.4,
+      "grooveMm": 1.4,
+      "bevelMm": 0.3,
+      "backingInsetMm": 0.6
+    },
+    "layers": [
+      {
+        "id": "wear",
+        "label": {
+          "en": "Wear Layer",
+          "th": "ชั้นเคลือบป้องกันผิว"
+        },
+        "description": {
+          "en": "Transparent UV coating: scratch, stain and fade resistance",
+          "th": "ชั้นเคลือบ UV โปร่งใส ช่วยป้องกันรอยขีดข่วน คราบ และสีซีดจาง"
+        },
+        "thicknessMm": 0.5,
+        "material": {
+          "kind": "wear",
+          "color": "#F1F5FA",
+          "roughness": 0.16,
+          "opacity": 0.35
+        },
+        "order": 0
+      },
+      {
+        "id": "decor",
+        "label": {
+          "en": "Décor Film Layer",
+          "th": "ชั้นฟิล์มลวดลาย"
+        },
+        "description": {
+          "en": "High-definition wood / marble design",
+          "th": "ฟิล์มลายไม้หรือลายหินอ่อนความละเอียดสูง"
+        },
+        "thicknessMm": 0.1,
+        "material": {
+          "kind": "decor"
+        },
+        "order": 1
+      },
+      {
+        "id": "core",
+        "label": {
+          "en": "SPC Core",
+          "th": "ชั้นแกนกลาง SPC"
+        },
+        "description": {
+          "en": "Stone Plastic Composite: rigid core, waterproof",
+          "th": "แกนวัสดุผสมหินและพลาสติก แข็งแรงและกันน้ำ"
+        },
+        "thicknessMm": 3.7,
+        "material": {
+          "kind": "core",
+          "color": "#D5D7D8",
+          "roughness": 0.9
+        },
+        "order": 2
+      },
+      {
+        "id": "backing",
+        "label": {
+          "en": "Backing / Underlayment",
+          "th": "ชั้นรองพื้น IXPE"
+        },
+        "description": {
+          "en": "IXPE foam: sound absorption and added comfort",
+          "th": "โฟม IXPE ช่วยดูดซับเสียงและเพิ่มความสบายขณะเดิน"
+        },
+        "thicknessMm": 1,
+        "material": {
+          "kind": "backing",
+          "color": "#161616",
+          "roughness": 0.85
+        },
+        "order": 3
+      }
+    ],
+    "seed": 28271,
+    "surface": {
+      "family": "wood",
+      "palette": {
+        "base": "#E2D6C5",
+        "light": "#EFE8DC",
+        "dark": "#B6A58F"
+      },
+      "grain": {
+        "scale": 0.98,
+        "contrast": 0.52,
+        "cathedral": 0.24,
+        "relief": 0.48,
+        "flecks": 0.2
+      },
+      "knots": {
+        "count": 2,
+        "radius": 0.042,
+        "strength": 0.78
+      },
+      "roughness": 0.76,
+      "clearcoat": 0.2,
+      "clearcoatRoughness": 0.53
+    },
+    "backingPattern": "crosshatch"
+  },
+  {
+    "id": "dark-walnut-brown",
+    "name": "Dark Walnut Brown",
+    "nameTh": "วอลนัตน้ำตาลเข้ม",
+    "description": {
+      "en": "Chocolate walnut with dense, straight grain and a satin finish.",
+      "th": "วอลนัตสีน้ำตาลช็อกโกแลต ลายตรงถี่และผิวซาติน"
+    },
+    "dimensions": {
+      "lengthMm": 1220,
+      "widthMm": 180,
+      "thicknessMm": 5.3
+    },
+    "profile": {
+      "tongueMm": 1.4,
+      "grooveMm": 1.4,
+      "bevelMm": 0.3,
+      "backingInsetMm": 0.6
+    },
+    "layers": [
+      {
+        "id": "wear",
+        "label": {
+          "en": "Wear Layer",
+          "th": "ชั้นเคลือบป้องกันผิว"
+        },
+        "description": {
+          "en": "Transparent UV coating: scratch, stain and fade resistance",
+          "th": "ชั้นเคลือบ UV โปร่งใส ช่วยป้องกันรอยขีดข่วน คราบ และสีซีดจาง"
+        },
+        "thicknessMm": 0.5,
+        "material": {
+          "kind": "wear",
+          "color": "#F1F5FA",
+          "roughness": 0.16,
+          "opacity": 0.35
+        },
+        "order": 0
+      },
+      {
+        "id": "decor",
+        "label": {
+          "en": "Décor Film Layer",
+          "th": "ชั้นฟิล์มลวดลาย"
+        },
+        "description": {
+          "en": "High-definition wood / marble design",
+          "th": "ฟิล์มลายไม้หรือลายหินอ่อนความละเอียดสูง"
+        },
+        "thicknessMm": 0.1,
+        "material": {
+          "kind": "decor"
+        },
+        "order": 1
+      },
+      {
+        "id": "core",
+        "label": {
+          "en": "SPC Core",
+          "th": "ชั้นแกนกลาง SPC"
+        },
+        "description": {
+          "en": "Stone Plastic Composite: rigid core, waterproof",
+          "th": "แกนวัสดุผสมหินและพลาสติก แข็งแรงและกันน้ำ"
+        },
+        "thicknessMm": 3.7,
+        "material": {
+          "kind": "core",
+          "color": "#D5D7D8",
+          "roughness": 0.9
+        },
+        "order": 2
+      },
+      {
+        "id": "backing",
+        "label": {
+          "en": "Backing / Underlayment",
+          "th": "ชั้นรองพื้น IXPE"
+        },
+        "description": {
+          "en": "IXPE foam: sound absorption and added comfort",
+          "th": "โฟม IXPE ช่วยดูดซับเสียงและเพิ่มความสบายขณะเดิน"
+        },
+        "thicknessMm": 1,
+        "material": {
+          "kind": "backing",
+          "color": "#161616",
+          "roughness": 0.85
+        },
+        "order": 3
+      }
+    ],
+    "seed": 59083,
+    "surface": {
+      "family": "wood",
+      "palette": {
+        "base": "#4A3324",
+        "light": "#6A4A34",
+        "dark": "#2A1A10"
+      },
+      "grain": {
+        "scale": 1.62,
+        "contrast": 0.68,
+        "cathedral": 0.055,
+        "relief": 0.38,
+        "flecks": 0.13
+      },
+      "knots": {
+        "count": 0,
+        "radius": 0.02,
+        "strength": 0
+      },
+      "roughness": 0.48,
+      "clearcoat": 0.4,
+      "clearcoatRoughness": 0.33
+    },
+    "backingPattern": "pebble"
+  },
+  {
+    "id": "white-marble",
+    "name": "White Marble",
+    "nameTh": "หินอ่อนสีขาว",
+    "description": {
+      "en": "Carrara-inspired white marble with fine grey veins and soft mineral clouds.",
+      "th": "หินอ่อนขาวลายเส้นแร่เทาบาง พร้อมปื้นแร่นุ่มนวล"
+    },
+    "dimensions": {
+      "lengthMm": 1220,
+      "widthMm": 180,
+      "thicknessMm": 5.3
+    },
+    "profile": {
+      "tongueMm": 1.4,
+      "grooveMm": 1.4,
+      "bevelMm": 0.3,
+      "backingInsetMm": 0.6
+    },
+    "layers": [
+      {
+        "id": "wear",
+        "label": {
+          "en": "Wear Layer",
+          "th": "ชั้นเคลือบป้องกันผิว"
+        },
+        "description": {
+          "en": "Transparent UV coating: scratch, stain and fade resistance",
+          "th": "ชั้นเคลือบ UV โปร่งใส ช่วยป้องกันรอยขีดข่วน คราบ และสีซีดจาง"
+        },
+        "thicknessMm": 0.5,
+        "material": {
+          "kind": "wear",
+          "color": "#F1F5FA",
+          "roughness": 0.16,
+          "opacity": 0.35
+        },
+        "order": 0
+      },
+      {
+        "id": "decor",
+        "label": {
+          "en": "Décor Film Layer",
+          "th": "ชั้นฟิล์มลวดลาย"
+        },
+        "description": {
+          "en": "High-definition wood / marble design",
+          "th": "ฟิล์มลายไม้หรือลายหินอ่อนความละเอียดสูง"
+        },
+        "thicknessMm": 0.1,
+        "material": {
+          "kind": "decor"
+        },
+        "order": 1
+      },
+      {
+        "id": "core",
+        "label": {
+          "en": "SPC Core",
+          "th": "ชั้นแกนกลาง SPC"
+        },
+        "description": {
+          "en": "Stone Plastic Composite: rigid core, waterproof",
+          "th": "แกนวัสดุผสมหินและพลาสติก แข็งแรงและกันน้ำ"
+        },
+        "thicknessMm": 3.7,
+        "material": {
+          "kind": "core",
+          "color": "#D5D7D8",
+          "roughness": 0.9
+        },
+        "order": 2
+      },
+      {
+        "id": "backing",
+        "label": {
+          "en": "Backing / Underlayment",
+          "th": "ชั้นรองพื้น IXPE"
+        },
+        "description": {
+          "en": "IXPE foam: sound absorption and added comfort",
+          "th": "โฟม IXPE ช่วยดูดซับเสียงและเพิ่มความสบายขณะเดิน"
+        },
+        "thicknessMm": 1,
+        "material": {
+          "kind": "backing",
+          "color": "#161616",
+          "roughness": 0.85
+        },
+        "order": 3
+      }
+    ],
+    "seed": 71491,
+    "surface": {
+      "family": "marble",
+      "palette": {
+        "base": "#F4F5F6",
+        "light": "#A9ADB2",
+        "dark": "#7F858B",
+        "speckle": "#5B6065"
+      },
+      "grain": {
+        "scale": 1,
+        "contrast": 0.5,
+        "cathedral": 0,
+        "relief": 0,
+        "flecks": 0
+      },
+      "knots": {
+        "count": 0,
+        "radius": 0,
+        "strength": 0
+      },
+      "roughness": 0.15,
+      "clearcoat": 1,
+      "clearcoatRoughness": 0.14
+    },
+    "backingPattern": "crosshatch"
+  },
+  {
+    "id": "golden-honey-oak",
+    "name": "Golden Honey Oak",
+    "nameTh": "โอ๊คสีทองน้ำผึ้ง",
+    "description": {
+      "en": "Warm honey oak with broad cathedral arches and delicate ray flecks.",
+      "th": "โอ๊คทองน้ำผึ้ง ลายโค้งกว้างและเสี้ยนไม้ละเอียด"
+    },
+    "dimensions": {
+      "lengthMm": 1220,
+      "widthMm": 180,
+      "thicknessMm": 5.3
+    },
+    "profile": {
+      "tongueMm": 1.4,
+      "grooveMm": 1.4,
+      "bevelMm": 0.3,
+      "backingInsetMm": 0.6
+    },
+    "layers": [
+      {
+        "id": "wear",
+        "label": {
+          "en": "Wear Layer",
+          "th": "ชั้นเคลือบป้องกันผิว"
+        },
+        "description": {
+          "en": "Transparent UV coating: scratch, stain and fade resistance",
+          "th": "ชั้นเคลือบ UV โปร่งใส ช่วยป้องกันรอยขีดข่วน คราบ และสีซีดจาง"
+        },
+        "thicknessMm": 0.5,
+        "material": {
+          "kind": "wear",
+          "color": "#F1F5FA",
+          "roughness": 0.16,
+          "opacity": 0.35
+        },
+        "order": 0
+      },
+      {
+        "id": "decor",
+        "label": {
+          "en": "Décor Film Layer",
+          "th": "ชั้นฟิล์มลวดลาย"
+        },
+        "description": {
+          "en": "High-definition wood / marble design",
+          "th": "ฟิล์มลายไม้หรือลายหินอ่อนความละเอียดสูง"
+        },
+        "thicknessMm": 0.1,
+        "material": {
+          "kind": "decor"
+        },
+        "order": 1
+      },
+      {
+        "id": "core",
+        "label": {
+          "en": "SPC Core",
+          "th": "ชั้นแกนกลาง SPC"
+        },
+        "description": {
+          "en": "Stone Plastic Composite: rigid core, waterproof",
+          "th": "แกนวัสดุผสมหินและพลาสติก แข็งแรงและกันน้ำ"
+        },
+        "thicknessMm": 3.7,
+        "material": {
+          "kind": "core",
+          "color": "#D5D7D8",
+          "roughness": 0.9
+        },
+        "order": 2
+      },
+      {
+        "id": "backing",
+        "label": {
+          "en": "Backing / Underlayment",
+          "th": "ชั้นรองพื้น IXPE"
+        },
+        "description": {
+          "en": "IXPE foam: sound absorption and added comfort",
+          "th": "โฟม IXPE ช่วยดูดซับเสียงและเพิ่มความสบายขณะเดิน"
+        },
+        "thicknessMm": 1,
+        "material": {
+          "kind": "backing",
+          "color": "#161616",
+          "roughness": 0.85
+        },
+        "order": 3
+      }
+    ],
+    "seed": 17389,
+    "surface": {
+      "family": "wood",
+      "palette": {
+        "base": "#D1963F",
+        "light": "#E5B866",
+        "dark": "#A66B25"
+      },
+      "grain": {
+        "scale": 0.9,
+        "contrast": 0.63,
+        "cathedral": 0.88,
+        "relief": 0.55,
+        "flecks": 0.48
+      },
+      "knots": {
+        "count": 1,
+        "radius": 0.025,
+        "strength": 0.55
+      },
+      "roughness": 0.5,
+      "clearcoat": 0.38,
+      "clearcoatRoughness": 0.36
+    },
+    "backingPattern": "crosshatch"
+  },
+  {
+    "id": "greige-oak",
+    "name": "Greige Oak",
+    "nameTh": "โอ๊คสีเทาเบจ",
+    "description": {
+      "en": "Grey-beige oak with deep brushed pores and pale raised grain.",
+      "th": "โอ๊คเทาเบจ ร่องเสี้ยนขัดลึกและสันลายสีอ่อน"
+    },
+    "dimensions": {
+      "lengthMm": 1220,
+      "widthMm": 180,
+      "thicknessMm": 5.3
+    },
+    "profile": {
+      "tongueMm": 1.4,
+      "grooveMm": 1.4,
+      "bevelMm": 0.3,
+      "backingInsetMm": 0.6
+    },
+    "layers": [
+      {
+        "id": "wear",
+        "label": {
+          "en": "Wear Layer",
+          "th": "ชั้นเคลือบป้องกันผิว"
+        },
+        "description": {
+          "en": "Transparent UV coating: scratch, stain and fade resistance",
+          "th": "ชั้นเคลือบ UV โปร่งใส ช่วยป้องกันรอยขีดข่วน คราบ และสีซีดจาง"
+        },
+        "thicknessMm": 0.5,
+        "material": {
+          "kind": "wear",
+          "color": "#F1F5FA",
+          "roughness": 0.16,
+          "opacity": 0.35
+        },
+        "order": 0
+      },
+      {
+        "id": "decor",
+        "label": {
+          "en": "Décor Film Layer",
+          "th": "ชั้นฟิล์มลวดลาย"
+        },
+        "description": {
+          "en": "High-definition wood / marble design",
+          "th": "ฟิล์มลายไม้หรือลายหินอ่อนความละเอียดสูง"
+        },
+        "thicknessMm": 0.1,
+        "material": {
+          "kind": "decor"
+        },
+        "order": 1
+      },
+      {
+        "id": "core",
+        "label": {
+          "en": "SPC Core",
+          "th": "ชั้นแกนกลาง SPC"
+        },
+        "description": {
+          "en": "Stone Plastic Composite: rigid core, waterproof",
+          "th": "แกนวัสดุผสมหินและพลาสติก แข็งแรงและกันน้ำ"
+        },
+        "thicknessMm": 3.7,
+        "material": {
+          "kind": "core",
+          "color": "#D5D7D8",
+          "roughness": 0.9
+        },
+        "order": 2
+      },
+      {
+        "id": "backing",
+        "label": {
+          "en": "Backing / Underlayment",
+          "th": "ชั้นรองพื้น IXPE"
+        },
+        "description": {
+          "en": "IXPE foam: sound absorption and added comfort",
+          "th": "โฟม IXPE ช่วยดูดซับเสียงและเพิ่มความสบายขณะเดิน"
+        },
+        "thicknessMm": 1,
+        "material": {
+          "kind": "backing",
+          "color": "#161616",
+          "roughness": 0.85
+        },
+        "order": 3
+      }
+    ],
+    "seed": 46349,
+    "surface": {
+      "family": "wood",
+      "palette": {
+        "base": "#988C7F",
+        "light": "#B8AFA4",
+        "dark": "#5F574E"
+      },
+      "grain": {
+        "scale": 1.06,
+        "contrast": 0.8,
+        "cathedral": 0.17,
+        "relief": 1,
+        "flecks": 0.35
+      },
+      "knots": {
+        "count": 2,
+        "radius": 0.037,
+        "strength": 0.92
+      },
+      "roughness": 0.83,
+      "clearcoat": 0.12,
+      "clearcoatRoughness": 0.62
+    },
+    "backingPattern": "crosshatch"
+  },
+  {
+    "id": "warm-taupe-oak",
+    "name": "Warm Taupe Oak",
+    "nameTh": "โอ๊คสีน้ำตาลเทาอุ่น",
+    "description": {
+      "en": "Warm brown oak with mixed straight and cathedral grain and characterful knots.",
+      "th": "โอ๊คน้ำตาลอุ่น ลายตรงผสมลายโค้งและปมไม้เด่น"
+    },
+    "dimensions": {
+      "lengthMm": 1220,
+      "widthMm": 180,
+      "thicknessMm": 5.3
+    },
+    "profile": {
+      "tongueMm": 1.4,
+      "grooveMm": 1.4,
+      "bevelMm": 0.3,
+      "backingInsetMm": 0.6
+    },
+    "layers": [
+      {
+        "id": "wear",
+        "label": {
+          "en": "Wear Layer",
+          "th": "ชั้นเคลือบป้องกันผิว"
+        },
+        "description": {
+          "en": "Transparent UV coating: scratch, stain and fade resistance",
+          "th": "ชั้นเคลือบ UV โปร่งใส ช่วยป้องกันรอยขีดข่วน คราบ และสีซีดจาง"
+        },
+        "thicknessMm": 0.5,
+        "material": {
+          "kind": "wear",
+          "color": "#F1F5FA",
+          "roughness": 0.16,
+          "opacity": 0.35
+        },
+        "order": 0
+      },
+      {
+        "id": "decor",
+        "label": {
+          "en": "Décor Film Layer",
+          "th": "ชั้นฟิล์มลวดลาย"
+        },
+        "description": {
+          "en": "High-definition wood / marble design",
+          "th": "ฟิล์มลายไม้หรือลายหินอ่อนความละเอียดสูง"
+        },
+        "thicknessMm": 0.1,
+        "material": {
+          "kind": "decor"
+        },
+        "order": 1
+      },
+      {
+        "id": "core",
+        "label": {
+          "en": "SPC Core",
+          "th": "ชั้นแกนกลาง SPC"
+        },
+        "description": {
+          "en": "Stone Plastic Composite: rigid core, waterproof",
+          "th": "แกนวัสดุผสมหินและพลาสติก แข็งแรงและกันน้ำ"
+        },
+        "thicknessMm": 3.7,
+        "material": {
+          "kind": "core",
+          "color": "#D5D7D8",
+          "roughness": 0.9
+        },
+        "order": 2
+      },
+      {
+        "id": "backing",
+        "label": {
+          "en": "Backing / Underlayment",
+          "th": "ชั้นรองพื้น IXPE"
+        },
+        "description": {
+          "en": "IXPE foam: sound absorption and added comfort",
+          "th": "โฟม IXPE ช่วยดูดซับเสียงและเพิ่มความสบายขณะเดิน"
+        },
+        "thicknessMm": 1,
+        "material": {
+          "kind": "backing",
+          "color": "#161616",
+          "roughness": 0.85
+        },
+        "order": 3
+      }
+    ],
+    "seed": 93251,
+    "surface": {
+      "family": "wood",
+      "palette": {
+        "base": "#A8744A",
+        "light": "#C4925F",
+        "dark": "#7A4F2E"
+      },
+      "grain": {
+        "scale": 0.92,
+        "contrast": 0.73,
+        "cathedral": 0.52,
+        "relief": 0.59,
+        "flecks": 0.3
+      },
+      "knots": {
+        "count": 3,
+        "radius": 0.037,
+        "strength": 0.87
+      },
+      "roughness": 0.54,
+      "clearcoat": 0.34,
+      "clearcoatRoughness": 0.38
+    },
+    "backingPattern": "crosshatch"
+  }
+]
