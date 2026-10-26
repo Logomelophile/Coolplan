@@ -1,8 +1,9 @@
 import './shared.css';
 import './home.css';
+import './brand-introduction.css';
 import { FloorScrollStory } from './FloorScrollStory';
 import { RoomPreview, type RoomPreviewDiagnostics } from './roomPreview';
-import { icon, mountHeader, mountContactDialog, sprite } from './shared';
+import { icon, mountHeader, mountFooter, mountContactDialog, sprite } from './shared';
 
 type Crop = [number,number,number,number];
 const $ = <T extends HTMLElement = HTMLElement>(id:string) => document.getElementById(id) as T;
@@ -23,6 +24,7 @@ const abort = new AbortController();
 const listen = (node:EventTarget,event:string,callback:EventListener) => node.addEventListener(event,callback,{signal:abort.signal});
 
 mountHeader('home');
+mountFooter();
 mountContactDialog();
 document.querySelectorAll<HTMLElement>('[data-icon]').forEach(el=>el.innerHTML=icon(el.dataset.icon!));
 

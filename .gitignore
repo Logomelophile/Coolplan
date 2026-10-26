@@ -3,7 +3,27 @@ dist/
 demo-dist/
 room-dist/
 website-dist/
+v2-dist/
+site-dist/
 test-results/
 playwright-report/
 .DS_Store
 *.tgz
+
+# Machine-local state and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+.openai/
+.codex/
+credentials*.json
+*credentials*.json
+*.log
+*.zip
+*.tar.gz
+*.bundle
+Thumbs.db

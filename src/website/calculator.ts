@@ -1,6 +1,6 @@
 import './shared.css';
 import './calculator.css';
-import { mountContactDialog, mountHeader } from './shared';
+import { mountContactDialog, mountHeader, mountFooter } from './shared';
 
 type GradeId = 'premium' | 'merit';
 interface Estimate { grade: GradeId; area: number; installRate: number; material: number; installation: number; total: number }
@@ -103,6 +103,7 @@ app.innerHTML = `
 `;
 
 mountHeader('calculator');
+mountFooter();
 mountContactDialog();
 
 const areaInput = document.querySelector<HTMLInputElement>('#floor-area')!;

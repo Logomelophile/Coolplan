@@ -32,9 +32,12 @@ export default defineConfig(({ mode }) => ({
   plugins: [textureManifestPlugin()],
   cacheDir: resolve(tmpdir(), 'coolplan-spc-vite-cache'),
   resolve: {alias: {'spc-plank-viewer': resolve(import.meta.dirname, 'src/index.ts')}},
-  build: mode === 'website' ? {
+  build: mode === 'v2' ? {
+    outDir: 'v2-dist', emptyOutDir: true,
+    rollupOptions: {input: resolve(import.meta.dirname, 'v2/index.html')},
+  } : mode === 'website' ? {
     outDir: 'website-dist', emptyOutDir: true,
-    rollupOptions: {input: {website: resolve(import.meta.dirname, 'website/index.html'), calculator: resolve(import.meta.dirname, 'calculator/index.html')}},
+    rollupOptions: {input: {website: resolve(import.meta.dirname, 'website/index.html'), calculator: resolve(import.meta.dirname, 'calculator/index.html'), ceo: resolve(import.meta.dirname, 'ceo/index.html'), nextGen: resolve(import.meta.dirname, 'next-gen/index.html')}},
   } : mode === 'room' ? {
     outDir: 'room-dist', emptyOutDir: true,
     rollupOptions: {input: resolve(import.meta.dirname, 'room/index.html')},

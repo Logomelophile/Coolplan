@@ -1,8 +1,7 @@
 name: Deploy material studio to GitHub Pages
 
+# Optional legacy Material Studio deployment. Source sync must not publish a site.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:

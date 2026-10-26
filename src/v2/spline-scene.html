@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Coolplan · Material Story V2</title>
+  <style>
+    :root{color-scheme:light;--ink:#30273b;--muted:#736b78;--purple:#674b80;--orange:#d77735;--paper:rgba(255,252,247,.9);--line:rgba(77,55,92,.16)}
+    *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent!important}body,button,input,a{font-family:Tahoma,"Noto Sans Thai",system-ui,sans-serif}body{color:var(--ink)}button,a,input{-webkit-tap-highlight-color:transparent}button,a{touch-action:manipulation}button{color:inherit;cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible,#scroll:focus-visible{outline:3px solid #d77735;outline-offset:4px}button:disabled{opacity:.3;cursor:default}button{border:1px solid var(--line);background:rgba(255,255,255,.8)}
+    #scroll{position:fixed;inset:0;overflow:auto;overflow-x:hidden;scrollbar-width:none;touch-action:pan-y;overscroll-behavior-y:auto;-webkit-overflow-scrolling:touch}#scroll::-webkit-scrollbar{display:none}#spacer{width:1px;pointer-events:none}
+    .intro{position:fixed;left:clamp(18px,3.5vw,64px);top:clamp(18px,3.6vh,42px);width:min(330px,34vw);pointer-events:none;text-shadow:0 1px 15px #fff}.eyebrow{margin:0 0 10px;font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--purple)}h1{font-size:clamp(24px,2.8vw,43px);letter-spacing:-.055em;line-height:1.17;margin:0 0 12px;font-weight:600}.intro p:not(.eyebrow){font-size:12px;line-height:1.8;margin:0;max-width:285px;color:#625765}.finish-number{font-size:10px;letter-spacing:.12em;color:#816b61;margin-bottom:9px}.finish-name{font-size:15px;letter-spacing:-.01em;margin-top:14px}.finish-name::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--swatch,#c3a075);margin-right:8px;border:1px solid #ffffff80}.thickness{display:flex;align-items:baseline;gap:6px;margin-top:17px}.thickness[hidden]{display:none}.thickness b{font-size:54px;line-height:1;letter-spacing:-.08em;font-weight:500}.thickness span{font-size:14px;letter-spacing:.07em}.thickness small{font-size:10px;line-height:1.5;color:var(--muted);max-width:106px;margin-left:5px}
+    .layers{position:fixed;right:clamp(20px,3.3vw,55px);top:23%;width:204px;display:grid;gap:11px;pointer-events:none}.layer{position:relative;padding:12px 14px;background:var(--paper);border:1px solid rgba(255,255,255,.7);border-radius:12px;box-shadow:0 5px 22px #392a4710;backdrop-filter:blur(12px);opacity:0;transform:translateY(8px);transition:opacity .25s ease,transform .25s ease}.layer::before{content:"";position:absolute;width:27px;height:1px;right:100%;top:26px;background:#765d83aa}.layer::after{content:"";position:absolute;width:4px;height:4px;right:calc(100% + 26px);top:24px;border-radius:50%;background:var(--purple)}.layer.visible{opacity:1;transform:none}.layer.active{border-color:#b9a2cb}.layer small{display:block;font-size:9px;letter-spacing:.1em;color:var(--purple);margin-bottom:4px}.layer strong{display:block;font-size:13px;line-height:1.35;font-weight:600}.layer p{font-size:10px;line-height:1.6;color:var(--muted);margin:4px 0 0}
+    .rotation{position:fixed;left:50%;bottom:119px;transform:translateX(-50%);display:flex;align-items:center;gap:6px}.rotate-handle{cursor:grab;touch-action:none;user-select:none;padding:10px 14px;border-radius:999px;font-size:11px;box-shadow:0 3px 15px #36223d0c;background:rgba(255,252,247,.9)}.rotate-handle.dragging{cursor:grabbing;border-color:var(--purple)}.reset{height:33px;width:33px;border-radius:50%;font-size:17px;background:var(--paper)}.drag-icon{display:inline-block;margin-right:6px;color:var(--purple)}
+    .controls{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);width:min(760px,calc(100% - 40px));padding:12px 17px 10px;border-radius:18px;border:1px solid #ffffffc4;background:var(--paper);box-shadow:0 6px 35px #3a27451a;backdrop-filter:blur(16px)}.control-top{display:flex;align-items:center;gap:12px}.arrow{flex:0 0 31px;height:31px;border-radius:50%;font-size:18px;line-height:1}.steps{flex:1;min-width:0;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:5px}.step{height:28px;border-radius:8px;padding:0;position:relative;font-size:9px;background:#ffffff80;border:1px solid transparent}.step::after{content:"";position:absolute;bottom:2px;left:50%;width:13px;height:2px;transform:translateX(-50%);background:var(--dot,#cbbfd1);border-radius:4px}.step[aria-current="step"]{border-color:#c1a7d3;background:#f0e9f5;color:#503464;font-weight:700}.step[aria-current="step"]::after{height:3px}.timeline{appearance:none;display:block;height:12px;width:100%;margin:9px 0 2px;cursor:pointer;background:transparent;touch-action:pan-x}.timeline::-webkit-slider-runnable-track{height:2px;background:linear-gradient(to right,var(--purple) 0 var(--progress,0%),#dcd3df var(--progress,0%) 100%);border-radius:3px}.timeline::-moz-range-track{height:2px;background:#dcd3df}.timeline::-moz-range-progress{height:2px;background:var(--purple)}.timeline::-webkit-slider-thumb{appearance:none;width:10px;height:10px;border-radius:50%;margin-top:-4px;background:var(--purple);box-shadow:0 0 0 3px #fff}.timeline::-moz-range-thumb{width:10px;height:10px;border-radius:50%;border:3px solid white;background:var(--purple)}.control-bottom{display:flex;align-items:center;justify-content:space-between;font-size:9px;line-height:1.5;color:var(--muted);gap:10px}.step-caption{color:var(--purple)}.scroll-hint{display:flex;align-items:center;gap:5px}.scroll-hint::before{content:"↕";font-size:12px;color:var(--orange)}
+    .completion{position:fixed;right:clamp(20px,3.3vw,55px);bottom:125px;display:none;align-items:center;gap:8px}.completion.visible{display:flex}.continue{font-size:11px;font-weight:600;text-decoration:none;color:#fff;background:var(--purple);border:0;border-radius:999px;padding:12px 16px;box-shadow:0 4px 16px #50306425}.continue:hover{background:#543b6c}.note{position:fixed;left:clamp(18px,3.5vw,64px);bottom:133px;max-width:220px;font-size:9px;line-height:1.6;color:#817581;pointer-events:none;text-shadow:0 0 10px #fff}.status{position:fixed;right:20px;top:20px;max-width:260px;font-size:10px;line-height:1.6;padding:7px 11px;border-radius:10px;background:var(--paper);color:#766580;pointer-events:none}.status[hidden]{display:none}.status.error{color:#8e3e34;border:1px solid #e2b8a8}.sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+    @media(max-width:800px){.intro{width:48vw;top:18px;left:20px}h1{font-size:27px}.intro p:not(.eyebrow){font-size:11px;max-width:240px}.layers{width:164px;right:20px;top:23%;gap:7px}.layer{padding:10px 12px}.layer strong{font-size:11px}.layer p{font-size:9px}.layer::before{width:16px}.layer::after{right:calc(100% + 15px)}.thickness b{font-size:45px}.note{bottom:170px;width:170px}.completion{bottom:163px}.rotation{bottom:117px}}
+    @media(max-width:560px){.intro{top:15px;left:18px;width:calc(100% - 36px)}.eyebrow{font-size:8px;margin-bottom:6px;letter-spacing:.16em}h1{font-size:25px;max-width:70%;margin-bottom:7px}.intro p:not(.eyebrow){font-size:10px;line-height:1.7;max-width:64%}.finish-number{display:none}.finish-name{font-size:11px;margin-top:9px}.thickness{position:absolute;right:0;top:25px;display:block;text-align:right;margin:0}.thickness b{font-size:43px}.thickness span{font-size:11px;margin-left:4px}.thickness small{display:block;max-width:95px;font-size:8px;margin-top:4px}.layers{top:auto;bottom:163px;left:18px;right:18px;width:auto;grid-template-columns:1fr 1fr;gap:5px}.layer{padding:7px 9px;border-radius:8px;min-height:49px;box-shadow:none}.layer small{font-size:7px;margin-bottom:2px}.layer strong{font-size:10px}.layer p{font-size:8px;margin-top:2px;line-height:1.4}.layer::before,.layer::after{display:none}.rotation{bottom:119px}.rotate-handle{font-size:10px;padding:8px 12px}.reset{height:30px;width:30px}.controls{bottom:12px;width:calc(100% - 24px);padding:10px 10px 8px;border-radius:14px}.control-top{gap:6px}.arrow{height:27px;flex-basis:27px;font-size:16px}.steps{gap:2px}.step{font-size:8px;height:26px;border-radius:5px}.step::after{width:9px}.control-bottom{font-size:8px;gap:4px}.scroll-hint{font-size:8px}.note{display:none}.completion{right:18px;bottom:289px}.continue{font-size:10px;padding:10px 13px}.status{top:auto;right:18px;bottom:160px;font-size:9px}.status.error{bottom:290px}.timeline{margin-top:8px}}
+    @media(max-height:560px) and (min-width:561px){.intro{top:14px;left:18px}h1{font-size:26px}.intro p:not(.eyebrow){font-size:10px}.eyebrow{margin-bottom:5px}.finish-name{margin-top:9px}.thickness{margin-top:10px}.thickness b{font-size:36px}.layers{top:14px;right:18px;gap:5px;width:172px}.layer{padding:7px 10px}.layer p{font-size:8px}.layer strong{font-size:10px}.layer small{font-size:7px}.controls{bottom:10px;padding:8px 13px 6px;width:min(650px,calc(100% - 36px))}.rotation{bottom:102px}.note{display:none}.completion{bottom:105px}.status{top:auto;bottom:145px}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}}
+  </style>
+</head>
+<body>
+  <main id="scroll" tabindex="0" aria-label="เลื่อนเพื่อสำรวจสีพื้นห้องและชั้นวัสดุ 12 ขั้นตอน">
+    <div id="spacer" aria-hidden="true"></div>
+    <header class="intro">
+      <p class="eyebrow">COOLPLAN · MATERIAL STORY</p>
+      <div class="finish-number" id="chapter">01 / 06 · FINISH COLLECTION</div>
+      <h1 id="title">พื้นที่ดี<br>เริ่มจากรายละเอียด</h1>
+      <p id="description">เลื่อนเพื่อเปลี่ยนบรรยากาศห้อง<br>แล้วค่อย ๆ สำรวจแต่ละชั้นของพื้น</p>
+      <div class="finish-name" id="finish">พื้นปก1 · Light Natural Oak</div>
+      <div class="thickness" id="thickness" hidden><b>5</b><span>MM</span><small>ความหนารวม<br>ของตัวอย่างพื้น</small></div>
+    </header>
+    <aside class="layers" aria-label="โครงสร้างพื้น 4 ชั้น">
+      <article class="layer" data-layer="0" aria-hidden="true"><small>01 · WEAR LAYER</small><strong>ชั้นเคลือบผิว</strong><p>ผิวใสเหนือชั้นลายตกแต่ง</p></article>
+      <article class="layer" data-layer="1" aria-hidden="true"><small>02 · DECOR FILM</small><strong>ชั้นลายตกแต่ง</strong><p>สีและลายที่สร้างบรรยากาศห้อง</p></article>
+      <article class="layer" data-layer="2" aria-hidden="true"><small>03 · SPC CORE</small><strong>แกนกลาง SPC</strong><p>โครงสร้างหลักของแผ่นพื้น</p></article>
+      <article class="layer" data-layer="3" aria-hidden="true"><small>04 · BACKING</small><strong>ชั้นรองพื้น</strong><p>ชั้นล่างสุดของตัวอย่างแผ่นพื้น</p></article>
+    </aside>
+    <div class="rotation" aria-label="ควบคุมมุมมองแผ่นพื้น">
+      <button class="rotate-handle" id="rotate" type="button" aria-label="ลากเพื่อหมุนแผ่นพื้น หรือใช้ปุ่มลูกศรเมื่อโฟกัส"><span class="drag-icon" aria-hidden="true">↔</span>ลากเพื่อหมุนแผ่นพื้น</button>
+      <button class="reset" id="reset" type="button" title="คืนมุมเริ่มต้น" aria-label="คืนมุมเริ่มต้น">↺</button>
+    </div>
+    <div class="note" id="note">สีและสัดส่วนในภาพเป็นการจำลอง<br>โปรดเทียบตัวอย่างจริงก่อนเลือกวัสดุ</div>
+    <div class="completion" id="completion"><a class="continue" id="continue" href="https://coolplan-material-studio.vitethap-n.chatgpt.site/website/#rooms" target="_blank" rel="noopener">เลือกพื้นให้ห้องของคุณ ↗</a></div>
+    <nav class="controls" aria-label="เลือกขั้นตอนการชมวัสดุ">
+      <div class="control-top">
+        <button class="arrow" id="prev" type="button" aria-label="ขั้นตอนก่อนหน้า" disabled>‹</button>
+        <div class="steps" id="steps"></div>
+        <button class="arrow" id="next" type="button" aria-label="ขั้นตอนถัดไป">›</button>
+      </div>
+      <label class="sr-only" for="timeline">ตำแหน่งเรื่องราว 0 ถึง 11</label>
+      <input class="timeline" id="timeline" type="range" min="0" max="11" step="0.01" value="0" aria-valuetext="พื้นปก1">
+      <div class="control-bottom"><span class="step-caption" id="caption">01 / 12 · พื้นปก1</span><span class="scroll-hint" id="hint">เลื่อนเพื่อไปขั้นถัดไป</span></div>
+    </nav>
+    <div class="status" id="status" role="status">กำลังเตรียมห้องและวัสดุ…</div>
+    <div class="sr-only" id="announcement" aria-live="polite" aria-atomic="true"></div>
+  </main>
+  <script>
+  (() => {
+    'use strict';
+    const FILE_ID = '76e891c1-57e1-47fb-9f29-6559e1a96f10';
+    const finishes = [
+      ['Light Natural Oak', '#c3a075'], ['Warm Oak', '#9d7a54'],
+      ['Honey Oak', '#be8b46'], ['Classic Oak', '#d3c7b1'],
+      ['Grey Oak', '#9a9286'], ['Walnut Brown', '#534335']
+    ];
+    const names = ['พื้นปก1','พื้นปก2','พื้นปก3','พื้นปก4','พื้นปก5','พื้นปก6','ความหนา 5 MM','ชั้นเคลือบผิว','ชั้นลายตกแต่ง','แกนกลาง SPC','ชั้นรองพื้น','ครบทุกชั้นวัสดุ'];
+    const shortNames = ['1','2','3','4','5','6','5mm','01','02','03','04','รวม'];
+    const $ = (id) => document.getElementById(id);
+    const ui = {scroll:$('scroll'),spacer:$('spacer'),title:$('title'),chapter:$('chapter'),description:$('description'),finish:$('finish'),thickness:$('thickness'),steps:$('steps'),prev:$('prev'),next:$('next'),range:$('timeline'),caption:$('caption'),hint:$('hint'),rotate:$('rotate'),reset:$('reset'),status:$('status'),note:$('note'),completion:$('completion'),announcement:$('announcement')};
+    const labels = [...document.querySelectorAll('.layer')];
+    const reduceQuery = matchMedia('(prefers-reduced-motion: reduce)');
+    const objects = new Map(), channels = new Map();
+    let ready = false, disposed = false, raf = 0, dirty = true, currentStep = -1, progress = 0;
+    let unit = 1, introStart = 0, introActive = false, userInteracted = false, drag = null;
+    let rotation = {x:0,y:0}, frameState = null, bridgeWrites = 0, bridgeErrors = 0, completedMessage = false;
+    let resolveReady;
+    const whenReady = new Promise(resolve => { resolveReady = resolve; });
+    const clamp = (x,lo=0,hi=1) => Math.max(lo,Math.min(hi,x));
+    const smooth = (x) => { const t=clamp(x);return t*t*(3-2*t); };
+    const mix = (a,b,t) => a+(b-a)*t;
+    const rounded = (v) => Math.round(v*1000)/1000;
+    const vector = (v) => ({x:rounded(v[0]),y:rounded(v[1]),z:rounded(v[2])});
+    const lerpVector = (a,b,t) => a.map((v,i)=>mix(v,b[i],t));
+    const rgb = (hex) => [1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));
+    const colors = finishes.map(f=>rgb(f[1]));
+    const colorAt = (p) => {
+      const a=Math.min(5,Math.floor(p)), b=Math.min(5,a+1), t=smooth((p-a-.14)/.72);
+      return '#'+colors[a].map((v,i)=>Math.round(mix(v,colors[b][i],t)).toString(16).padStart(2,'0')).join('');
+    };
+    function reportError(error) {
+      bridgeErrors++;
+      if(bridgeErrors===1) console.error('[Coolplan V2]',error);
+      ui.status.textContent='เชื่อมต่อภาพ 3D ไม่สำเร็จ · ลองเปิดหน้านี้อีกครั้ง';
+      ui.status.classList.add('error');ui.status.hidden=false;
+    }
+    // Coalesce bridge traffic: a busy object keeps only its newest complete pose.
+    function write(name, patch) {
+      const id=objects.get(name);if(!id||disposed)return;
+      const signature=JSON.stringify(patch);
+      let channel=channels.get(id);
+      if(!channel){channel={signature:'',pending:false,queued:null};channels.set(id,channel);}
+      if(channel.signature===signature)return;
+      channel.signature=signature;
+      if(channel.pending){channel.queued=patch;return;}
+      send(id,patch,channel);
+    }
+    function send(id,patch,channel) {
+      if(disposed)return;
+      channel.pending=true;bridgeWrites++;
+      Promise.resolve().then(()=>spline.updateObject(id,patch)).catch(reportError).finally(()=>{
+        channel.pending=false;
+        if(channel.queued&&!disposed){const latest=channel.queued;channel.queued=null;send(id,latest,channel);}
+      });
+    }
+    function cameraRotation(position,target) {
+      const dx=target[0]-position[0],dy=target[1]-position[1],dz=target[2]-position[2];
+      return {x:rounded(Math.atan2(dy,Math.hypot(dx,dz))*180/Math.PI),y:rounded(Math.atan2(-dx,-dz)*180/Math.PI),z:0};
+    }
+    function poseAt(p,entrance=0) {
+      const detail=smooth((p-5.2)/1.05), profile=smooth((p-5.2)/.8)*(1-smooth((p-6.2)/.9));
+      const exploded=smooth((p-6.15)/3.85);
+      const aspect=Math.max(.35,innerWidth/Math.max(1,innerHeight));
+      const narrow=clamp((1.25-aspect)/.8);
+      const initialTarget=[-15,35,10], detailTarget=[-25,47,55];
+      const target=lerpVector(initialTarget,detailTarget,detail);
+      // Keeping distance proportional to aspect retains the whole sample on portrait screens.
+      const fit=Math.max(1,Math.min(1.55,.85/aspect));
+      const azimuth=mix(-22,-13,detail)*Math.PI/180;
+      const elevation=mix(14,26,exploded)-profile*10;
+      const radius=mix(253,199,detail)*fit+18*narrow;
+      const elevationRad=elevation*Math.PI/180;
+      const initialCamera=[-110,80,240];
+      const orbitCamera=[target[0]+Math.sin(azimuth)*Math.cos(elevationRad)*radius,target[1]+Math.sin(elevationRad)*radius,target[2]+Math.cos(azimuth)*Math.cos(elevationRad)*radius];
+      const startingCamera=lerpVector(initialCamera,orbitCamera,narrow);
+      let camera=lerpVector(startingCamera,orbitCamera,detail);
+      camera=[camera[0]-entrance*22,camera[1]+entrance*8,camera[2]+entrance*18];
+      const ys=[mix(2.25,25,smooth((p-6.2)/.8)),mix(1.9,13,smooth((p-7.2)/.8)),mix(.1,1,smooth((p-8.2)/.8)),mix(-2.05,-11,smooth((p-9.2)/.8))];
+      const c=colorAt(p);
+      const fraction=p-Math.floor(p);
+      const lift=p<5?Math.sin(Math.PI*smooth((fraction-.12)/.76))*6:0;
+      const rot={x:rounded(rotation.x),y:rounded(rotation.y),z:0};
+      return {progress:rounded(p),step:clamp(Math.floor(p+.06),0,11),color:c,layerY:ys.map(rounded),exploded:rounded(exploded),floorLift:rounded(lift),camera:{position:vector(camera),rotation:cameraRotation(camera,target),target:vector(target)},sample:{position:{x:-25,y:45,z:55},rotation:rot,scale:{x:1.2,y:1.2,z:1.2}}};
+    }
+    function paintScene(state) {
+      write('Showroom Camera',{position:state.camera.position,rotation:state.camera.rotation});
+      write('Floor Sample',state.sample);
+      ['Sample Wear','Sample Decor','Sample Core','Sample Backing'].forEach((name,i)=>{
+        const patch={position:{x:0,y:state.layerY[i],z:0}};
+        if(i===1)patch.material={color:state.color};
+        write(name,patch);
+      });
+      for(let i=0;i<6;i++)write('Room Floor '+i,{position:{x:0,y:rounded(-.125+(i>=3?state.floorLift:0)),z:-137.5+i*55},material:{color:state.color}});
+      write('Room Floor Extension',{position:{x:-100,y:-1.5,z:500},material:{color:state.color}});
+    }
+    function paintUI(step) {
+      if(step===currentStep)return;
+      currentStep=step;
+      const finish=Math.min(5,step);
+      [...ui.steps.children].forEach((button,i)=>{
+        if(i===step)button.setAttribute('aria-current','step');else button.removeAttribute('aria-current');
+      });
+      ui.prev.disabled=step===0;ui.next.disabled=step===11;
+      ui.caption.textContent=String(step+1).padStart(2,'0')+' / 12 · '+names[step];
+      ui.range.setAttribute('aria-valuetext',names[step]);
+      ui.finish.textContent='พื้นปก'+(finish+1)+' · '+finishes[finish][0];
+      ui.finish.style.setProperty('--swatch',finishes[finish][1]);
+      ui.thickness.hidden=step<6;
+      if(step<6){
+        ui.chapter.textContent=String(step+1).padStart(2,'0')+' / 06 · FINISH COLLECTION';
+        ui.title.innerHTML=step===0?'พื้นที่ดี<br>เริ่มจากรายละเอียด':'สีใหม่<br>บรรยากาศใหม่';
+        ui.description.innerHTML='เลื่อนเพื่อเปลี่ยนบรรยากาศห้อง<br>แล้วค่อย ๆ สำรวจแต่ละชั้นของพื้น';
+      }else{
+        ui.chapter.textContent='MATERIAL DETAIL · 5 MM';
+        ui.title.innerHTML=step===6?'บางอย่าง<br>มีมากกว่าที่เห็น':step===11?'ครบทุกชั้น<br>ในมุมของคุณ':'ค่อย ๆ เปิด<br>แต่ละชั้นวัสดุ';
+        ui.description.textContent=step===6?'เริ่มจากด้านข้าง เห็นความหนารวมของแผ่น':step===11?'ลองหมุนเพื่อดูรายละเอียด แล้วไปเลือกพื้นสำหรับห้องคุณ':names[step]+' · เลื่อนต่อเพื่อดูโครงสร้างถัดไป';
+      }
+      labels.forEach((label,i)=>{
+        const visible=step>=7+i;
+        label.classList.toggle('visible',visible);label.classList.toggle('active',step===7+i);
+        label.setAttribute('aria-hidden',String(!visible));
+      });
+      ui.note.innerHTML=step<7?'สีและสัดส่วนในภาพเป็นการจำลอง<br>โปรดเทียบตัวอย่างจริงก่อนเลือกวัสดุ':'ระยะห่างระหว่างชั้นขยายเพื่ออธิบาย<br>ความหนารวมของตัวอย่าง 5 มม.';
+      ui.completion.classList.toggle('visible',step===11);
+      ui.hint.textContent=step===11?'ครบแล้ว · เลื่อนย้อนเพื่อชมอีกครั้ง':'เลื่อนเพื่อไปขั้นถัดไป';
+      ui.announcement.textContent=names[step];
+      if(step===11&&!completedMessage){
+        completedMessage=true;
+        window.top.postMessage({type:'coolplan:spline-complete',fileId:FILE_ID},'*');
+      }else if(step<11)completedMessage=false;
+    }
+    function schedule() {
+      dirty=true;
+      if(!raf&&!document.hidden&&!disposed)raf=requestAnimationFrame(frame);
+    }
+    function frame(now) {
+      raf=0;if(disposed||document.hidden)return;
+      const entrance=introActive?1-smooth((now-introStart)/2000):0;
+      if(introActive&&now-introStart>=2000)introActive=false;
+      if(dirty||introActive||entrance===0){
+        dirty=false;
+        progress=clamp(ui.scroll.scrollTop/unit,0,11);
+        frameState=poseAt(progress,entrance);
+        if(ready)paintScene(frameState);
+        paintUI(frameState.step);
+        ui.range.value=String(progress);
+        ui.range.style.setProperty('--progress',(progress/11*100).toFixed(2)+'%');
+      }
+      if(introActive)schedule();
+    }
+    function interact(){userInteracted=true;introActive=false;schedule();}
+    function resize() {
+      const oldProgress=progress;
+      unit=Math.max(240,innerHeight*.72);
+      ui.spacer.style.height=(innerHeight+unit*11+1)+'px';
+      ui.scroll.scrollTop=oldProgress*unit;
+      schedule();
+    }
+    function seek(value,options={}) {
+      const parsed=Number(value);if(!Number.isFinite(parsed))return false;
+      interact();const p=clamp(parsed,0,11);
+      ui.scroll.scrollTo({top:p*unit,behavior:options.smooth&&!reduceQuery.matches?'smooth':'instant'});
+      schedule();return true;
+    }
+    names.forEach((name,i)=>{
+      const button=document.createElement('button');button.className='step';button.type='button';button.textContent=shortNames[i];
+      button.setAttribute('aria-label',(i+1)+' / 12 · '+name);button.title=name;
+      if(i<6)button.style.setProperty('--dot',finishes[i][1]);
+      button.addEventListener('click',()=>seek(i,{smooth:true}));ui.steps.append(button);
+    });
+    ui.scroll.addEventListener('scroll',schedule,{passive:true});
+    ui.scroll.addEventListener('wheel',interact,{passive:true});
+    ui.scroll.addEventListener('touchstart',interact,{passive:true});
+    ui.prev.addEventListener('click',()=>seek(Math.max(0,currentStep-1),{smooth:true}));
+    ui.next.addEventListener('click',()=>seek(Math.min(11,currentStep+1),{smooth:true}));
+    ui.range.addEventListener('input',()=>seek(ui.range.value));
+    ui.reset.addEventListener('click',()=>{rotation={x:0,y:0};interact();});
+    ui.rotate.addEventListener('pointerdown',(event)=>{
+      if(event.button!==0)return;interact();drag={id:event.pointerId,x:event.clientX,y:event.clientY,rx:rotation.x,ry:rotation.y};
+      ui.rotate.setPointerCapture(event.pointerId);ui.rotate.classList.add('dragging');event.preventDefault();
+    });
+    ui.rotate.addEventListener('pointermove',(event)=>{
+      if(!drag||event.pointerId!==drag.id)return;
+      rotation={x:clamp(drag.rx+(event.clientY-drag.y)*.2,-28,28),y:clamp(drag.ry+(event.clientX-drag.x)*.35,-80,80)};schedule();
+    });
+    function releaseDrag(){drag=null;ui.rotate.classList.remove('dragging');}
+    ui.rotate.addEventListener('pointerup',releaseDrag);ui.rotate.addEventListener('pointercancel',releaseDrag);ui.rotate.addEventListener('lostpointercapture',releaseDrag);
+    ui.rotate.addEventListener('keydown',(event)=>{
+      const direction={ArrowLeft:[0,-5],ArrowRight:[0,5],ArrowUp:[-5,0],ArrowDown:[5,0]}[event.key];
+      if(!direction)return;event.preventDefault();rotation={x:clamp(rotation.x+direction[0],-28,28),y:clamp(rotation.y+direction[1],-80,80)};interact();
+    });
+    ui.scroll.addEventListener('keydown',(event)=>{
+      if(event.target!==ui.scroll)return;
+      const values={ArrowDown:currentStep+1,ArrowRight:currentStep+1,PageDown:currentStep+1,ArrowUp:currentStep-1,ArrowLeft:currentStep-1,PageUp:currentStep-1,Home:0,End:11};
+      if(!(event.key in values))return;event.preventDefault();seek(values[event.key],{smooth:true});
+    });
+    document.addEventListener('visibilitychange',()=>{
+      if(document.hidden){if(raf)cancelAnimationFrame(raf);raf=0;introActive=false;}else schedule();
+    });
+    window.addEventListener('resize',resize,{passive:true});
+    window.addEventListener('pagehide',()=>{disposed=true;if(raf)cancelAnimationFrame(raf);raf=0;});
+    reduceQuery.addEventListener('change',()=>{if(reduceQuery.matches)introActive=false;schedule();});
+    window.coolplanSplineV2={
+      get ready(){return ready;},get progress(){return progress;},whenReady,seek,
+      resetRotation(){rotation={x:0,y:0};interact();},
+      getState(){return {ready,progress,step:currentStep,frame:frameState,bridgeWrites,bridgeErrors,pending:[...channels.values()].filter(c=>c.pending).length,rafActive:Boolean(raf),reducedMotion:reduceQuery.matches,objectCount:objects.size,viewport:{width:innerWidth,height:innerHeight},scrollTop:ui.scroll.scrollTop};}
+    };
+    resize();paintUI(0);
+    async function boot(){
+      let timeout;
+      try{
+        if(typeof spline==='undefined')throw new Error('Spline bridge unavailable');
+        await Promise.race([spline.ready,new Promise((_,reject)=>{timeout=setTimeout(()=>reject(new Error('Spline bridge timeout')),18000);})]);
+        clearTimeout(timeout);
+        const snapshots=await spline.getAllObjects();
+        const all=Array.isArray(snapshots)?snapshots:Array.isArray(snapshots?.objects)?snapshots.objects:[];
+        all.forEach(object=>{if(object.name&&object.id)objects.set(object.name,object.id);});
+        const required=['Showroom Camera','Floor Sample','Sample Wear','Sample Decor','Sample Core','Sample Backing','Room Floor Extension',...Array.from({length:6},(_,i)=>'Room Floor '+i)];
+        const missing=required.filter(name=>!objects.has(name));
+        if(missing.length){
+          const found=await Promise.all(missing.map(async(name)=>[name,await spline.findObjectByName(name)]));
+          found.forEach(([name,object])=>{if(object?.id)objects.set(name,object.id);});
+        }
+        const absent=required.filter(name=>!objects.has(name));if(absent.length)throw new Error('Required scene objects missing: '+absent.join(', '));
+        ready=true;ui.status.hidden=true;
+        introActive=!reduceQuery.matches&&!userInteracted&&!document.hidden;introStart=performance.now();
+        schedule();resolveReady(true);
+        window.top.postMessage({type:'coolplan:spline-ready',fileId:FILE_ID},'*');
+      }catch(error){clearTimeout(timeout);reportError(error);resolveReady(false);}
+    }
+    boot();
+  })();
+  </script>
+</body>
+</html>

@@ -22,20 +22,35 @@ export const icon = (name:string) => {
   };
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name] || paths.arrow}</svg>`;
 };
-export function mountHeader(active:'home'|'calculator') {
+export function mountHeader(active:'home'|'calculator'|'ceo') {
   const host=document.getElementById('site-header');
   if(!host)return;
   const home='/website/';
-  const links=active==='home'
-    ? `<a href="${home}" aria-current="page">หน้าแรก</a><a href="${home}#products">สินค้าของเรา</a><a href="${home}#rooms">แรงบันดาลใจ</a><button type="button" data-about-open>เกี่ยวกับเรา</button><button type="button" data-contact-open>ติดต่อเรา</button>`
-    : `<a href="${home}">หน้าแรก</a><a href="${home}#products">สินค้า</a><button type="button" data-about-open>บริการ</button><a href="/calculator/" aria-current="page">คำนวณราคา</a><a href="${home}#rooms">ผลงานของเรา</a><button type="button" data-about-open>เกี่ยวกับเรา</button><button type="button" data-contact-open>ติดต่อเรา</button>`;
+  const links=active!=='calculator'
+    ? `<a href="${home}" ${active==='home'?'aria-current="page"':''}>หน้าแรก</a><a href="${home}#products">สินค้าของเรา</a><a href="${home}#rooms">แรงบันดาลใจ</a><a href="/ceo/" ${active==='ceo'?'aria-current="page"':''}>CEO & Brand</a><a href="/ceo/#next-gen">Next Gen</a><button type="button" data-contact-open>ติดต่อเรา</button>`
+    : `<a href="${home}">หน้าแรก</a><a href="${home}#products">สินค้า</a><button type="button" data-about-open>บริการ</button><a href="/calculator/" aria-current="page">คำนวณราคา</a><a href="${home}#rooms">ผลงานของเรา</a><a href="/ceo/">CEO & Brand</a><a href="/ceo/#next-gen">Next Gen</a><button type="button" data-contact-open>ติดต่อเรา</button>`;
   host.innerHTML=`<a class="skip-link" href="#main">ข้ามไปเนื้อหา</a><header class="site-header ${active==='calculator'?'calculator-header':''}"><a class="site-logo" href="${home}" aria-label="COOLPLAN หน้าแรก">COOLPLAN<small>${active==='calculator'?'FLOORING FOR A BETTER TOMORROW':'SPC FLOORING'}</small></a><nav class="site-nav-links" id="main-navigation" aria-label="เมนูหลัก">${links}</nav>${active==='calculator'?`<a class="header-search" href="${home}#products" aria-label="ค้นหาสินค้า">${icon('search')}</a>`:''}<a class="header-quote" href="/calculator/#quote" ${active==='calculator'?'data-quote-open':''}>ขอใบเสนอราคา ${active==='home'?icon('arrow'):''}</a><button class="menu-toggle" type="button" aria-controls="main-navigation" aria-expanded="false" aria-label="เปิดเมนู">${icon('menu')}</button></header>`;
   const header=host.querySelector('header')!;
   const menu=host.querySelector<HTMLButtonElement>('.menu-toggle')!;
   menu.addEventListener('click',()=>{const open=menu.getAttribute('aria-expanded')!=='true';menu.setAttribute('aria-expanded',String(open));header.classList.toggle('menu-open',open);});
+  header.addEventListener('keydown',event=>{if(event.key==='Escape'&&menu.getAttribute('aria-expanded')==='true'){menu.setAttribute('aria-expanded','false');header.classList.remove('menu-open');menu.focus();}});
   header.querySelectorAll('nav a,nav button').forEach(link=>link.addEventListener('click',()=>{menu.setAttribute('aria-expanded','false');header.classList.remove('menu-open');}));
   const scrolled=()=>header.classList.toggle('is-scrolled',scrollY>20);
   window.addEventListener('scroll',scrolled,{passive:true});scrolled();
+}
+export function mountFooter() {
+  const host=document.getElementById('site-footer');
+  if(!host)return;
+  host.innerHTML=`<footer class="site-footer" aria-label="ส่วนท้ายเว็บไซต์ COOLPLAN">
+    <div class="footer-invitation"><div><span class="footer-eyebrow">LET'S MAKE ROOM FOR YOU</span><h2>พื้นที่ของคุณ<br><em>เริ่มต้นจากการพูดคุย</em></h2></div><a class="primary-button" href="/calculator/#quote" data-quote-open>ขอใบเสนอราคา ${icon('arrow')}</a></div>
+    <div class="footer-columns">
+      <div class="footer-brand"><a class="site-logo" href="/website/" aria-label="COOLPLAN หน้าแรก">COOLPLAN<small>SPC FLOORING</small></a><p>พื้นที่ดี เริ่มต้นจากพื้นฐานที่ดีกว่า<br>ค้นหาสีพื้น วางแผนพื้นที่<br>และเลือกสิ่งที่เข้ากับชีวิตของคุณ</p></div>
+      <nav class="footer-menu" aria-label="รู้จัก COOLPLAN"><h3>รู้จัก COOLPLAN</h3><a href="/website/">หน้าแรก</a><a href="/ceo/">CEO & Brand</a><a href="/ceo/#next-gen">Next Gen · ก้าวต่อไปของเรา</a><a href="/website/#products">สินค้าของเรา</a><a href="/website/#rooms">แรงบันดาลใจแต่งห้อง</a></nav>
+      <nav class="footer-menu" aria-label="วางแผนพื้นของคุณ"><h3>วางแผนพื้นของคุณ</h3><a href="/website/#products">ลองสีพื้นในห้อง</a><a href="/calculator/">คำนวณราคาเบื้องต้น</a><a href="/">Material Studio · ดูชั้นวัสดุ</a><a href="/room/">Room Motion · ห้อง 3D</a><button type="button" data-contact-open>ปรึกษาเรื่องพื้น</button></nav>
+      <address class="footer-contact" id="contact"><h3>ติดต่อเรา</h3><p>${contact.name}</p><a class="footer-phone" href="tel:${contact.tel}">084 670 7551 ${icon('arrow')}</a><a class="footer-email" href="mailto:${contact.email}">${contact.email}</a><button type="button" data-contact-open>ดูช่องทางติดต่อ ${icon('arrow')}</button></address>
+    </div>
+    <div class="footer-bottom"><p>© ${new Date().getFullYear()} COOLPLAN. All rights reserved.</p><span>SPC FLOORING · YOUR SPACE, YOUR EVERYDAY</span><a href="#main">กลับด้านบน ↑</a></div>
+  </footer>`;
 }
 export function mountContactDialog() {
   if(document.getElementById('contact-dialog'))return;
