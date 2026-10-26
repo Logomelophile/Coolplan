@@ -9,6 +9,7 @@ import { createPlank, type PlankModel } from '../geometry/plankGeometry';
 import { createMaterials, type MaterialBundle } from '../materials/materialFactory';
 import { createStudio } from '../lighting';
 import type { ProductConfig } from '../types';
+import { sitePath } from '../sitePath';
 
 export type FloorStoryLayerId = 'wear' | 'decor' | 'core' | 'backing';
 export interface FloorStoryFrame {
@@ -177,7 +178,7 @@ export class FloorStoryScene {
   private async load(): Promise<void> {
     const references = await Promise.all(patches.map(async ([sheet]) => {
       const image = new Image();
-      image.src = `/website/assets/material-${sheet}.jpg`;
+      image.src = sitePath(`/website/assets/material-${sheet}.jpg`);
       await image.decode();
       return image;
     }));

@@ -1,7 +1,31 @@
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import { resolve } from 'node:path';
 import { existsSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
+
+const siteBase = process.env.COOLPLAN_BASE_PATH || './';
+if (siteBase !== './' && !/^\/(?:[A-Za-z0-9._~-]+\/)*$/.test(siteBase)) {
+  throw new Error('COOLPLAN_BASE_PATH must be an absolute path ending in /');
+}
+
+function projectLinksPlugin(): Plugin {
+  const prefixed = (path: string) => path.startsWith(siteBase) ? path : `${siteBase}${path.replace(/^\//, '')}`;
+  return {
+    name: 'coolplan-project-links',
+    apply: 'build',
+    transformIndexHtml: {
+      order: 'post',
+      handler(html) {
+        if (siteBase === './' || siteBase === '/') return html;
+        return html
+          .replace(/\b(href|src|srcset)=(["'])(\/(?!\/)[^"']*)\2/g,
+            (_match, attribute, quote, path) => `${attribute}=${quote}${prefixed(path)}${quote}`)
+          .replace(/(content=["']\s*\d+;\s*url=)(\/(?!\/)[^"']*)/gi,
+            (_match, prefix, path) => `${prefix}${prefixed(path)}`);
+      },
+    },
+  };
+}
 
 function textureManifestPlugin() {
   const virtualId = 'virtual:spc-texture-manifest';
@@ -28,8 +52,8 @@ function textureManifestPlugin() {
 }
 
 export default defineConfig(({ mode }) => ({
-  base: './',
-  plugins: [textureManifestPlugin()],
+  base: siteBase,
+  plugins: [textureManifestPlugin(), projectLinksPlugin()],
   cacheDir: resolve(tmpdir(), 'coolplan-spc-vite-cache'),
   resolve: {alias: {'spc-plank-viewer': resolve(import.meta.dirname, 'src/index.ts')}},
   build: mode === 'v2' ? {

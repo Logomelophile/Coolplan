@@ -1,1 +1,3 @@
-window.location.replace('/ceo/#next-gen');
+import { sitePath } from '../sitePath';
+
+window.location.replace(sitePath('/ceo/#next-gen'));

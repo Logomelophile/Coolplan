@@ -1,3 +1,5 @@
+import { sitePath } from '../sitePath';
+
 /** Photo-based room preview. All image processing stays inside the browser. */
 type Point = { x: number; y: number };
 type Crop = { x: number; y: number; width: number; height: number };
@@ -188,7 +190,7 @@ export class RoomPreview {
         }
         resolve();
       };
-      this.prototype.src = options.imageUrl ?? '/website/assets/prototype-home.png';
+      this.prototype.src = options.imageUrl ?? sitePath('/website/assets/prototype-home.png');
     });
   }
 

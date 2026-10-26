@@ -2,6 +2,7 @@ import { MeshPhysicalMaterial, MeshStandardMaterial, Vector2 } from 'three';
 import { getProduct } from '../data/products';
 import { generateSurfaceTextures, type TextureSet } from '../textures';
 import type { ProductConfig } from '../types';
+import { sitePath } from '../sitePath';
 
 export interface RoomFinish {
   id: string;
@@ -73,7 +74,7 @@ function makeFinish(recipe: FinishRecipe): RoomFinish {
     name,
     subtitle: recipe.subtitle,
     color: recipe.palette.base,
-    reference: `/room/references/${id}.png`,
+    reference: sitePath(`/room/references/${id}.png`),
     product,
   };
 }

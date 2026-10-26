@@ -125,7 +125,7 @@ npm run test:story
 ชุดทดสอบใช้ Chrome ผ่าน Playwright ค่า URL เริ่มต้นคือ `http://127.0.0.1:5185/website/` เปลี่ยนได้ด้วยตัวแปร `SPC_WEBSITE_URL` ผลและภาพหน้าจอของเว็บไซต์อยู่ใน `test-results/website/` และ Motion Scrolling อยู่ใน `test-results/story/` การทดสอบเรื่องราวครอบคลุมสีทั้งหก การย้อนลำดับ ชั้นวัสดุ เส้นคำอธิบาย การตรึง/ปล่อยหน้า การหมุนด้วยเมาส์ มือถือ และโหมดลดการเคลื่อนไหว ส่วน `npm test` ตรวจตรรกะ timeline รวมกับการทดสอบเดิมของ viewer
 
 `build:website` ตรวจ TypeScript และสร้าง `website-dist/` สำหรับ Website, Calculator, CEO รวม Next Gen และลิงก์เปลี่ยนทาง ส่วนเดโมเดิมสร้างแยกด้วย `npm run build` เป็น `demo-dist/` และ `npm run build:room` เป็น `room-dist/` ใช้ `npm run build:site` เพื่อ build และรวม V1 ทั้งหมดเป็น `site-dist/` จากนั้น `npm run preview:site -- --port 5185 --strictPort` เพื่อตรวจเว็บรวม V2 เป็นงานทดลองแยกและไม่อยู่ในผลรวมนี้
-ลิงก์และภาพของเว็บไซต์ใหม่ใช้เส้นทางจากรากโดเมน เช่น `/website/` จึงต้องปรับ URL หากโฮสต์ใต้ path prefix
+ลิงก์และภาพใช้รากโดเมนเป็นค่าเริ่มต้น เช่น `/website/` หากโฮสต์ใต้ path prefix ให้ตั้ง `COOLPLAN_BASE_PATH` เป็นเส้นทางที่ขึ้นต้นและลงท้ายด้วย `/` เช่น `/Coolplan/` ตอน build และ preview; workflow GitHub Pages ตั้งค่านี้จาก metadata ของ Pages ให้อัตโนมัติ
 
 ## จุดแก้ไขหลัก
 

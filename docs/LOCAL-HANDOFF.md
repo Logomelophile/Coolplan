@@ -121,6 +121,6 @@ GitHub เก็บซอร์สและประวัติสำหรั�
 URL ปัจจุบัน: https://coolplan-material-studio.vitethap-n.chatgpt.site
 Site project ID (ข้อมูลระบุตัวตน ไม่ใช่ credential): `appgprj_6acca5096d108191816721f8af6a6d7e`
 
-ผล `site-dist/` ใช้ URL จากรากโดเมน จึงต้องเสิร์ฟที่รากของ host; การนำไปวางใต้ path เช่น GitHub Pages `/Coolplan/` ต้องปรับ routing/assets ก่อน ห้ามนำ token หรือ credential การเผยแพร่ลง repository
+ค่าเริ่มต้นของ `site-dist/` ใช้ URL จากรากโดเมน สำหรับ GitHub Pages ให้ใช้ workflow `Publish COOLPLAN website` ซึ่งอ่าน base path ของ Pages และตั้ง `COOLPLAN_BASE_PATH` ให้ก่อน build เพื่อให้รูป ลิงก์ และ redirect ทำงานใต้ `/Coolplan/` ได้ ตั้งค่า Source เป็น GitHub Actions ใน Settings → Pages ก่อนใช้ครั้งแรก; repository แบบ private ต้องใช้แพ็กเกจที่รองรับ Pages ห้ามนำ token หรือ credential การเผยแพร่ลง repository
 
 ซอร์สใช้ MIT ภาพบุคคล ภาพห้อง และเอกสารอ้างอิงของผู้ใช้ไม่ถูกเปลี่ยนเป็น MIT ฟอนต์และ dependencies คง license ของตนตามไฟล์ notices ที่แนบ

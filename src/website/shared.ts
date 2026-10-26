@@ -1,3 +1,5 @@
+import { localizeSiteLinks, sitePath } from '../sitePath';
+
 export const contact = { name:'คุณคะน้า', phone:'0846707551', tel:'+66846707551', email:'coolplanworkshop@gmail.com' };
 export const icon = (name:string) => {
   const paths:Record<string,string> = {
@@ -30,6 +32,7 @@ export function mountHeader(active:'home'|'calculator'|'ceo') {
     ? `<a href="${home}" ${active==='home'?'aria-current="page"':''}>หน้าแรก</a><a href="${home}#products">สินค้าของเรา</a><a href="${home}#rooms">แรงบันดาลใจ</a><a href="/ceo/" ${active==='ceo'?'aria-current="page"':''}>CEO & Brand</a><a href="/ceo/#next-gen">Next Gen</a><button type="button" data-contact-open>ติดต่อเรา</button>`
     : `<a href="${home}">หน้าแรก</a><a href="${home}#products">สินค้า</a><button type="button" data-about-open>บริการ</button><a href="/calculator/" aria-current="page">คำนวณราคา</a><a href="${home}#rooms">ผลงานของเรา</a><a href="/ceo/">CEO & Brand</a><a href="/ceo/#next-gen">Next Gen</a><button type="button" data-contact-open>ติดต่อเรา</button>`;
   host.innerHTML=`<a class="skip-link" href="#main">ข้ามไปเนื้อหา</a><header class="site-header ${active==='calculator'?'calculator-header':''}"><a class="site-logo" href="${home}" aria-label="COOLPLAN หน้าแรก">COOLPLAN<small>${active==='calculator'?'FLOORING FOR A BETTER TOMORROW':'SPC FLOORING'}</small></a><nav class="site-nav-links" id="main-navigation" aria-label="เมนูหลัก">${links}</nav>${active==='calculator'?`<a class="header-search" href="${home}#products" aria-label="ค้นหาสินค้า">${icon('search')}</a>`:''}<a class="header-quote" href="/calculator/#quote" ${active==='calculator'?'data-quote-open':''}>ขอใบเสนอราคา ${active==='home'?icon('arrow'):''}</a><button class="menu-toggle" type="button" aria-controls="main-navigation" aria-expanded="false" aria-label="เปิดเมนู">${icon('menu')}</button></header>`;
+  localizeSiteLinks(host);
   const header=host.querySelector('header')!;
   const menu=host.querySelector<HTMLButtonElement>('.menu-toggle')!;
   menu.addEventListener('click',()=>{const open=menu.getAttribute('aria-expanded')!=='true';menu.setAttribute('aria-expanded',String(open));header.classList.toggle('menu-open',open);});
@@ -51,12 +54,14 @@ export function mountFooter() {
     </div>
     <div class="footer-bottom"><p>© ${new Date().getFullYear()} COOLPLAN. All rights reserved.</p><span>SPC FLOORING · YOUR SPACE, YOUR EVERYDAY</span><a href="#main">กลับด้านบน ↑</a></div>
   </footer>`;
+  localizeSiteLinks(host);
 }
 export function mountContactDialog() {
   if(document.getElementById('contact-dialog'))return;
   const holder=document.createElement('div');
   holder.innerHTML=`<dialog class="site-dialog contact-dialog" id="contact-dialog" aria-labelledby="contact-heading"><button class="dialog-close" data-dialog-close type="button" aria-label="ปิด">${icon('close')}</button><span class="dialog-eyebrow">LET'S CREATE YOUR SPACE</span><h2 id="contact-heading">คุยเรื่องพื้นที่ของคุณ</h2><p>ปรึกษาเรื่องวัสดุ การติดตั้ง และขอใบเสนอราคากับ ${contact.name}</p><a class="contact-method" href="tel:${contact.tel}">${icon('phone')}<span><small>โทรหา${contact.name}</small>084 670 7551</span>${icon('arrow')}</a><a class="contact-method" href="mailto:${contact.email}?subject=${encodeURIComponent('สอบถามพื้น SPC และขอใบเสนอราคา COOLPLAN')}">${icon('mail')}<span><small>ส่งอีเมลถึงเรา</small>${contact.email}</span>${icon('arrow')}</a><a class="primary-button purple" href="/calculator/">คำนวณงบประมาณเบื้องต้น ${icon('arrow')}</a></dialog><dialog class="site-dialog" id="about-dialog" aria-labelledby="about-heading"><button class="dialog-close" data-dialog-close type="button" aria-label="ปิด">${icon('close')}</button><span class="dialog-eyebrow">COOLPLAN · SPC FLOORING</span><h2 id="about-heading">พื้นที่ดี เริ่มต้นจากพื้นฐานที่ดีกว่า</h2><p>เลือกพื้น SPC ลายไม้ที่เข้ากับสไตล์ของคุณ สำรวจสีและชั้นวัสดุ เปรียบเทียบบรรยากาศในห้อง และวางงบประมาณก่อนเลือกพื้น</p><div class="about-services"><div>${icon('diamond')}<strong>เลือกวัสดุ</strong><p>ดูสี ลายไม้ และโครงสร้างของแผ่นพื้น</p></div><div>${icon('room')}<strong>วางแผนพื้นที่</strong><p>คำนวณค่าวัสดุและค่าติดตั้งเบื้องต้น</p></div><div>${icon('chat')}<strong>ปรึกษาโดยตรง</strong><p>สอบถามรายละเอียดกับ${contact.name}</p></div></div><button class="primary-button purple" type="button" data-contact-open>ปรึกษาผู้เชี่ยวชาญ ${icon('arrow')}</button></dialog>`;
   document.body.append(holder);
+  localizeSiteLinks(document);
   holder.querySelectorAll<HTMLDialogElement>('dialog').forEach(dialog=>{
     dialog.querySelector('[data-dialog-close]')!.addEventListener('click',()=>dialog.close());
     dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}});
@@ -69,7 +74,7 @@ export function mountContactDialog() {
 }
 export function sprite(element:HTMLElement,crop:[number,number,number,number],source='home') {
   const [x,y,w,h]=crop, width=source==='home'?1122:1024,height=source==='home'?1402:1536;
-  element.style.backgroundImage=`url('/website/assets/prototype-${source}.png')`;
+  element.style.backgroundImage=`url('${sitePath(`/website/assets/prototype-${source}.png`)}')`;
   element.style.backgroundSize=`${width/w*100}% ${height/h*100}%`;
   element.style.backgroundPosition=`${x/(width-w)*100}% ${y/(height-h)*100}%`;
   element.style.aspectRatio=`${w}/${h}`;

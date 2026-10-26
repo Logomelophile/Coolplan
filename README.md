@@ -44,6 +44,14 @@ npm run preview:site -- --port 5185 --strictPort
 
 **Git push ไม่ได้อัปเดตเว็บ Sites ที่เผยแพร่อยู่โดยอัตโนมัติ** การส่งซอร์สให้เครื่องอื่นกับการเผยแพร่เว็บเป็นคนละขั้นตอน
 
+## เผยแพร่ผ่าน GitHub Pages
+
+Workflow `Publish COOLPLAN website` สร้างเว็บ V1 ครบ 6 เส้นทางและเผยแพร่เมื่อ push เข้า `main` หรือเลือก Run workflow ด้วยตัวเอง ก่อนใช้ครั้งแรก ให้เปิด repository → Settings → Pages แล้วเลือก Source เป็น **GitHub Actions** หาก repository แบบ private แจ้งให้ upgrade ให้ตรวจแพ็กเกจก่อน; workflow ไม่เปลี่ยน repository เป็น public และไม่สมัครบริการเพิ่ม
+
+เมื่อเปิด Pages แล้ว ดูลิงก์ที่ GitHub แสดงใน Settings → Pages และเติม `/website/` เพื่อเข้าหน้าเว็บหลัก Workflow จะใช้ base path จาก GitHub ให้อัตโนมัติ และตรวจหน้าเว็บกับไฟล์ JavaScript หลังเผยแพร่ การเผยแพร่นี้แยกจากเว็บ ChatGPT Sites เดิม
+
+ทดสอบ build สำหรับที่อยู่แบบ `/Coolplan/` ได้ด้วย `COOLPLAN_BASE_PATH=/Coolplan/ npm run build:site` และใช้ค่าเดียวกันตอนรัน preview บน Bash; ไม่ตั้งค่านี้เมื่อต้องการ build สำหรับรากโดเมนเดิม
+
 ## ทำงานต่อและส่งกลับ
 
 ก่อนเริ่มงานแต่ละครั้ง ตรวจให้ไม่มีงานค้างที่ยังไม่ commit แล้วดึงการเปลี่ยนแปลง:

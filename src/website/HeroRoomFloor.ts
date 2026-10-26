@@ -1,6 +1,7 @@
 import { getProduct } from '../data/products';
+import { sitePath } from '../sitePath';
 
-const IMAGE_URL = '/room/references/room-original.png';
+const IMAGE_URL = sitePath('/room/references/room-original.png');
 const REFERENCE_WIDTH = 1672;
 const REFERENCE_HEIGHT = 941;
 const FINISH_IDS = ['light-natural-oak', 'warm-taupe-oak', 'golden-honey-oak', 'whitewashed-ash-oak', 'greige-oak', 'dark-walnut-brown'] as const;
