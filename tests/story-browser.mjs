@@ -61,6 +61,34 @@ async function roomPixels() {
   }));
 }
 
+async function assertWheelFinishes(label) {
+  await seek(0);
+  const first = await roomPixels();
+  const hashes = [first[0].floor];
+  for (let step = 1; step < 6; step++) {
+    const target = await page.evaluate(step => {
+      const host = document.getElementById('floor-story');
+      const hero = document.getElementById('hero');
+      return host.getBoundingClientRect().top + scrollY + step * hero.offsetHeight * .78;
+    }, step);
+    const canvas = await page.locator('#hero-viewer canvas').boundingBox();
+    assert.ok(canvas);
+    await page.mouse.move(canvas.x + canvas.width * .5, canvas.y + canvas.height * .45);
+    await page.mouse.wheel(0, target - await page.evaluate(() => scrollY));
+    await page.waitForFunction(step => window.websiteDemo.story.step === step && window.websiteDemo.state.finish === step, step);
+    assertPinned(await layout(), `${label} step ${step}`);
+    const pixels = await roomPixels();
+    hashes.push(pixels[0].floor);
+    assert.equal(pixels[0].upper, first[0].upper, `${label}: the room above the floor changed`);
+  }
+  assert.equal(new Set(hashes).size, 6, `${label}: wheel input did not show six different floor colours`);
+  const start = await page.evaluate(() => document.getElementById('floor-story').getBoundingClientRect().top);
+  await page.mouse.wheel(0, start);
+  await page.waitForFunction(() => window.websiteDemo.story.step === 0 && window.websiteDemo.state.finish === 0);
+  assert.deepEqual(await roomPixels(), first, `${label}: reverse wheel input did not restore the first finish`);
+  check(`${label}: real mouse-wheel input changes all six floor colours, preserves the upper room, and reverses to the first colour.`);
+}
+
 try {
   await initialize();
   const initial = await story();
@@ -197,8 +225,26 @@ try {
   await page.screenshot({ path: outputPath('mobile-compact-step-11.png') });
   check('Compact 375×667 mobile: all layer explanations and native navigation remain visible in the pinned viewport.');
 
+  for (const viewport of [{ width: 1200, height: 540 }, { width: 390, height: 540 }, { width: 844, height: 390 }]) {
+    await page.setViewportSize(viewport);
+    const label = `Short viewport ${viewport.width}×${viewport.height}`;
+    await assertWheelFinishes(label);
+    await seek(11);
+    const value = await layout();
+    assertPinned(value, label);
+    const rail = await page.locator('.story-rail').boundingBox();
+    assert.ok(rail && rail.y >= 0 && rail.y + rail.height <= viewport.height + 1, `${label}: navigation leaves the viewport`);
+    for (const card of value.finishCards) {
+      assert.ok(card.box.left >= -1 && card.box.right <= viewport.width + 1, `${label}: layer ${card.id} leaves the viewport horizontally`);
+      assert.ok(card.box.top >= 0 && card.box.bottom <= rail.y, `${label}: layer ${card.id} overlaps navigation or leaves the viewport`);
+    }
+    await page.screenshot({ path: outputPath(`short-${viewport.width}x${viewport.height}-step-11.png`) });
+  }
+  check('Short desktop, portrait, and landscape viewports keep layer details and navigation visible without disabling scrolling.');
+
+  await page.setViewportSize({ width: 1200, height: 900 });
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await initialize();
+  await assertWheelFinishes('Reduced motion');
   await page.locator('#story-skip').click();
   await page.waitForFunction(() => document.getElementById('rooms').getBoundingClientRect().top < innerHeight / 2);
   assert.equal(await page.evaluate(() => document.body.style.overflow), '');

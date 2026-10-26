@@ -28,7 +28,6 @@ export class FloorScrollStory{
   private manualFinish:number|null=null;
   private manualExplode:number|null=null;
   private reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
-  private get simplified(){return this.reduced.matches||innerHeight<580;}
   private panel:HTMLElement;
   private overlay:SVGSVGElement;
   private status:HTMLElement;
@@ -51,15 +50,13 @@ export class FloorScrollStory{
       if(!this.scene.diagnostics.webgl){document.getElementById('hero-hint')!.textContent='อุปกรณ์นี้ไม่รองรับ 3D · ใช้ปุ่มด้านล่างเพื่อสำรวจสีและข้อมูลวัสดุ';this.hero.classList.add('story-no-webgl');}
     }).catch(error=>{if(!this.disposed){this.status.textContent='โหลดวัสดุไม่สำเร็จ กรุณาโหลดหน้าใหม่ หรือเลื่อนต่อเพื่อเลือกพื้น';this.hero.classList.add('story-load-error');}console.error(error);});
   }
-  private updateReduced=()=>{this.host.classList.toggle('reduced-story',this.simplified);this.host.classList.toggle('compact-static-story',innerHeight<580);this.readScroll(true);};
+  private updateReduced=()=>{this.readScroll(true);};
   private schedule=()=>{if(!this.raf)this.raf=requestAnimationFrame(()=>{this.raf=0;this.readScroll();});};
   private readScroll(force=false){
     if(this.disposed)return;
-    this.host.classList.toggle('reduced-story',this.simplified);this.host.classList.toggle('compact-static-story',innerHeight<580);
     const start=this.host.getBoundingClientRect().top+scrollY;
     const progress=Math.max(0,Math.min(STORY_END,(scrollY-start)/(this.hero.offsetHeight*STORY_UNIT)));
-    document.body.classList.toggle('story-pinned',!this.simplified&&scrollY<start+this.hero.offsetHeight*STORY_END*STORY_UNIT);
-    if(this.simplified){if(force)this.apply(this.frame.progress);this.updateLeaders();return;}
+    document.body.classList.toggle('story-pinned',scrollY<start+this.hero.offsetHeight*STORY_END*STORY_UNIT);
     if(force||Math.abs(progress-this.frame.progress)>.00001){
       if(progress<STORY_END){this.manualFinish=null;this.manualExplode=null;}
       this.apply(progress);
@@ -110,9 +107,8 @@ export class FloorScrollStory{
   }
   seekStep(index:number,smooth=false){
     const target=Math.max(0,Math.min(11,index));
-    if(this.simplified){this.manualFinish=null;this.manualExplode=null;this.apply(target);return;}
     const top=this.host.getBoundingClientRect().top+scrollY+target*this.hero.offsetHeight*STORY_UNIT;
-    window.scrollTo({top,behavior:smooth?'smooth':'instant'});this.readScroll(true);
+    window.scrollTo({top,behavior:smooth&&!this.reduced.matches?'smooth':'instant'});this.readScroll(true);
   }
   setExplode(value:number){this.manualExplode=Math.max(0,Math.min(1,value));this.apply(this.frame.progress);}
   selectFinish(index:number){this.manualFinish=index;this.apply(this.frame.progress);}
