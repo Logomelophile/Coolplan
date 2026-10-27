@@ -17,6 +17,8 @@ export interface PlankAtlas {
 }
 
 export interface PlankAtlasOptions {
+  /** Full-height catalogue plank photograph; rotated into the board's long axis. */
+  photo?: HTMLImageElement;
   planks?: number;
   /** Texels along the plank length (768 ≈ 1.6 mm/texel; ~0.4 s per product on a laptop). */
   width?: number;
@@ -27,7 +29,7 @@ const cache = new Map<string, PlankAtlas>();
 export function buildPlankAtlas(product: ProductConfig, options: PlankAtlasOptions = {}): PlankAtlas {
   const planks = Math.max(1, Math.min(8, Math.round(options.planks ?? 4)));
   const width = Math.max(64, Math.round(options.width ?? 768));
-  const key = `${product.id}:${planks}:${width}`;
+  const key = `${product.id}:${planks}:${width}:${options.photo?.src ?? 'procedural'}`;
   const cached = cache.get(key);
   if (cached) return cached;
   const { lengthMm, widthMm } = product.dimensions;
@@ -38,6 +40,18 @@ export function buildPlankAtlas(product: ProductConfig, options: PlankAtlasOptio
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('เบราว์เซอร์นี้ไม่รองรับการสร้างลายพื้น');
   for (let row = 0; row < planks; row++) {
+    if (options.photo?.naturalWidth) {
+      const photo = options.photo;
+      const cropHeight = photo.naturalHeight * .88;
+      const cropY = (photo.naturalHeight - cropHeight) * row / Math.max(1, planks - 1);
+      ctx.save();
+      ctx.translate(0, (row + 1) * rowHeight);
+      ctx.rotate(-Math.PI / 2);
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(photo, 0, cropY, photo.naturalWidth, cropHeight, 0, 0, rowHeight, width);
+      ctx.restore();
+      continue;
+    }
     // Distinct boards: re-seed the material so grain, knots and tone vary per plank.
     const variant: ProductConfig = { ...product, seed: (product.seed + row * 7919) >>> 0 };
     const pixels = product.surface.family === 'wood' ? generateWoodPixels(variant, width, rowHeight) : generateMarblePixels(variant, width, rowHeight);

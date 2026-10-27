@@ -1,4 +1,5 @@
 import type { Point } from './geometry/homography';
+import { HIGH_RES_ROOMS } from './samplePhotos';
 
 /** Crop of the shared prototype sprite (public/website/assets/prototype-home.png). */
 export interface Crop { x: number; y: number; width: number; height: number }
@@ -17,6 +18,8 @@ export interface FloorSpec {
 }
 
 export interface SampleRoom {
+  name?: string;
+  image?: string;
   crop: Crop;
   /** Working-image scale applied to the crop. */
   scale: number;
@@ -33,9 +36,9 @@ const normalized = (pairs: number[][]): Point[] => pairs.map(([x, y]) => ({ x, y
 const thumb = (x: number): Crop => ({ x, y: 733, width: 130, height: 104 });
 
 /** Matte files produced by scripts/precompute-rooms.mts live under public/website/rooms/. */
-export const roomAlphaPath = (index: number): string => `/website/rooms/room-${index}-alpha.png`;
+export const roomAlphaPath = (index: number): string | null => SAMPLE_ROOMS[index].image ? null : `/website/rooms/room-${index}-alpha.png`;
 
-export const SAMPLE_ROOMS: SampleRoom[] = [
+export const LEGACY_SAMPLE_ROOMS: SampleRoom[] = [
   {
     crop: { x: 563, y: 976, width: 494, height: 238 }, scale: 2,
     floor: { horizonY: .36, focal: .85, anchor: { x: .5, y: .86 }, rotation: Math.PI / 2, cameraHeight: .9 },
@@ -51,3 +54,9 @@ export const SAMPLE_ROOMS: SampleRoom[] = [
   { crop: thumb(786), scale: 4, floor: { horizonY: .5, focal: .85, anchor: { x: .5, y: .94 }, rotation: Math.PI / 2, cameraHeight: 1.5 }, polygon: normalized([[.08, .84], [.27, .83], [.34, .90], [.71, .90], [.83, .80], [.93, .86], [1, 1], [0, 1]]) },
   { crop: thumb(931), scale: 4, floor: { horizonY: .5, focal: .85, anchor: { x: .5, y: .93 }, rotation: Math.PI / 2, cameraHeight: 1.5 }, polygon: normalized([[.14, .80], [.25, .73], [.32, .75], [.33, .87], [.73, .87], [.74, .75], [.83, .78], [1, 1], [0, 1]]) },
 ];
+
+// Keep legacy sprite crops for callers with an explicit imageUrl override.
+// Every default sample uses a full-resolution photo with its own contour.
+export const SAMPLE_ROOMS: SampleRoom[] = LEGACY_SAMPLE_ROOMS.map((room, index) => ({
+  ...room, ...HIGH_RES_ROOMS[index], scale: 1, ellipseHoles: [],
+}));

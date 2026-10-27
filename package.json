@@ -39,6 +39,7 @@
     "preview:site": "vite preview --outDir site-dist --host 127.0.0.1",
     "test:website": "node tests/website-browser.mjs",
     "test:story": "node tests/story-browser.mjs",
+    "test:visualizer": "node tests/visualizer-browser.mjs",
     "build:v2": "npm run typecheck && vite build --mode v2",
     "preview:v2": "vite preview --outDir v2-dist --host 127.0.0.1",
     "test": "tsx --test tests/*.test.ts",

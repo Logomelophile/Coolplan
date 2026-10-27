@@ -1,4 +1,5 @@
 import type { Mat3 } from '../geometry/homography';
+import { herringboneTile, type FloorPattern } from '../texture/layout';
 
 /**
  * Composites a new floor into a photograph on a single full-image quad:
@@ -17,6 +18,7 @@ export interface FloorRenderInputs {
 }
 
 export interface FloorRenderParams {
+  pattern: FloorPattern;
   /** Pixel (x, y, 1) -> floor metres (s, t). */
   Hinv: Mat3;
   plankSize: [number, number];
@@ -44,7 +46,7 @@ export interface FloorRenderer {
 }
 
 export const defaultRenderParams = (Hinv: Mat3, plankSize: [number, number]): FloorRenderParams => ({
-  Hinv, plankSize, rotation: 0, stagger: 1 / 3, grout: .55, detailStrength: .8, meanRGB: [.5, .5, .5], exposure: 1,
+  Hinv, plankSize, pattern: 'straight', rotation: 0, stagger: 1 / 3, grout: .24, detailStrength: .35, meanRGB: [.5, .5, .5], exposure: 1,
 });
 
 const VERTEX = `#version 300 es
@@ -58,7 +60,7 @@ uniform sampler2D uPhoto, uAlpha, uShade, uAtlas;
 uniform vec2 uResolution;
 uniform mat3 uHinv;
 uniform vec2 uPlankSize;
-uniform float uRotate, uStagger, uGrout, uDetail, uPlanks, uExposure;
+uniform float uRotate, uStagger, uGrout, uDetail, uPlanks, uExposure, uPattern;
 uniform vec3 uMeanRGB;
 in vec2 vUv;
 out vec4 outColor;
@@ -73,15 +75,27 @@ void main(){
   if (p.z <= 1e-6) { outColor = vec4(photo, 1.0); return; }
   vec2 st = p.xy / p.z;
   float c = cos(uRotate), s = sin(uRotate);
-  st = mat2(c, -s, s, c) * st;
+  st = mat2(c, s, -s, c) * st;
   float row = floor(st.y / uPlankSize.y);
   float along = st.x + row * uStagger * uPlankSize.x + hash(vec2(row, 3.7)) * uPlankSize.x;
   float col = floor(along / uPlankSize.x);
   vec2 plankUv = vec2(fract(along / uPlankSize.x), fract(st.y / uPlankSize.y));
   float plank = floor(hash(vec2(row, col)) * uPlanks);
+  float plankLength = uPlankSize.x;
+  if (uPattern > 0.5) {
+    float n = max(2.0, floor(uPlankSize.x / uPlankSize.y + 0.5));
+    vec2 grid = st / uPlankSize.y;
+    vec2 cell = floor(grid);
+    float phase = mod(cell.x + cell.y, 2.0 * n);
+    bool horizontal = phase < n;
+    vec2 origin = horizontal ? vec2(cell.x - phase, cell.y) : vec2(cell.x, cell.y - phase + n);
+    plankUv = horizontal ? vec2((grid.x - origin.x) / n, fract(grid.y)) : vec2((grid.y - origin.y) / n, 1.0 - fract(grid.x));
+    plank = floor(hash(origin + vec2(0.0, horizontal ? 0.0 : 97.0)) * uPlanks);
+    plankLength = n * uPlankSize.y;
+  }
   vec2 atlasUv = vec2(plankUv.x, (plank + clamp(plankUv.y, 0.01, 0.99)) / uPlanks);
   vec3 albedo = toLinear(texture(uAtlas, atlasUv).rgb);
-  vec2 d = vec2(min(plankUv.x, 1.0 - plankUv.x) * uPlankSize.x, min(plankUv.y, 1.0 - plankUv.y) * uPlankSize.y);
+  vec2 d = vec2(min(plankUv.x, 1.0 - plankUv.x) * plankLength, min(plankUv.y, 1.0 - plankUv.y) * uPlankSize.y);
   float edge = min(d.x, d.y);
   float groove = 1.0 - smoothstep(0.0, 0.0012 + fwidth(edge) * 1.5, edge);
   albedo *= 1.0 - uGrout * 0.55 * groove;
@@ -90,10 +104,10 @@ void main(){
   vec3 lit = albedo * sh.y * detail * uExposure;
   float meanLum = max(dot(uMeanRGB, vec3(0.2126, 0.7152, 0.0722)), 1e-3);
   vec3 balance = uMeanRGB / meanLum;
-  lit *= mix(vec3(1.0), balance, 0.25);
+  lit *= mix(vec3(1.0), balance, 0.12);
   vec3 linPhoto = toLinear(photo);
   float spec = smoothstep(0.85, 1.0, dot(linPhoto, vec3(0.2126, 0.7152, 0.0722)));
-  lit = mix(lit, 1.0 - (1.0 - lit) * (1.0 - linPhoto), spec * 0.6);
+  lit = mix(lit, 1.0 - (1.0 - lit) * (1.0 - linPhoto), spec * 0.12);
   outColor = vec4(mix(photo, toSRGB(lit), a), 1.0);
 }`;
 
@@ -134,7 +148,7 @@ class WebGLFloorRenderer implements FloorRenderer {
     const position = gl.getAttribLocation(program, 'aPosition');
     gl.enableVertexAttribArray(position);
     gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
-    for (const name of ['uPhoto', 'uAlpha', 'uShade', 'uAtlas', 'uResolution', 'uHinv', 'uPlankSize', 'uRotate', 'uStagger', 'uGrout', 'uDetail', 'uPlanks', 'uExposure', 'uMeanRGB']) {
+    for (const name of ['uPhoto', 'uAlpha', 'uShade', 'uAtlas', 'uResolution', 'uHinv', 'uPlankSize', 'uRotate', 'uStagger', 'uGrout', 'uDetail', 'uPlanks', 'uExposure', 'uMeanRGB', 'uPattern']) {
       this.uniforms.set(name, gl.getUniformLocation(program, name));
     }
     const make = (unit: number, repeat: boolean): WebGLTexture => {
@@ -198,7 +212,8 @@ class WebGLFloorRenderer implements FloorRenderer {
     const h = params.Hinv;
     gl.uniformMatrix3fv(u.get('uHinv')!, false, [h[0], h[3], h[6], h[1], h[4], h[7], h[2], h[5], h[8]]);
     gl.uniform2f(u.get('uPlankSize')!, params.plankSize[0], params.plankSize[1]);
-    gl.uniform1f(u.get('uRotate')!, params.rotation);
+    gl.uniform1f(u.get('uRotate')!, params.rotation + (params.pattern === 'herringbone' ? Math.PI / 4 : 0));
+    gl.uniform1f(u.get('uPattern')!, params.pattern === 'herringbone' ? 1 : 0);
     gl.uniform1f(u.get('uStagger')!, params.stagger);
     gl.uniform1f(u.get('uGrout')!, params.grout);
     gl.uniform1f(u.get('uDetail')!, params.detailStrength);
@@ -268,9 +283,10 @@ class CpuFloorRenderer implements FloorRenderer {
     const toByte = (c: number): number => Math.pow(Math.max(0, c), 1 / 2.2) * 255;
     const hash = (x: number, y: number): number => { const v = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return v - Math.floor(v); };
     const [pl, pw] = params.plankSize, h = params.Hinv;
-    const cs = Math.cos(params.rotation), sn = Math.sin(params.rotation);
+    const rotation = params.rotation + (params.pattern === 'herringbone' ? Math.PI / 4 : 0);
+    const cs = Math.cos(rotation), sn = Math.sin(rotation);
     const meanLum = Math.max(1e-3, params.meanRGB[0] * .2126 + params.meanRGB[1] * .7152 + params.meanRGB[2] * .0722);
-    const balance = params.meanRGB.map(c => 1 + (c / meanLum - 1) * .25);
+    const balance = params.meanRGB.map(c => 1 + (c / meanLum - 1) * .12);
     for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
       const i = (y * width + x) * 4;
       const a = this.alpha[i] / 255;
@@ -283,21 +299,27 @@ class CpuFloorRenderer implements FloorRenderer {
       const row = Math.floor(t / pw);
       const along = s + row * params.stagger * pl + hash(row, 3.7) * pl;
       const col = Math.floor(along / pl);
-      const fu = along / pl - col, fv = t / pw - row;
-      const plank = Math.floor(hash(row, col) * this.planks);
+      let fu = along / pl - col, fv = t / pw - row;
+      let plank = Math.floor(hash(row, col) * this.planks), plankLength = pl;
+      if (params.pattern === 'herringbone') {
+        const tile = herringboneTile(s, t, pw, pl);
+        fu = tile.u; fv = tile.v; plankLength = tile.length;
+        plank = Math.floor(hash(tile.idX, tile.idY) * this.planks);
+      }
       const ax = Math.min(this.atlasWidth - 1, Math.floor(fu * this.atlasWidth));
       const ay = Math.min(this.atlasHeight - 1, Math.floor((plank + Math.min(.99, Math.max(.01, fv))) / this.planks * this.atlasHeight));
       const ai = (ay * this.atlasWidth + ax) * 4;
-      const edge = Math.min(Math.min(fu, 1 - fu) * pl, Math.min(fv, 1 - fv) * pw);
+      const edge = Math.min(Math.min(fu, 1 - fu) * plankLength, Math.min(fv, 1 - fv) * pw);
       const groove = edge < .0012 ? 1 - edge / .0012 : 0;
       const detail = 1 + (this.shade[i] / 127.5 - 1) * params.detailStrength;
       const tone = this.shade[i + 1] / 127.5;
       const lum = toLinear(this.photo[i]) * .2126 + toLinear(this.photo[i + 1]) * .7152 + toLinear(this.photo[i + 2]) * .0722;
-      const spec = Math.min(1, Math.max(0, (lum - .85) / .15));
+      const highlight = Math.min(1, Math.max(0, (lum - .85) / .15));
+      const spec = highlight * highlight * (3 - 2 * highlight);
       for (let c = 0; c < 3; c++) {
         let lit = toLinear(this.atlas[ai + c]) * (1 - params.grout * .55 * groove) * tone * detail * params.exposure * balance[c];
         const lp = toLinear(this.photo[i + c]);
-        lit = lit + (1 - (1 - lit) * (1 - lp) - lit) * spec * .6;
+        lit = lit + (1 - (1 - lit) * (1 - lp) - lit) * spec * .12;
         o[i + c] = this.photo[i + c] * (1 - a) + toByte(lit) * a;
       }
       o[i + 3] = 255;

@@ -6,7 +6,8 @@ import type { HorizonEstimate } from './geometry/vanishing';
 import { createFloorRenderer, defaultRenderParams, type FloorRenderer } from './render/FloorRenderer';
 import { computeShading } from './render/shading';
 import { buildPlankAtlas, disposePlankAtlases, type PlankAtlas } from './texture/plankAtlas';
-import { SAMPLE_ROOMS, roomAlphaPath, type SampleRoom } from './rooms';
+import { SAMPLE_ROOMS, LEGACY_SAMPLE_ROOMS, roomAlphaPath, type SampleRoom } from './rooms';
+import type { FloorPattern } from './texture/layout';
 import { decodeImage, depthTensor, letterboxTensor, samTensor, toWorkingCanvas } from './prepare';
 import { luminanceOf, resizeMap } from './mask/guidedFilter';
 import { DEPTH, DEPTH_WASM, FLOOR_SEGMENTATION, SAM_DECODER, SAM_ENCODER, resolveModelUrl } from './models';
@@ -29,6 +30,13 @@ export type DepthStatus = 'idle' | 'running' | 'done' | 'failed';
 export type SamStatus = 'idle' | 'embedding' | 'ready' | 'failed';
 
 export interface FloorVisualizerDiagnostics {
+  pattern: FloorPattern;
+  sourceWidth: number;
+  sourceHeight: number;
+  canUndo: boolean;
+  canRedo: boolean;
+  frame: Crop;
+  display: Crop;
   ready: boolean;
   failed: boolean;
   disposed: boolean;
@@ -176,6 +184,9 @@ export class FloorVisualizer {
   private readonly productList: ProductConfig[];
   private readonly alphaImages = new Map<number, Promise<HTMLImageElement | null>>();
   private readonly alphaLoaded = new Map<number, HTMLImageElement | null>();
+  private readonly roomImages = new Map<number, Promise<HTMLImageElement | null>>();
+  private readonly roomLoaded = new Map<number, HTMLImageElement | null>();
+  private readonly materialPhotos = new Map<string, HTMLImageElement>();
   private readonly observer?: ResizeObserver;
   private scene: Scene | null = null;
   private inputsKey = '';
@@ -218,6 +229,10 @@ export class FloorVisualizer {
   private disposed = false;
   private room = 0;
   private finish = 0;
+  private pattern: FloorPattern = 'straight';
+  private maskHistory: Uint8Array[] = [];
+  private maskFuture: Uint8Array[] = [];
+  private lastPaintPoint: Point | null = null;
   private view = 0;
   private compare = false;
   private comparePosition = .5;
@@ -260,38 +275,39 @@ export class FloorVisualizer {
       this.observer.observe(host);
     } else window.addEventListener('resize', this.resize);
     this.resize();
-    const firstAlpha = this.alphaImage(0);
-    // The remaining mattes are a few KB each; fetch them now so room switches never show the polygon fallback.
-    void firstAlpha.then(() => { if (!this.disposed) SAMPLE_ROOMS.forEach((_, index) => index && this.alphaImage(index)); });
-    this.ready = new Promise<void>(resolve => {
-      this.prototype.onload = () => {
-        void firstAlpha.then(() => {
-          if (!this.disposed) {
-            this.loadComplete = true;
-            this.rebuild();
-            this.emit();
-            this.warmAtlases();
-          }
-          resolve();
-        });
-      };
-      this.prototype.onerror = () => {
-        if (!this.disposed) {
-          this.failed = true;
-          this.hint('ไม่สามารถโหลดภาพตัวอย่างได้ กรุณาลองรีเฟรชหน้าเว็บ หรืออัปโหลดภาพห้องของคุณ');
-          this.emit();
-        }
-        resolve();
-      };
-      this.prototype.src = options.imageUrl ?? sitePath('/website/assets/prototype-home.png');
+    const source = options.imageUrl ? new Promise<boolean>(resolve => {
+      this.prototype.onload = () => resolve(true);
+      this.prototype.onerror = () => resolve(false);
+      this.prototype.src = options.imageUrl!;
+    }) : this.roomImage(0).then(Boolean);
+    const materials = Promise.all(this.productList.map(async product => {
+      const index = DEFAULT_PRODUCTS.indexOf(product.id);
+      if (index < 0) return;
+      const image = await loadImage(sitePath(`/v2/assets/finish-${index + 1}.webp`));
+      if (image && !this.disposed) this.materialPhotos.set(product.id, image);
+    }));
+    this.ready = Promise.all([source, this.alphaImage(0), materials]).then(([loaded]) => {
+      if (this.disposed) return;
+      this.loadComplete = loaded;
+      this.failed = !loaded;
+      if (loaded) {
+        this.rebuild();
+        this.hint('เลือกสีและลายปู แล้วลองหมุนลายหรือเปรียบเทียบกับภาพเดิมได้');
+        this.warmAtlases();
+        SAMPLE_ROOMS.forEach((_, index) => { if (index) { void this.roomImage(index); void this.alphaImage(index); } });
+      } else this.hint('โหลดภาพห้องไม่สำเร็จ กรุณาลองใหม่หรืออัปโหลดภาพของคุณ');
+      this.emit();
     });
   }
 
   get diagnostics(): FloorVisualizerDiagnostics {
     return {
+      pattern: this.pattern, sourceWidth: this.original.width, sourceHeight: this.original.height,
+      canUndo: this.maskHistory.length > 0, canRedo: this.maskFuture.length > 0,
+      frame: { ...this.frame }, display: { ...this.display },
       ready: this.loadComplete || Boolean(this.photo), failed: this.failed, disposed: this.disposed,
       room: this.room, finish: this.finish, view: this.view, compare: this.compare, comparePosition: this.comparePosition,
-      uploaded: Boolean(this.photo), floorCorners: this.points.length, floorSelected: Boolean(this.quad) || this.stage === 'auto',
+      uploaded: Boolean(this.photo), floorCorners: this.points.length, floorSelected: Boolean(this.scene),
       width: this.canvas.width, height: this.canvas.height, renderer: this.renderer.kind,
       maskSource: this.scene?.maskSource ?? 'none', rotation: this.scene?.rotation ?? 0,
       atlasMs: this.atlasMs, renderMs: this.renderMs,
@@ -313,6 +329,8 @@ export class FloorVisualizer {
     this.room = clampIndex(index, SAMPLE_ROOMS.length - 1);
     this.view = 0;
     this.rotationOverride = null;
+    this.scene = null;
+    void this.roomImage(this.room);
     this.rebuild();
     this.hint('เลือกสีพื้นเพื่อดูบรรยากาศในห้องตัวอย่าง');
     this.emit();
@@ -326,8 +344,47 @@ export class FloorVisualizer {
     this.emit();
   }
 
+  setPattern(pattern: FloorPattern): void {
+    if (this.disposed || !['straight', 'herringbone'].includes(pattern)) return;
+    if (this.tool !== 'none') this.setTool('none');
+    this.pattern = pattern;
+    this.renderScene();
+    this.draw();
+    this.emit();
+  }
+
+  private maskSnapshot(): Uint8Array {
+    const alpha = this.scene!.alphaMap, result = new Uint8Array(alpha.length);
+    for (let i = 0; i < alpha.length; i++) result[i] = Math.round(alpha[i] * 255);
+    return result;
+  }
+
+  private restoreMask(snapshot: Uint8Array): void {
+    if (!this.scene || snapshot.length !== this.scene.alphaMap.length) return;
+    const ctx = context(this.scene.alpha), image = ctx.createImageData(this.scene.width, this.scene.height);
+    for (let i = 0; i < snapshot.length; i++) {
+      image.data[i * 4] = image.data[i * 4 + 1] = image.data[i * 4 + 2] = snapshot[i];
+      image.data[i * 4 + 3] = 255;
+    }
+    ctx.putImageData(image, 0, 0);
+    this.finishPaint();
+  }
+
+  undoMask(): void {
+    if (!this.scene || !this.maskHistory.length) return;
+    this.maskFuture.push(this.maskSnapshot());
+    this.restoreMask(this.maskHistory.pop()!);
+  }
+
+  redoMask(): void {
+    if (!this.scene || !this.maskFuture.length) return;
+    this.maskHistory.push(this.maskSnapshot());
+    this.restoreMask(this.maskFuture.pop()!);
+  }
+
   setCompare(enabled: boolean): void {
     if (this.disposed) return;
+    if (enabled && this.tool !== 'none') this.setTool('none');
     this.compare = Boolean(enabled);
     this.draw();
     this.emit();
@@ -365,7 +422,9 @@ export class FloorVisualizer {
   setTool(tool: Tool): void {
     if (this.disposed) return;
     const previous = this.tool;
-    this.tool = this.stage === 'auto' ? tool : 'none';
+    const editable = Boolean(this.scene) && this.stage !== 'scanning';
+    this.tool = editable && (tool.startsWith('brush') || tool === 'none' || this.stage === 'auto') ? tool : 'none';
+    this.canvas.style.touchAction = this.tool.startsWith('brush') || this.tool === 'horizon' ? 'none' : 'pan-y';
     if (previous !== this.tool && (previous.startsWith('click') || this.tool.startsWith('click'))) {
       // Each click session (add or erase) starts from the matte as it is now.
       this.samPoints = [];
@@ -501,13 +560,14 @@ export class FloorVisualizer {
 
   /** Restores the model's matte after brush edits. */
   resetMask(): void {
-    if (this.disposed || this.stage !== 'auto' || !this.autoMask) return;
+    if (this.disposed || !this.scene) return;
+    this.maskHistory = []; this.maskFuture = [];
     this.samPoints = [];
     this.samBaseAlpha = null;
     this.depthState = { status: 'idle', planarity: 0, removed: 0, ms: 0, error: null };
     this.scene = null;
     this.rebuild();
-    this.hint('คืนค่าขอบพื้นที่ตรวจพบอัตโนมัติแล้ว');
+    this.hint('คืนค่าขอบพื้นเริ่มต้นแล้ว');
     this.emit();
   }
 
@@ -559,6 +619,8 @@ export class FloorVisualizer {
     if ('close' in source) source.close();
     this.cancelScan();
     this.photo = { canvas, token, lum: null };
+    this.maskHistory = []; this.maskFuture = []; this.lastPaintPoint = null;
+    this.canvas.style.touchAction = 'pan-y';
     this.points = [];
     this.quad = null;
     this.keyboardActive = false;
@@ -595,7 +657,7 @@ export class FloorVisualizer {
     ctx.drawImage(this.current, 0, 0);
     const unit = Math.max(1, width / 800);
     const product = this.productList[this.finish];
-    const label = `COOLPLAN · ${product.name} · ${product.nameTh}`;
+    const label = `COOLPLAN · ${product.name} · ${this.pattern === 'herringbone' ? 'ลายก้างปลา' : 'ลายตรง'}`;
     ctx.font = `600 ${13 * unit}px "Noto Sans Thai", sans-serif`;
     const textWidth = ctx.measureText(label).width;
     const padding = 10 * unit;
@@ -625,6 +687,8 @@ export class FloorVisualizer {
     this.canvas.remove();
     this.renderer.dispose();
     disposePlankAtlases();
+    this.roomLoaded.clear(); this.roomImages.clear(); this.materialPhotos.clear();
+    this.alphaLoaded.clear(); this.alphaImages.clear();
     this.scene = null;
     this.original.width = this.current.width = this.canvas.width = 1;
     this.original.height = this.current.height = this.canvas.height = 1;
@@ -810,6 +874,8 @@ export class FloorVisualizer {
     this.photo = null;
     this.stage = 'idle';
     this.tool = 'none';
+    this.maskHistory = []; this.maskFuture = []; this.lastPaintPoint = null;
+    this.canvas.style.touchAction = 'pan-y';
     this.autoMask = null;
     this.horizonEstimate = null;
     this.scanError = null;
@@ -857,8 +923,32 @@ export class FloorVisualizer {
     return clamp(4 / spanAtUnitHeight, .7, 2.2);
   }
 
+  private get sampleRoom(): SampleRoom {
+    return (this.options.imageUrl ? LEGACY_SAMPLE_ROOMS : SAMPLE_ROOMS)[this.room];
+  }
+
+  private roomImage(index: number): Promise<HTMLImageElement | null> {
+    if (this.options.imageUrl) return Promise.resolve(null);
+    let pending = this.roomImages.get(index);
+    if (!pending) {
+      const path = SAMPLE_ROOMS[index].image;
+      pending = (path ? loadImage(sitePath(path)) : Promise.resolve(null)).then(image => {
+        if (this.disposed) return null;
+        this.roomLoaded.set(index, image);
+        if (this.loadComplete && !this.photo && this.room === index) {
+          if (image) { this.scene = null; this.rebuild(); }
+          else this.hint('โหลดห้องนี้ไม่สำเร็จ กรุณาเลือกห้องอื่นหรือลองใหม่');
+          this.emit();
+        }
+        return image;
+      });
+      this.roomImages.set(index, pending);
+    }
+    return pending;
+  }
+
   private defaultRotation(): number {
-    if (!this.photo) return SAMPLE_ROOMS[this.room].floor.rotation;
+    if (!this.photo) return this.sampleRoom.floor.rotation;
     if (this.stage === 'auto' && this.horizonEstimate?.vanishingPoint && this.horizonEstimate.confidence >= .25 && this.scene) {
       const vp = this.horizonEstimate.vanishingPoint;
       if (vp.x > -.5 && vp.x < 1.5) {
@@ -871,7 +961,8 @@ export class FloorVisualizer {
   private alphaImage(index: number): Promise<HTMLImageElement | null> {
     let pending = this.alphaImages.get(index);
     if (!pending) {
-      pending = loadImage(sitePath(roomAlphaPath(index))).then(image => {
+      const path = this.options.imageUrl ? `/website/rooms/room-${index}-alpha.png` : roomAlphaPath(index);
+      pending = (path ? loadImage(sitePath(path)) : Promise.resolve(null)).then(image => {
         this.alphaLoaded.set(index, image);
         if (image && !this.disposed && !this.photo && this.room === index && this.scene?.maskSource === 'polygon') {
           this.scene = null;
@@ -890,7 +981,8 @@ export class FloorVisualizer {
     const step = (): void => {
       if (this.disposed || !pending.length) return;
       const started = performance.now();
-      buildPlankAtlas(this.productList[pending.shift()!]);
+      const product = this.productList[pending.shift()!];
+      buildPlankAtlas(product, { photo: this.materialPhotos.get(product.id) });
       this.atlasMs = Math.max(this.atlasMs, performance.now() - started);
       schedule();
     };
@@ -966,8 +1058,11 @@ export class FloorVisualizer {
     if (this.disposed) return;
     const point = this.canvasPoint(event);
     if (!point) return;
-    if (this.stage === 'auto' && this.tool.startsWith('brush') && this.scene) {
+    if (this.tool.startsWith('brush') && this.scene) {
       event.preventDefault();
+      this.maskHistory.push(this.maskSnapshot());
+      if (this.maskHistory.length > 8) this.maskHistory.shift();
+      this.maskFuture = []; this.lastPaintPoint = null;
       this.painting = this.tool === 'brush-add' ? 'add' : 'erase';
       this.canvas.setPointerCapture(event.pointerId);
       this.paint(this.toImage(point));
@@ -999,6 +1094,7 @@ export class FloorVisualizer {
     if (this.canvas.hasPointerCapture(event.pointerId)) this.canvas.releasePointerCapture(event.pointerId);
     if (this.painting) {
       this.painting = null;
+      this.lastPaintPoint = null;
       this.finishPaint();
     }
     this.draggingHorizon = false;
@@ -1042,14 +1138,19 @@ export class FloorVisualizer {
     if (!scene) return;
     const ctx = context(scene.alpha, true);
     const radius = this.brushSize * scene.width / Math.max(1, this.display.width) * (this.canvas.width / Math.max(1, this.canvas.getBoundingClientRect().width || this.canvas.width));
-    const gradient = ctx.createRadialGradient(image.x, image.y, radius * .6, image.x, image.y, radius);
     const value = this.painting === 'add' ? 255 : 0;
-    gradient.addColorStop(0, `rgba(${value},${value},${value},1)`);
-    gradient.addColorStop(1, `rgba(${value},${value},${value},0)`);
-    ctx.fillStyle = gradient;
-    ctx.beginPath();
-    ctx.arc(image.x, image.y, radius, 0, Math.PI * 2);
-    ctx.fill();
+    const previous = this.lastPaintPoint ?? image;
+    const steps = Math.max(1, Math.ceil(Math.hypot(image.x - previous.x, image.y - previous.y) / Math.max(1, radius * .35)));
+    for (let i = 1; i <= steps; i++) {
+      const x = previous.x + (image.x - previous.x) * i / steps;
+      const y = previous.y + (image.y - previous.y) * i / steps;
+      const gradient = ctx.createRadialGradient(x, y, radius * .6, x, y, radius);
+      gradient.addColorStop(0, `rgba(${value},${value},${value},1)`);
+      gradient.addColorStop(1, `rgba(${value},${value},${value},0)`);
+      ctx.fillStyle = gradient;
+      ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill();
+    }
+    this.lastPaintPoint = image;
     scene.tint = null;
     if (this.renderer.kind === 'webgl2') {
       this.renderer.setAlpha(scene.alpha);
@@ -1081,10 +1182,10 @@ export class FloorVisualizer {
 
   /** Draws the source photo into `original` and returns the scene key. */
   private loadOriginal(): string {
-    const room: SampleRoom = SAMPLE_ROOMS[this.room];
-    const sourceWidth = this.photo?.canvas.width ?? room.crop.width;
-    const sourceHeight = this.photo?.canvas.height ?? room.crop.height;
-    const scale = this.photo ? 1 : room.scale;
+    const room = this.sampleRoom, sample = this.options.imageUrl ? null : this.roomLoaded.get(this.room);
+    const sourceWidth = this.photo?.canvas.width ?? sample?.naturalWidth ?? room.crop.width;
+    const sourceHeight = this.photo?.canvas.height ?? sample?.naturalHeight ?? room.crop.height;
+    const scale = this.photo || sample ? 1 : room.scale;
     const width = Math.max(1, Math.round(sourceWidth * scale)), height = Math.max(1, Math.round(sourceHeight * scale));
     const key = this.photo
       ? `upload:${this.photo.token}:${this.stage}:${this.quad ? this.quad.map(p => `${p.x.toFixed(4)},${p.y.toFixed(4)}`).join(';') : 'none'}`
@@ -1093,7 +1194,9 @@ export class FloorVisualizer {
       this.original.width = this.current.width = width;
       this.original.height = this.current.height = height;
       const base = context(this.original, true);
+      base.imageSmoothingQuality = 'high';
       if (this.photo) base.drawImage(this.photo.canvas, 0, 0, width, height);
+      else if (sample) base.drawImage(sample, 0, 0, width, height);
       else base.drawImage(this.prototype, room.crop.x, room.crop.y, room.crop.width, room.crop.height, 0, 0, width, height);
     }
     return key;
@@ -1104,7 +1207,8 @@ export class FloorVisualizer {
       if (this.stage === 'manual') {
         if (!this.quad) return null;
         const unit = homographyFromQuad(this.quad.map(p => ({ x: p.x * width, y: p.y * height })));
-        const Hinv = unit ? invert(multiply(unit, scaled(1 / QUAD_METRES[0], 1 / QUAD_METRES[1]))) : null;
+        const size = this.cameraHeight / DEFAULT_CAMERA_HEIGHT;
+        const Hinv = unit ? invert(multiply(unit, scaled(1 / (QUAD_METRES[0] * size), 1 / (QUAD_METRES[1] * size)))) : null;
         return Hinv ? { Hinv, rotation: this.rotationOverride ?? Math.PI / 2 } : null;
       }
       const anchor = this.autoMask ? maskStats(this.autoMask, width, height).anchor : { x: .5, y: .9 };
@@ -1112,7 +1216,7 @@ export class FloorVisualizer {
       const frame = floorFrame({ width, height, horizonY, focal: UPLOAD_FOCAL, anchor, cameraHeight: this.cameraHeight, rotation: 0 });
       return frame ? { Hinv: frame.Hinv, rotation: this.rotationOverride ?? this.defaultRotation() } : null;
     }
-    const room = SAMPLE_ROOMS[this.room];
+    const room = this.sampleRoom;
     const frame = floorFrame({ width, height, horizonY: room.floor.horizonY, focal: room.floor.focal, anchor: room.floor.anchor, cameraHeight: room.floor.cameraHeight * (this.cameraHeight / DEFAULT_CAMERA_HEIGHT), rotation: 0 });
     return frame ? { Hinv: frame.Hinv, rotation: this.rotationOverride ?? room.floor.rotation } : null;
   }
@@ -1130,7 +1234,7 @@ export class FloorVisualizer {
 
   private buildScene(key: string): Scene | null {
     const width = this.original.width, height = this.original.height;
-    const room = SAMPLE_ROOMS[this.room];
+    const room = this.sampleRoom;
     const alpha = surface(width, height);
     const actx = context(alpha, true);
     actx.fillStyle = '#000';
@@ -1148,7 +1252,7 @@ export class FloorVisualizer {
         maskSource = 'auto';
       } else if (this.stage === 'manual' && this.quad) {
         actx.save();
-        actx.filter = 'blur(1.2px)';
+        actx.filter = 'blur(0.55px)';
         actx.fillStyle = '#fff';
         actx.beginPath();
         tracePath(actx, this.quad, width, height);
@@ -1164,7 +1268,7 @@ export class FloorVisualizer {
         maskSource = 'precomputed';
       } else {
         actx.save();
-        actx.filter = 'blur(1.2px)';
+        actx.filter = 'blur(0.55px)';
         actx.fillStyle = '#fff';
         actx.beginPath();
         tracePath(actx, room.polygon, width, height);
@@ -1196,13 +1300,14 @@ export class FloorVisualizer {
     const shadeImage = context(shade).createImageData(width, height);
     shadeImage.data.set(shading.rgba);
     context(shade).putImageData(shadeImage, 0, 0);
-    if (this.photo) this.coverage = stats.coverage;
+    this.coverage = stats.coverage;
     return { key, width, height, alpha, alphaMap, shade, tint: null, meanRGB: shading.meanRGB, Hinv: frame.Hinv, rotation: frame.rotation, maskSource, maskTop: stats.top };
   }
 
   private atlas(): PlankAtlas {
     const started = performance.now();
-    const atlas = buildPlankAtlas(this.productList[this.finish]);
+    const product = this.productList[this.finish];
+    const atlas = buildPlankAtlas(product, { photo: this.materialPhotos.get(product.id) });
     const elapsed = performance.now() - started;
     if (elapsed > 1) this.atlasMs = elapsed;
     return atlas;
@@ -1219,6 +1324,8 @@ export class FloorVisualizer {
       this.inputsKey = inputsKey;
     }
     const params = defaultRenderParams(scene.Hinv, atlas.plankSize);
+    params.pattern = this.pattern;
+    if (this.pattern === 'herringbone') params.plankSize = [.72, .12];
     params.rotation = scene.rotation;
     params.meanRGB = scene.meanRGB;
     const rendered = this.renderer.render(params);
@@ -1230,6 +1337,7 @@ export class FloorVisualizer {
 
   private rebuild(): void {
     if (this.disposed || (!this.loadComplete && !this.photo)) return;
+    if (!this.photo && !this.options.imageUrl && !this.roomLoaded.get(this.room)) return;
     const key = this.loadOriginal();
     if (!this.scene || this.scene.key !== key) {
       this.scene = this.buildScene(key);
@@ -1266,7 +1374,7 @@ export class FloorVisualizer {
     drawImage(this.current);
     if (this.compare && this.scene) this.drawCompare(drawImage);
     if (this.stage === 'scanning') this.drawScanner();
-    if (this.stage === 'auto' && this.scene && (this.tool.startsWith('brush') || this.tool.startsWith('click') || performance.now() < this.revealUntil)) this.drawMaskTint(drawImage);
+    if (this.scene && (this.tool.startsWith('brush') || (this.stage === 'auto' && (this.tool.startsWith('click') || performance.now() < this.revealUntil)))) this.drawMaskTint(drawImage);
     if (this.stage === 'auto' && this.tool.startsWith('click') && this.samPoints.length && this.samFrame) this.drawSamPoints();
     if (this.stage === 'auto' && this.tool === 'horizon') this.drawHorizon();
     if (this.stage === 'manual' && !this.quad && (this.points.length || this.keyboardActive)) this.drawCorners();

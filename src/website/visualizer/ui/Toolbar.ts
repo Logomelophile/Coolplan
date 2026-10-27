@@ -3,9 +3,9 @@ import { adviceEndpoint, requestRoomAdvice } from '../advice';
 import { track } from '../analytics';
 
 /**
- * Upload tools rendered from TypeScript (the page markup stays untouched):
+ * Customer tools for sample rooms and uploaded photos:
  * brush add/erase, horizon, plank scale, rescan / manual corners, download, share.
- * Visible only while a user photo is loaded.
+ * Optional AI tools appear only for automatically segmented uploads.
  */
 export interface ToolbarHandle {
   element: HTMLElement;
@@ -28,7 +28,7 @@ export function mountVisualizerToolbar(anchor: HTMLElement, visualizer: FloorVis
   root.id = 'visualizer-tools';
   root.hidden = true;
   root.setAttribute('role', 'toolbar');
-  root.setAttribute('aria-label', 'เครื่องมือปรับพื้นในภาพของคุณ');
+  root.setAttribute('aria-label', 'ปรับลายพื้นและบันทึกภาพ');
   const abort = new AbortController();
   const signal = abort.signal;
 
@@ -70,17 +70,19 @@ export function mountVisualizerToolbar(anchor: HTMLElement, visualizer: FloorVis
 
   const groupEdit = document.createElement('div');
   groupEdit.className = 'visualizer-group';
-  const brushAdd = button('tool-brush-add', '+ เพิ่มพื้น', 'ระบายเพิ่มบริเวณที่เป็นพื้น', () => setTool('brush-add'), true);
-  const brushErase = button('tool-brush-erase', '− ลบพื้น', 'ระบายลบบริเวณที่ไม่ใช่พื้น', () => setTool('brush-erase'), true);
+  const brushAdd = button('tool-brush-add', '+ เพิ่มพื้นที่พื้น', 'ระบายเพิ่มบริเวณที่เป็นพื้น', () => setTool('brush-add'), true);
+  const brushErase = button('tool-brush-erase', '− ลบส่วนเกิน', 'ระบายส่วนที่ทับโต๊ะ ขาเก้าอี้ หรือเฟอร์นิเจอร์ออก', () => setTool('brush-erase'), true);
+  const undo = button('tool-undo', '↶ ย้อนกลับ', 'ย้อนรอยระบายครั้งล่าสุด', () => visualizer.undoMask());
+  const redo = button('tool-redo', '↷ ทำซ้ำ', 'คืนรอยระบายที่เพิ่งย้อนกลับ', () => visualizer.redoMask());
   const horizon = button('tool-horizon', 'ปรับมุมมอง', 'เลื่อนเส้นขอบฟ้าให้ตรงระดับสายตา', () => setTool('horizon'), true);
-  const resetMask = button('tool-reset-mask', 'คืนค่าขอบ', 'ยกเลิกการระบายและใช้ขอบที่ตรวจพบอัตโนมัติ', () => visualizer.resetMask());
+  const resetMask = button('tool-reset-mask', 'คืนค่าขอบ', 'ยกเลิกการระบายและกลับไปใช้ขอบพื้นเริ่มต้น', () => visualizer.resetMask());
   const brushSize = range('tool-brush-size', 'ขนาดแปรง', 6, 120, 2, 28, value => visualizer.setBrushSize(value));
   const plankScale = range('tool-plank-scale', 'ขนาดแผ่น', 60, 240, 5, 140, value => visualizer.setPlankScale(value / 100));
   plankScale.input.title = 'เลื่อนซ้าย = แผ่นใหญ่ขึ้น (กล้องใกล้พื้น), ขวา = แผ่นเล็กลง';
   const clickAdd = button('tool-click-add', 'แตะเพิ่มพื้น (AI)', 'แตะหนึ่งจุด AI จะเลือกบริเวณพื้นทั้งผืนให้', () => setTool('click-add'), true);
   const clickErase = button('tool-click-erase', 'แตะลบวัตถุ (AI)', 'แตะวัตถุที่ทับพื้น AI จะลบออกทั้งชิ้น', () => setTool('click-erase'), true);
   const depth = button('tool-depth', 'แยกวัตถุด้วยความลึก', 'ใช้โมเดลความลึกตัดวัตถุที่วางบนพื้นออกจากขอบพื้น', () => visualizer.refineWithDepth());
-  groupEdit.append(clickAdd, clickErase, brushAdd, brushErase, brushSize.wrap, resetMask, horizon, plankScale.wrap, depth);
+  groupEdit.append(brushAdd, brushErase, brushSize.wrap, undo, redo, resetMask, clickAdd, clickErase, horizon, depth);
 
   const groupMode = document.createElement('div');
   groupMode.className = 'visualizer-group';
@@ -142,15 +144,33 @@ export function mountVisualizerToolbar(anchor: HTMLElement, visualizer: FloorVis
     groupExport.append(advice);
   }
 
-  root.append(groupEdit, groupMode, groupExport);
+  const quick = document.createElement('div');
+  quick.className = 'visualizer-group visualizer-quick';
+  quick.append(plankScale.wrap);
+  const refinement = document.createElement('details');
+  refinement.className = 'visualizer-refinement';
+  refinement.id = 'visualizer-refinement';
+  const summary = document.createElement('summary');
+  summary.textContent = 'ปรับขอบพื้น';
+  const help = document.createElement('p');
+  help.textContent = 'ถ้าพื้นทับขาโต๊ะหรือเฟอร์นิเจอร์ ให้เลือกลบส่วนเกินแล้วระบายบนภาพ ใช้ปุ่มย้อนกลับเพื่อลบรอยระบายล่าสุดได้';
+  refinement.append(summary, help, groupEdit, groupMode);
+  refinement.addEventListener('toggle', () => { if (!refinement.open && tool !== 'none') { tool = 'none'; visualizer.setTool('none'); } }, { signal });
+  groupExport.classList.add('visualizer-export');
+  root.append(quick, refinement, groupExport);
   anchor.insertAdjacentElement('afterend', root);
 
   return {
     element: root,
     update(state) {
-      root.hidden = !state.uploaded;
+      root.hidden = !state.ready;
       const auto = state.stage === 'auto';
-      groupEdit.hidden = !auto;
+      groupEdit.hidden = !state.floorSelected;
+      groupMode.hidden = !state.uploaded;
+      help.hidden = !state.floorSelected;
+      clickAdd.hidden = clickErase.hidden = horizon.hidden = depth.hidden = !auto;
+      undo.disabled = !state.canUndo;
+      redo.disabled = !state.canRedo;
       const pressed = (el: HTMLButtonElement, active: boolean): void => el.setAttribute('aria-pressed', String(active));
       pressed(brushAdd, state.tool === 'brush-add');
       pressed(brushErase, state.tool === 'brush-erase');
@@ -165,11 +185,12 @@ export function mountVisualizerToolbar(anchor: HTMLElement, visualizer: FloorVis
       depth.classList.toggle('is-done', state.depth.status === 'done');
       brushSize.wrap.hidden = !state.tool.startsWith('brush');
       plankScale.wrap.hidden = state.tool !== 'horizon' && state.tool !== 'none';
+      plankScale.input.disabled = !state.floorSelected;
       plankScale.input.value = String(Math.round(state.cameraHeight * 100));
       rescan.hidden = state.stage === 'scanning';
       rescan.textContent = state.stage === 'manual' ? 'สแกนอัตโนมัติ' : 'สแกนใหม่';
       manual.hidden = state.stage !== 'auto' && state.stage !== 'scanning';
-      download.disabled = !(auto || (state.stage === 'manual' && state.floorSelected));
+      download.disabled = !state.floorSelected;
       groupExport.hidden = state.stage === 'scanning';
       if (state.tool !== tool) tool = state.tool;
     },

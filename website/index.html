@@ -50,9 +50,18 @@
           <div class="color-filters" id="color-filters" role="group" aria-label="กรองโทนสี"></div>
           <div class="product-grid" id="product-grid" role="group" aria-label="เลือกพื้น SPC"></div>
           <p class="filter-empty" id="filter-empty" hidden>ไม่พบสีพื้นในโทนนี้</p>
+          <div class="floor-pattern-picker">
+            <h3 id="pattern-heading">2. เลือกลายปู</h3>
+            <div class="floor-patterns" role="group" aria-labelledby="pattern-heading">
+              <button type="button" data-pattern="straight" aria-pressed="true"><svg viewBox="0 0 44 32" aria-hidden="true"><path d="M2 3h40v8H2zm0 10h40v8H2zm0 10h40v7H2zM15 3v8m15 2v8M12 23v7"/></svg><span>ลายตรง<small>เรียบง่าย เข้าได้กับทุกห้อง</small></span></button>
+              <button type="button" data-pattern="herringbone" aria-pressed="false"><svg viewBox="0 0 44 32" aria-hidden="true"><path d="m4 9 14-7 4 6-14 7zm18-1 14-7 4 6-14 7zM4 22l14-7 4 6-14 7zm18-1 14-7 4 6-14 7z"/></svg><span>ลายก้างปลา<small>เพิ่มจังหวะและมิติให้พื้นที่</small></span></button>
+            </div>
+            <p class="floor-simulation-note">ภาพจำลองสีและลายปู กรุณายืนยันสีกับตัวอย่างจริง และรุ่นที่รองรับลายก้างปลาก่อนติดตั้ง</p>
+          </div>
         </div>
         <div class="preview-column">
-          <h2>2. ดูผลลัพธ์ในห้องของคุณ</h2>
+          <h2>3. ดูผลลัพธ์ในห้องของคุณ</h2>
+          <p class="preview-selection" id="preview-selection" aria-live="polite">Light Natural Oak · ลายตรง</p>
           <div class="preview-tabs" role="group" aria-label="เลือกรูปห้อง">
             <button class="active" id="sample-tab" type="button" aria-pressed="true"><span data-icon="room"></span>เลือกรูปห้องตัวอย่าง</button>
             <button id="upload-tab" type="button" aria-pressed="false"><span data-icon="camera"></span>อัปโหลดรูปห้องของคุณ</button>

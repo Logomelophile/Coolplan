@@ -7,9 +7,11 @@ import { FloorVisualizer, type FloorVisualizerDiagnostics as RoomPreviewDiagnost
 import { mountVisualizerToolbar, type ToolbarHandle } from './visualizer/ui/Toolbar';
 import { mountQrDialog, UPLOAD_HASH } from './visualizer/ui/QrDialog';
 import { track } from './visualizer/analytics';
-import { icon, mountHeader, mountFooter, mountContactDialog, sprite } from './shared';
+import { icon, mountHeader, mountFooter, mountContactDialog } from './shared';
+import { SAMPLE_ROOMS } from './visualizer/rooms';
+import { sitePath } from '../sitePath';
+import type { FloorPattern } from './visualizer/texture/layout';
 
-type Crop = [number,number,number,number];
 const $ = <T extends HTMLElement = HTMLElement>(id:string) => document.getElementById(id) as T;
 const floors = [
   {name:'Light Natural Oak',code:'CP-101',id:'light-natural-oak',tones:[1,2],crop:[76,979,132,86]},
@@ -19,9 +21,8 @@ const floors = [
   {name:'Grey Oak',code:'CP-105',id:'greige-oak',tones:[4],crop:[229,1123,137,89]},
   {name:'Walnut Brown',code:'CP-106',id:'dark-walnut-brown',tones:[5],crop:[385,1123,139,89]},
 ] as const;
-const rooms=['ห้องนั่งเล่น','ห้องนอน','ห้องครัว','ห้องทำงาน','ห้องรับประทานอาหาร','ห้องน้ำ','ห้องแต่งตัว'];
-const roomCrops:Crop[]=[[62,733,130,104],[207,733,131,104],[351,733,130,104],[496,733,130,104],[641,733,130,104],[786,733,130,104],[931,733,131,104]];
-const viewCrops:Crop[]=[[567,1227,75,56],[652,1227,77,56],[738,1227,77,56],[825,1227,78,56],[914,1227,81,56],[1005,1227,50,56]];
+const rooms=SAMPLE_ROOMS.map(room=>room.name!);
+const viewNames=['ภาพห้องเต็ม','ดูด้านซ้าย','ดูด้านขวา','ดูส่วนกลาง','รายละเอียดด้านซ้าย','รายละเอียดพื้น'];
 const state={finish:0,room:0,view:0,filter:0,compare:false,progress:.65,disposed:false};
 let story:FloorScrollStory|undefined;
 const abort = new AbortController();
@@ -39,6 +40,8 @@ function syncPreview(value:RoomPreviewDiagnostics) {
   $('room-preview-shell').classList.toggle('upload-picking',value.uploaded&&!value.floorSelected);
   $('room-preview-shell').classList.toggle('upload-scanning',value.stage==='scanning');
   tools?.update(value);
+  $('preview-selection').textContent=`${floors[state.finish].name} · ${value.pattern==='herringbone'?'ลายก้างปลา':'ลายตรง'}`;
+  document.querySelectorAll<HTMLButtonElement>('[data-pattern]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.pattern===value.pattern)));
   $('reset-upload').hidden=!value.uploaded;
   $('reset-upload').textContent='กลับสู่ห้องตัวอย่าง';
   $('sample-tab').classList.toggle('active',!value.uploaded);
@@ -53,7 +56,7 @@ const preview=new FloorVisualizer($('room-preview'),{productIds:floors.map(floor
 const toneNames=['','ธรรมชาติ','อ่อน','คลาสสิก','เทา','เข้ม'];
 tools=mountVisualizerToolbar($('room-preview-shell'),preview,{
   hint:message=>$('preview-hint').textContent=message,
-  fileName:()=>`coolplan-${floors[state.finish].code}`,
+  fileName:()=>`coolplan-${floors[state.finish].code}-${preview.diagnostics.pattern}`,
   products:()=>floors.map(floor=>({id:floor.code,name:floor.name,nameTh:floor.name,tone:floor.tones.map(tone=>toneNames[tone]).join('/')})),
   onAdvice:ids=>{document.querySelectorAll<HTMLElement>('[data-product]').forEach(el=>el.classList.toggle('is-suggested',ids.includes(floors[Number(el.dataset.product)].code)));},
 });
@@ -61,19 +64,21 @@ tools=mountVisualizerToolbar($('room-preview-shell'),preview,{
 const rotateButton=document.createElement('button');rotateButton.type='button';rotateButton.id='rotate-planks';rotateButton.className='rotate-planks';rotateButton.innerHTML=`${icon('compare')}<span>หมุนลายแผ่น</span>`;rotateButton.setAttribute('aria-label','หมุนทิศทางลายแผ่น 90 องศา');
 $('preview-hint').insertAdjacentElement('afterend',rotateButton);
 listen(rotateButton,'click',()=>preview.rotate());
+tools.element.querySelector('.visualizer-quick')!.prepend(rotateButton);
+document.querySelectorAll<HTMLButtonElement>('[data-pattern]').forEach(button=>listen(button,'click',()=>preview.setPattern(button.dataset.pattern as FloorPattern)));
 // Desktop visitors can continue on their phone: QR of this page with a hash that jumps to the visualizer.
 const qr=mountQrDialog(`${location.origin}${location.pathname}${UPLOAD_HASH}`);
 const qrButton=document.createElement('button');qrButton.type='button';qrButton.id='open-on-phone';qrButton.className='rotate-planks';qrButton.innerHTML=`${icon('camera')}<span>ถ่ายด้วยมือถือ</span>`;
-rotateButton.insertAdjacentElement('afterend',qrButton);
+tools.element.querySelector('.visualizer-export')!.append(qrButton);
 listen(qrButton,'click',()=>qr.open());
 if(location.hash===UPLOAD_HASH){requestAnimationFrame(()=>{$('room-preview-shell').scrollIntoView({block:'center'});$('preview-hint').textContent='แตะ "อัปโหลดรูปห้องของคุณ" เพื่อถ่ายรูปห้อง แล้วระบบจะหาพื้นให้อัตโนมัติ';$('upload-tab').focus();});}
 
 function roomButton(index:number) {
   const button=document.createElement('button');button.type='button';button.className='room-choice';button.dataset.room=String(index);
   button.setAttribute('aria-pressed',String(index===state.room));
-  const photo=document.createElement('span');photo.className='room-photo';sprite(photo,roomCrops[index]);
+  const photo=document.createElement('span');photo.className='room-photo';photo.style.backgroundImage=`url('${sitePath(SAMPLE_ROOMS[index].image!)}')`;photo.style.backgroundSize='cover';photo.style.backgroundPosition='center';
   const label=document.createElement('span');label.textContent=rooms[index];button.append(photo,label);
-  listen(button,'click',()=>{selectRoom(index);($('room-gallery') as HTMLDialogElement).close();});
+  listen(button,'click',()=>{selectRoom(index);const gallery=$('room-gallery') as HTMLDialogElement;if(gallery.open)gallery.close();});
   return button;
 }
 function selectRoom(index:number) {
@@ -87,10 +92,20 @@ rooms.forEach((_,i)=>{$('room-choices').append(roomButton(i));$('gallery-grid').
 listen($('all-rooms'),'click',()=>($('room-gallery') as HTMLDialogElement).showModal());
 listen($('gallery-close'),'click',()=>($('room-gallery') as HTMLDialogElement).close());
 
-function updateViews(){document.querySelectorAll<HTMLElement>('[data-view]').forEach(el=>el.setAttribute('aria-pressed',String(Number(el.dataset.view)===state.view)));}
-viewCrops.forEach((crop,index)=>{
+function updateViews(){
+  const positions=['50% 50%','18% 54%','83% 54%','50% 62%','32% 57%','78% 98%'];
+  const zooms=[100,130,130,160,180,210];
+  document.querySelectorAll<HTMLElement>('[data-view]').forEach(el=>{
+    const index=Number(el.dataset.view);
+    el.setAttribute('aria-pressed',String(index===state.view));
+    el.style.backgroundImage=`url('${sitePath(SAMPLE_ROOMS[state.room].image!)}')`;
+    el.style.backgroundSize=index===0?'cover':`${Math.max(125,zooms[index])}% auto`;
+    el.style.backgroundPosition=positions[index];
+  });
+}
+viewNames.forEach((label,index)=>{
   const button=document.createElement('button');button.type='button';button.className='view-thumbnail';button.dataset.view=String(index);
-  button.setAttribute('aria-label',['ภาพห้องเต็ม','ดูด้านซ้าย','ดูด้านขวา','ดูส่วนกลาง','รายละเอียดด้านซ้าย','รายละเอียดพื้น'][index]);sprite(button,crop);
+  button.setAttribute('aria-label',label);button.title=label;
   listen(button,'click',()=>{state.view=index;preview.setView(index);updateViews();});$('view-thumbnails').append(button);
 });updateViews();
 
@@ -100,7 +115,7 @@ function renderProducts(){
     if(state.filter && !(floor.tones as readonly number[]).includes(state.filter))return;
     const button=document.createElement('button');button.type='button';button.className='product-card';button.dataset.product=String(index);
     button.setAttribute('aria-pressed',String(index===state.finish));button.setAttribute('aria-label',`${floor.name} ${floor.code}`);
-    const photo=document.createElement('span');photo.className='product-swatch';sprite(photo,[...floor.crop] as Crop);
+    const photo=document.createElement('span');photo.className='product-swatch';photo.style.backgroundImage=`url('${sitePath(`/v2/assets/finish-${index+1}.webp`)}')`;photo.style.backgroundSize='cover';photo.style.backgroundPosition='center';
     const name=document.createElement('span');name.className='product-name';name.textContent=floor.name;
     const code=document.createElement('span');code.className='product-code';code.textContent=floor.code;
     button.append(photo,name,code);listen(button,'click',()=>void selectFloor(index));$('product-grid').append(button);
@@ -108,11 +123,12 @@ function renderProducts(){
   $('filter-empty').hidden=$('product-grid').childElementCount>0;
 }
 async function selectFloor(index:number){
-  state.finish=index;preview.setFinish(index);renderProducts();
+  state.finish=index;preview.setFinish(index);updateProductSelection();
   track({name:'visualizer_finish',product:floors[index].code,context:preview.diagnostics.uploaded?'upload':'sample'});
   $('room-preview').setAttribute('aria-label',`${rooms[state.room]} พร้อมพื้น ${floors[index].name}`);
   story?.selectFinish(index);
 }
+function updateProductSelection(){document.querySelectorAll<HTMLElement>('[data-product]').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.product)===state.finish)));}
 ['ทั้งหมด','โทนธรรมชาติ','โทนอ่อน','โทนคลาสสิก','โทนเทา','โทนเข้ม'].forEach((label,index)=>{
   const button=document.createElement('button');button.type='button';button.textContent=label;button.dataset.filter=String(index);button.setAttribute('aria-pressed',String(index===0));
   listen(button,'click',()=>{state.filter=index;document.querySelectorAll<HTMLElement>('[data-filter]').forEach(el=>el.setAttribute('aria-pressed',String(Number(el.dataset.filter)===index)));renderProducts();});$('color-filters').append(button);
@@ -161,7 +177,7 @@ listen($('layers-toggle'),'click',()=>setProgress(state.progress>.5?0:1));
 listen($('hero-reset'),'click',()=>story?.resetView());
 
 const ready=(async()=>{
-  story=new FloorScrollStory({onFinish:index=>{if(state.disposed)return;state.finish=index;preview.setFinish(index);renderProducts();},onFrame:frame=>{state.progress=frame.explode;$<HTMLInputElement>('layer-slider').value=String(Math.round(frame.explode*100));$('layers-toggle').setAttribute('aria-pressed',String(frame.explode>.5));}});
+  story=new FloorScrollStory({onFinish:index=>{if(state.disposed)return;state.finish=index;preview.setFinish(index);updateProductSelection();},onFrame:frame=>{state.progress=frame.explode;$<HTMLInputElement>('layer-slider').value=String(Math.round(frame.explode*100));$('layers-toggle').setAttribute('aria-pressed',String(frame.explode>.5));}});
   await story.ready;
   await preview.ready;
 })();
