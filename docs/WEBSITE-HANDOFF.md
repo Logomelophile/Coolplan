@@ -136,7 +136,8 @@ npm run test:story
 | `src/website/FloorScrollStory.ts`, `storyTimeline.ts`, `story.css` | ลำดับ 12 ขั้น ฉากตรึง ปุ่มนำทาง ข้อความและเส้นชี้ |
 | `src/website/FloorStoryScene.ts` | วัสดุทั้งหก มุมกล้อง ชั้น WebGL และตำแหน่งเส้นชี้ของชิ้นตัวอย่าง 5 มม. |
 | `src/website/HeroRoomFloor.ts` | เปลี่ยนสีพื้นในภาพห้องหลักโดยรักษาเฟอร์นิเจอร์และแสงเงา |
-| `src/website/roomPreview.ts` | ภาพห้อง mask การอัปโหลดและการเลือกสี่มุม |
+| `src/website/visualizer/` | ตัวแสดงพื้นในภาพห้อง: `index.ts` (API/สถานะ), `vision.worker.ts` (ONNX Runtime Web: หาพื้น/ความลึก/SAM), `render/FloorRenderer.ts` (WebGL2 + CPU), `texture/plankAtlas.ts` (ลายไม้จาก `products.json`), `geometry/` (homography, จุดอันตรธาน, ระนาบจากความลึก), `ui/Toolbar.ts`, `ui/QrDialog.ts`, `models.ts` (URL โมเดล override ได้ด้วย `VITE_MODEL_*`), matte ห้องตัวอย่างใน `public/website/rooms/` จาก `npm run precompute:rooms` ดูการออกแบบและสถานะใน `docs/floor-visualizer-design.md` §7 |
+| `server/` | ตัวเลือกฝั่งเซิร์ฟเวอร์: `floor-api/` (FastAPI segment/depth, ยังไม่ได้รัน) และ `edge/room-advice.ts` (Cloudflare Worker → OpenRouter สำหรับ "แนะนำสีด้วย AI" เปิดด้วย `VITE_ROOM_ADVICE_URL`) |
 | `src/website/calculator.ts`, `calculator.css` | ราคา สูตร แบบฟอร์ม และใบประมาณราคา |
 | `src/website/shared.ts`, `shared.css` | เมนู ข้อมูลติดต่อ หน้าต่างข้อมูลและรูปแบบร่วม |
 | `ceo/index.html`, `src/website/ceo.ts`, `ceo.css`, `next-gen.css` | หน้า CEO และเนื้อหา Next Gen ที่อยู่ต่อด้านล่าง |

@@ -59,7 +59,27 @@ async function escapeExpanded(openId, shellId, closeId) {
 }
 async function uploadAndReset(label) {
   await page.locator('#room-file').setInputFiles(photoPath);
-  await page.waitForFunction(() => window.websiteDemo.diagnostics.preview.uploaded && !window.websiteDemo.diagnostics.preview.floorSelected);
+  // Automatic detection runs in a worker (first run downloads the model); it ends in 'auto' or falls back to 'manual'.
+  await page.waitForFunction(() => { const p = window.websiteDemo.diagnostics.preview; return p.uploaded && (p.stage === 'auto' || p.stage === 'manual'); }, null, { timeout: 180000 });
+  const scanned = (await state()).preview;
+  report[`${label}Scan`] = { stage: scanned.stage, coverage: scanned.coverage, horizonY: scanned.horizonY, horizonConfidence: scanned.horizonConfidence, backend: scanned.backend, segmentMs: scanned.segmentMs, segmentTimings: scanned.segmentTimings, cameraHeight: scanned.cameraHeight, scanError: scanned.scanError };
+  if (scanned.stage === 'auto') {
+    assert.ok(scanned.coverage > .05, `auto floor coverage ${scanned.coverage}`);
+    assert.equal(scanned.floorSelected, true);
+    assert.equal(await page.locator('#visualizer-tools').isVisible(), true);
+    await page.locator('#compare-toggle').click();
+    assert.equal((await state()).preview.compare, true);
+    await page.screenshot({ path: outputPath(`${label}-upload-auto.png`), fullPage: false });
+    await page.locator('#tool-brush-add').click();
+    assert.equal((await state()).preview.tool, 'brush-add');
+    await page.locator('#tool-horizon').click();
+    assert.equal((await state()).preview.tool, 'horizon');
+    await page.locator('#tool-horizon').click();
+    await page.locator('#tool-manual').click();
+  } else {
+    console.warn(`${label}: automatic detection unavailable (${scanned.scanError}); manual path only.`);
+  }
+  await page.waitForFunction(() => { const p = window.websiteDemo.diagnostics.preview; return p.stage === 'manual' && !p.floorSelected; });
   assert.match(await page.locator('#preview-hint').innerText(), /0\/4/);
   const canvas = page.locator('#room-preview canvas');
   await canvas.scrollIntoViewIfNeeded();
@@ -82,7 +102,7 @@ async function uploadAndReset(label) {
   assert.equal((await state()).preview.uploaded, false);
   assert.equal(await page.locator('#reset-upload').isVisible(), false);
   assert.equal(await page.locator('#sample-tab').getAttribute('aria-pressed'), 'true');
-  check(`${label}: local photo upload, four floor corners, comparison, Escape reset and return to sample room.`);
+  check(`${label}: local photo upload, automatic floor detection or manual fallback, tools, four floor corners, comparison, Escape reset and return to sample room.`);
 }
 
 try {

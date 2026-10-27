@@ -1,0 +1,34 @@
+/* Floor visualizer controls added from TypeScript (phases 0–1). Kept separate from home.css. */
+.rotate-planks{display:inline-flex;align-items:center;gap:5px;border:0;background:none;color:var(--purple);font-size:11px;white-space:nowrap;padding:0;cursor:pointer}
+.rotate-planks svg{width:14px;height:14px}
+.rotate-planks:hover span{text-decoration:underline}
+.room-preview-shell.upload-picking .rotate-planks,.room-preview-shell.upload-scanning .rotate-planks{display:none}
+
+.visualizer-tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:10px;padding:10px 12px;border-radius:12px;background:#f3eff6;border:1px solid #e6dfeb}
+.visualizer-tools[hidden]{display:none}
+.visualizer-group{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.visualizer-group[hidden]{display:none}
+.visualizer-tools button{border:1px solid #d9cfe2;border-radius:20px;background:#fff;color:#4d3a5c;font-size:11.5px;line-height:1.4;padding:6px 12px;white-space:nowrap;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.visualizer-tools button:hover{border-color:var(--purple)}
+.visualizer-tools button[aria-pressed=true]{background:linear-gradient(100deg,#9671b6,#82609c);color:#fff;border-color:transparent}
+.visualizer-tools button:disabled{opacity:.45;cursor:default}
+.visualizer-tools button[hidden]{display:none}
+#tool-download{border-color:#e9773e;color:#c85d25}
+#tool-download:not(:disabled):hover{background:#e9773e;color:#fff}
+.visualizer-range{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#5d4f66}
+.visualizer-range[hidden]{display:none}
+.visualizer-range input{accent-color:var(--purple);width:90px;height:16px}
+
+#tool-depth.is-done{border-color:#9bd1a8;color:#2f7a45}
+.product-card.is-suggested .product-swatch{box-shadow:0 0 0 2px #e9773e;border-color:#e9773e}
+.product-card.is-suggested .product-name::after{content:' · AI แนะนำ';color:#c85d25;font-size:10px}
+.qr-dialog{max-width:min(420px,calc(100% - 32px));text-align:center}
+.qr-holder{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:14px}
+.qr-holder canvas{width:220px;height:220px;image-rendering:pixelated;border-radius:10px;box-shadow:0 2px 14px #4c352418}
+.qr-link{font-size:12px;color:var(--purple);word-break:break-all}
+
+@media(max-width:520px){
+  .visualizer-tools{gap:6px 10px;padding:8px}
+  .visualizer-tools button{font-size:10.5px;padding:6px 10px}
+  .visualizer-range input{width:70px}
+}

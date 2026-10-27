@@ -2,7 +2,11 @@ import './shared.css';
 import './home.css';
 import './brand-introduction.css';
 import { FloorScrollStory } from './FloorScrollStory';
-import { RoomPreview, type RoomPreviewDiagnostics } from './roomPreview';
+import './visualizer.css';
+import { FloorVisualizer, type FloorVisualizerDiagnostics as RoomPreviewDiagnostics } from './visualizer';
+import { mountVisualizerToolbar, type ToolbarHandle } from './visualizer/ui/Toolbar';
+import { mountQrDialog, UPLOAD_HASH } from './visualizer/ui/QrDialog';
+import { track } from './visualizer/analytics';
 import { icon, mountHeader, mountFooter, mountContactDialog, sprite } from './shared';
 
 type Crop = [number,number,number,number];
@@ -33,6 +37,8 @@ function syncPreview(value:RoomPreviewDiagnostics) {
   state.compare=value.compare;
   $('compare-toggle').setAttribute('aria-pressed',String(value.compare));
   $('room-preview-shell').classList.toggle('upload-picking',value.uploaded&&!value.floorSelected);
+  $('room-preview-shell').classList.toggle('upload-scanning',value.stage==='scanning');
+  tools?.update(value);
   $('reset-upload').hidden=!value.uploaded;
   $('reset-upload').textContent='กลับสู่ห้องตัวอย่าง';
   $('sample-tab').classList.toggle('active',!value.uploaded);
@@ -42,7 +48,25 @@ function syncPreview(value:RoomPreviewDiagnostics) {
   $('previous-room').hidden=value.uploaded;
   $('next-room').hidden=value.uploaded;
 }
-const preview=new RoomPreview($('room-preview'),{onHint:message=>$('preview-hint').textContent=message,onChange:syncPreview});
+let tools:ToolbarHandle|undefined;
+const preview=new FloorVisualizer($('room-preview'),{productIds:floors.map(floor=>floor.id),onHint:message=>$('preview-hint').textContent=message,onChange:syncPreview});
+const toneNames=['','ธรรมชาติ','อ่อน','คลาสสิก','เทา','เข้ม'];
+tools=mountVisualizerToolbar($('room-preview-shell'),preview,{
+  hint:message=>$('preview-hint').textContent=message,
+  fileName:()=>`coolplan-${floors[state.finish].code}`,
+  products:()=>floors.map(floor=>({id:floor.code,name:floor.name,nameTh:floor.name,tone:floor.tones.map(tone=>toneNames[tone]).join('/')})),
+  onAdvice:ids=>{document.querySelectorAll<HTMLElement>('[data-product]').forEach(el=>el.classList.toggle('is-suggested',ids.includes(floors[Number(el.dataset.product)].code)));},
+});
+// Plank-direction toggle lives beside the hint so the markup stays unchanged.
+const rotateButton=document.createElement('button');rotateButton.type='button';rotateButton.id='rotate-planks';rotateButton.className='rotate-planks';rotateButton.innerHTML=`${icon('compare')}<span>หมุนลายแผ่น</span>`;rotateButton.setAttribute('aria-label','หมุนทิศทางลายแผ่น 90 องศา');
+$('preview-hint').insertAdjacentElement('afterend',rotateButton);
+listen(rotateButton,'click',()=>preview.rotate());
+// Desktop visitors can continue on their phone: QR of this page with a hash that jumps to the visualizer.
+const qr=mountQrDialog(`${location.origin}${location.pathname}${UPLOAD_HASH}`);
+const qrButton=document.createElement('button');qrButton.type='button';qrButton.id='open-on-phone';qrButton.className='rotate-planks';qrButton.innerHTML=`${icon('camera')}<span>ถ่ายด้วยมือถือ</span>`;
+rotateButton.insertAdjacentElement('afterend',qrButton);
+listen(qrButton,'click',()=>qr.open());
+if(location.hash===UPLOAD_HASH){requestAnimationFrame(()=>{$('room-preview-shell').scrollIntoView({block:'center'});$('preview-hint').textContent='แตะ "อัปโหลดรูปห้องของคุณ" เพื่อถ่ายรูปห้อง แล้วระบบจะหาพื้นให้อัตโนมัติ';$('upload-tab').focus();});}
 
 function roomButton(index:number) {
   const button=document.createElement('button');button.type='button';button.className='room-choice';button.dataset.room=String(index);
@@ -85,6 +109,7 @@ function renderProducts(){
 }
 async function selectFloor(index:number){
   state.finish=index;preview.setFinish(index);renderProducts();
+  track({name:'visualizer_finish',product:floors[index].code,context:preview.diagnostics.uploaded?'upload':'sample'});
   $('room-preview').setAttribute('aria-label',`${rooms[state.room]} พร้อมพื้น ${floors[index].name}`);
   story?.selectFinish(index);
 }
@@ -101,6 +126,7 @@ listen($('reset-upload'),'click',()=>{preview.resetUpload();state.view=0;updateV
 listen($('upload-tab'),'click',()=>($('room-file') as HTMLInputElement).click());
 listen($('room-file'),'change',async()=>{
   const input=$<HTMLInputElement>('room-file'), file=input.files?.[0];if(!file)return;
+  track({name:'visualizer_upload',bytes:file.size,type:file.type});
   try{await preview.upload(file);state.view=0;updateViews();}catch(error){$('preview-hint').textContent=error instanceof Error?error.message:'ไม่สามารถเปิดภาพนี้ได้';}finally{input.value='';}
 });
 
@@ -140,6 +166,6 @@ const ready=(async()=>{
   await preview.ready;
 })();
 
-function dispose(){if(state.disposed)return;closeExpanded();state.disposed=true;abort.abort();story?.dispose();preview.dispose();}
+function dispose(){if(state.disposed)return;closeExpanded();state.disposed=true;abort.abort();story?.dispose();preview.dispose();tools?.dispose();qr.dispose();}
 listen(window,'pagehide',event=>{if(!(event as PageTransitionEvent).persisted)dispose();});
 Object.assign(window,{websiteDemo:{ready,get state(){return {...state};},get diagnostics(){return {viewer:story?.diagnostics.scene,preview:preview.diagnostics};},get story(){return story?.state;},seekStep:(index:number,smooth=false)=>story?.seekStep(index,smooth),setProgress,dispose}});

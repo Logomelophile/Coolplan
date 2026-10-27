@@ -42,10 +42,13 @@
     "build:v2": "npm run typecheck && vite build --mode v2",
     "preview:v2": "vite preview --outDir v2-dist --host 127.0.0.1",
     "test": "tsx --test tests/*.test.ts",
-    "test:browser": "node tests/browser.mjs"
+    "test:browser": "node tests/browser.mjs",
+    "precompute:rooms": "tsx scripts/precompute-rooms.mts"
   },
   "dependencies": {
     "@types/three": "^0.186.0",
+    "onnxruntime-web": "^1.31.1",
+    "qrcode-generator": "^1.4.4",
     "three": "0.186.1"
   },
   "devDependencies": {

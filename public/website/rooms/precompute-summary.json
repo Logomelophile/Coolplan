@@ -1,0 +1,62 @@
+{
+  "generated": "2026-10-27T05:41:30.054Z",
+  "model": "segformer-b0-ade20k (prototype)",
+  "rooms": [
+    {
+      "room": 0,
+      "width": 1024,
+      "height": 493,
+      "inferenceMs": 2001,
+      "totalMs": 29276,
+      "coverage": 0.299
+    },
+    {
+      "room": 1,
+      "width": 1024,
+      "height": 819,
+      "inferenceMs": 1283,
+      "totalMs": 17807,
+      "coverage": 0.167
+    },
+    {
+      "room": 2,
+      "width": 1024,
+      "height": 819,
+      "inferenceMs": 832,
+      "totalMs": 13736,
+      "coverage": 0.335
+    },
+    {
+      "room": 3,
+      "width": 1024,
+      "height": 819,
+      "inferenceMs": 764,
+      "totalMs": 14361,
+      "coverage": 0.218
+    },
+    {
+      "room": 4,
+      "width": 1024,
+      "height": 819,
+      "inferenceMs": 969,
+      "totalMs": 13463,
+      "coverage": 0.241
+    },
+    {
+      "room": 5,
+      "width": 1024,
+      "height": 819,
+      "inferenceMs": 740,
+      "totalMs": 15691,
+      "coverage": 0.254
+    },
+    {
+      "room": 6,
+      "width": 1024,
+      "height": 819,
+      "inferenceMs": 720,
+      "totalMs": 19134,
+      "coverage": 0.251
+    }
+  ]
+}
