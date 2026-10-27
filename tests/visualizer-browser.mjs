@@ -1,6 +1,7 @@
 import { chromium } from '@playwright/test';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 
 const url = process.env.SPC_WEBSITE_URL || 'http://127.0.0.1:5185/website/';
 const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
@@ -82,7 +83,7 @@ try {
       assert.ok(difference <= 2, `${pattern}/${finish} recoloured a furniture pixel (max difference ${difference})`);
       combinations.push(await hash());
     }
-    await page.locator('.configurator-grid').screenshot({ path: new URL(`${pattern}-desktop.png`, output).pathname });
+    await page.locator('.configurator-grid').screenshot({ path: fileURLToPath(new URL(`${pattern}-desktop.png`, output)) });
   }
   assert.equal(new Set(combinations).size, 12);
   check('All six colours and both laying patterns visibly differ; table, pedestals, sofa and plant pixels stay unchanged.');
@@ -119,7 +120,7 @@ try {
     await chooseRoom(room);
     assert.ok((await state()).coverage > .25);
     assert.equal((await state()).pattern, 'herringbone');
-    await page.locator('#room-preview-shell').screenshot({ path: new URL(`room-${room}-herringbone.png`, output).pathname });
+    await page.locator('#room-preview-shell').screenshot({ path: fileURLToPath(new URL(`room-${room}-herringbone.png`, output)) });
   }
   check('All seven sample rooms use 1672×941 source photos with individual floor contours.');
 
@@ -138,11 +139,11 @@ try {
   await page.locator('#tool-brush-erase').click();
   assert.equal(await canvas().evaluate(canvas => canvas.style.touchAction), 'pan-y');
   await page.locator('#tool-undo').click();
-  await page.locator('.configurator-grid').screenshot({ path: new URL('mobile.png', output).pathname });
+  await page.locator('.configurator-grid').screenshot({ path: fileURLToPath(new URL('mobile.png', output)) });
   check('Mobile controls fit 390px; touch painting edits the floor without scrolling the page.');
 
   await page.route('**/*vision.worker*', route => route.abort());
-  await page.locator('#room-file').setInputFiles(new URL('../public/room/references/room-original.png', import.meta.url).pathname);
+  await page.locator('#room-file').setInputFiles(fileURLToPath(new URL('../public/room/references/room-original.png', import.meta.url)));
   await page.waitForFunction(() => window.websiteDemo.diagnostics.preview.stage === 'manual');
   await canvas().scrollIntoViewIfNeeded();
   const uploadBox = await canvas().boundingBox(), uploaded = await state();
@@ -178,7 +179,7 @@ try {
   assert.deepEqual(report.errors, []);
 } catch (error) {
   report.failed = { message: error.message, stack: error.stack };
-  await page.screenshot({ path: new URL('failure.png', output).pathname }).catch(() => {});
+  await page.screenshot({ path: fileURLToPath(new URL('failure.png', output)) }).catch(() => {});
   throw error;
 } finally {
   await writeFile(new URL('browser-report.json', output), JSON.stringify(report, null, 2));
