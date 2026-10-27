@@ -18,6 +18,9 @@ page.on('response', response => { if (response.status() >= 400) report.errors.pu
 const check = message => { report.checks.push(message); console.log(`PASS ${message}`); };
 const story = () => page.evaluate(() => window.websiteDemo.story);
 const productIds = ['light-natural-oak', 'warm-taupe-oak', 'golden-honey-oak', 'whitewashed-ash-oak', 'greige-oak', 'dark-walnut-brown'];
+// Product indices shown by the opening colour stops, in scroll order (see STORY_FINISHES).
+const storyFinishes = [0, 3, 4, 5];
+const STEPS = 10, DETAIL = storyFinishes.length, LAST = STEPS - 1;
 async function initialize() {
   await page.goto(url, { waitUntil: 'networkidle' });
   await page.waitForFunction(() => Boolean(window.websiteDemo?.ready));
@@ -65,44 +68,44 @@ async function assertWheelFinishes(label) {
   await seek(0);
   const first = await roomPixels();
   const hashes = [first[0].floor];
-  for (let step = 1; step < 6; step++) {
+  for (let step = 1; step < DETAIL; step++) {
     const target = await page.evaluate(step => {
       const host = document.getElementById('floor-story');
       const hero = document.getElementById('hero');
-      return host.getBoundingClientRect().top + scrollY + step * hero.offsetHeight * .78;
+      return host.getBoundingClientRect().top + scrollY + step * hero.offsetHeight * 1;
     }, step);
     const canvas = await page.locator('#hero-viewer canvas').boundingBox();
     assert.ok(canvas);
     await page.mouse.move(canvas.x + canvas.width * .5, canvas.y + canvas.height * .45);
     await page.mouse.wheel(0, target - await page.evaluate(() => scrollY));
-    await page.waitForFunction(step => window.websiteDemo.story.step === step && window.websiteDemo.state.finish === step, step);
+    await page.waitForFunction(([step, finish]) => window.websiteDemo.story.step === step && window.websiteDemo.state.finish === finish, [step, storyFinishes[step]]);
     assertPinned(await layout(), `${label} step ${step}`);
     const pixels = await roomPixels();
     hashes.push(pixels[0].floor);
     assert.equal(pixels[0].upper, first[0].upper, `${label}: the room above the floor changed`);
   }
-  assert.equal(new Set(hashes).size, 6, `${label}: wheel input did not show six different floor colours`);
+  assert.equal(new Set(hashes).size, DETAIL, `${label}: wheel input did not show ${DETAIL} different floor colours`);
   const start = await page.evaluate(() => document.getElementById('floor-story').getBoundingClientRect().top);
   await page.mouse.wheel(0, start);
-  await page.waitForFunction(() => window.websiteDemo.story.step === 0 && window.websiteDemo.state.finish === 0);
+  await page.waitForFunction(() => window.websiteDemo.story.step === 0 && window.websiteDemo.state.finish === 0 && window.websiteDemo.story.progress === 0);
   assert.deepEqual(await roomPixels(), first, `${label}: reverse wheel input did not restore the first finish`);
-  check(`${label}: real mouse-wheel input changes all six floor colours, preserves the upper room, and reverses to the first colour.`);
+  check(`${label}: real mouse-wheel input changes all ${DETAIL} floor colours, preserves the upper room, and reverses to the first colour.`);
 }
 
 try {
   await initialize();
   const initial = await story();
   assert.equal(initial.step, 0);
-  assert.equal(await page.locator('button[data-story-step]').count(), 12);
+  assert.equal(await page.locator('button[data-story-step]').count(), STEPS);
   await page.screenshot({ path: outputPath('desktop-step-00.png') });
   const forward = [];
-  for (let step = 0; step < 12; step++) {
+  for (let step = 0; step < STEPS; step++) {
     const current = await seek(step);
     const bounds = await layout();
     assertPinned(bounds, `Desktop step ${step}`);
     assert.ok(bounds.rooms.top >= bounds.viewport.height - 2, `Configurator exposed before story completes at step ${step}`);
     const visible = await page.locator('.story-layer[data-shown="true"]').count();
-    const expected = Math.max(0, Math.min(4, step - 6));
+    const expected = Math.max(0, Math.min(4, step - DETAIL));
     assert.equal(visible, expected, `Step ${step}: incorrect number of revealed construction labels`);
     const pixels = await roomPixels();
     const { scene, room } = current.diagnostics;
@@ -114,8 +117,8 @@ try {
     assert.ok(Math.abs(scene.layerThicknessSumMm - 5) < 1e-9, 'Physical layer thickness sum must agree with the 5 MM claim.');
     assert.equal(scene.thickness.assembled, true);
     assert.equal(scene.thickness.thicknessMm, 5);
-    if (step < 6) {
-      assert.equal(scene.productId, productIds[step], `Wrong model finish at step ${step}`);
+    if (step < DETAIL) {
+      assert.equal(scene.productId, productIds[storyFinishes[step]], `Wrong model finish at step ${step}`);
       assert.equal(room.from, current.frame.from);
       assert.equal(room.to, current.frame.to);
       assert.ok(Math.abs(room.mix - current.frame.mix) < 1e-9, 'Room and material blend must share the same progress.');
@@ -123,17 +126,17 @@ try {
     assert.ok(scene.anchors.every(anchor => Number.isFinite(anchor.x) && Number.isFinite(anchor.y)), 'Every projected layer anchor must be finite.');
     forward.push({ current, pixels });
     report.samples.push({ step, frame: current.frame, diagnostics: current.diagnostics, layout: bounds, pixels });
-    if ([1, 5, 6, 7, 10, 11].includes(step)) await page.screenshot({ path: outputPath(`desktop-step-${String(step).padStart(2, '0')}.png`) });
+    if ([1, DETAIL - 1, DETAIL, DETAIL + 1, LAST - 1, LAST].includes(step)) await page.screenshot({ path: outputPath(`desktop-step-${String(step).padStart(2, '0')}.png`) });
   }
-  check('Desktop: twelve native scroll stops stay in one pinned viewport; layer details appear progressively and the configurator remains below.');
+  check(`Desktop: ${STEPS} native scroll stops stay in one pinned viewport; layer details appear progressively and the configurator remains below.`);
 
-  const roomHashes = forward.slice(0, 6).map(sample => sample.pixels[0]?.floor);
+  const roomHashes = forward.slice(0, DETAIL).map(sample => sample.pixels[0]?.floor);
   assert.ok(roomHashes.every(value => Number.isFinite(value)), 'Room story needs a readable 2D photo canvas.');
-  assert.equal(new Set(roomHashes).size, 6, 'Each of six finishes must visibly change floor pixels.');
-  assert.equal(new Set(forward.slice(0, 6).map(sample => sample.pixels[0].upper)).size, 1, 'Changing a finish must preserve the upper room photograph.');
-  check('All six finishes change actual floor pixels while the upper room photograph stays unchanged.');
+  assert.equal(new Set(roomHashes).size, DETAIL, `Each of ${DETAIL} finishes must visibly change floor pixels.`);
+  assert.equal(new Set(forward.slice(0, DETAIL).map(sample => sample.pixels[0].upper)).size, 1, 'Changing a finish must preserve the upper room photograph.');
+  check(`All ${DETAIL} finishes change actual floor pixels while the upper room photograph stays unchanged.`);
 
-  await seek(10);
+  await seek(LAST - 1);
   const beforeOrbit = (await story()).diagnostics.scene.cameraPosition;
   const modelBounds = await page.locator('#hero-viewer canvas').boundingBox();
   assert.ok(modelBounds);
@@ -149,7 +152,7 @@ try {
   await page.locator('#hero-reset').click();
   check('Mouse drag still rotates the enlarged 3D sample and all four leader paths retain finite projected endpoints.');
 
-  for (let step = 5; step >= 0; step--) {
+  for (let step = DETAIL - 1; step >= 0; step--) {
     const current = await seek(step);
     assert.deepEqual(current.frame, forward[step].current.frame, `Frame reversibility at step ${step}`);
     assert.deepEqual(await roomPixels(), forward[step].pixels, `Room image reversibility at step ${step}`);
@@ -166,16 +169,16 @@ try {
   assert.equal(await page.evaluate(() => document.body.style.overflow), '');
   check('Wheel over the interactive model changes native document scroll without locking the page.');
 
-  await seek(7);
+  await seek(DETAIL + 1);
   await page.locator('#story-next').focus();
   await page.keyboard.press('Enter');
-  await page.waitForFunction(() => window.websiteDemo.story.step === 8);
+  await page.waitForFunction(step => window.websiteDemo.story.step === step, DETAIL + 2);
   await page.locator('#story-prev').focus();
   await page.keyboard.press('Enter');
-  await page.waitForFunction(() => window.websiteDemo.story.step === 7);
-  await page.locator('button[data-story-step="11"]').focus();
+  await page.waitForFunction(step => window.websiteDemo.story.step === step, DETAIL + 1);
+  await page.locator(`button[data-story-step="${LAST}"]`).focus();
   await page.keyboard.press('Enter');
-  await page.waitForFunction(() => window.websiteDemo.story.step === 11);
+  await page.waitForFunction(step => window.websiteDemo.story.step === step, LAST);
   assert.match(await page.locator('#story-thickness').innerText(), /5\s*MM/i);
   assert.equal(await page.locator('.story-layer[data-shown="true"]').count(), 4);
   check('Keyboard next, previous and direct step buttons reach the complete four-layer, 5 MM explanation.');
@@ -190,7 +193,7 @@ try {
 
   await page.setViewportSize({ width: 390, height: 844 });
   await initialize();
-  for (const step of [0, 5, 6, 7, 8, 9, 10, 11]) {
+  for (const step of [0, ...Array.from({ length: STEPS - DETAIL + 1 }, (_, index) => DETAIL - 1 + index)]) {
     await seek(step);
     const value = await layout();
     assertPinned(value, `Mobile step ${step}`);
@@ -198,7 +201,7 @@ try {
       assert.ok(label.box.left >= -1 && label.box.right <= value.viewport.width + 1, `Mobile layer ${label.id} escapes the viewport horizontally`);
       assert.ok(label.box.top >= -1 && label.box.bottom <= value.viewport.height + 1, `Mobile layer ${label.id} escapes the viewport vertically`);
     }
-    if ([0, 6, 10, 11].includes(step)) await page.screenshot({ path: outputPath(`mobile-step-${String(step).padStart(2, '0')}.png`) });
+    if ([0, DETAIL, LAST - 1, LAST].includes(step)) await page.screenshot({ path: outputPath(`mobile-step-${String(step).padStart(2, '0')}.png`) });
   }
   check('Mobile 390px: pinned story and every visible layer label stay within the viewport.');
 
@@ -216,7 +219,7 @@ try {
   check('Actual touch input over the mobile model pans the native page and advances the scroll story.');
 
   await page.setViewportSize({ width: 375, height: 667 });
-  await seek(11);
+  await seek(LAST);
   const compact = await layout();
   assertPinned(compact, 'Compact mobile');
   for (const label of compact.finishCards) assert.ok(label.box.top >= -1 && label.box.bottom <= 668, `Compact mobile layer ${label.id} leaves the viewport`);
@@ -229,7 +232,7 @@ try {
     await page.setViewportSize(viewport);
     const label = `Short viewport ${viewport.width}×${viewport.height}`;
     await assertWheelFinishes(label);
-    await seek(11);
+    await seek(LAST);
     const value = await layout();
     assertPinned(value, label);
     const rail = await page.locator('.story-rail').boundingBox();
@@ -248,8 +251,8 @@ try {
   await page.locator('#story-skip').click();
   await page.waitForFunction(() => document.getElementById('rooms').getBoundingClientRect().top < innerHeight / 2);
   assert.equal(await page.evaluate(() => document.body.style.overflow), '');
-  await seek(11);
-  assert.equal((await story()).step, 11);
+  await seek(LAST);
+  assert.equal((await story()).step, LAST);
   await page.locator('#story-next').focus();
   assert.deepEqual(report.errors, []);
   check('Reduced-motion mode supports direct navigation and skip without a scroll trap or browser errors.');

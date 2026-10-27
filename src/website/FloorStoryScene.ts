@@ -261,6 +261,8 @@ export class FloorStoryScene {
       mix: clamp(frame.mix), explode: clamp(frame.explode), focus: Math.round(clamp(frame.focus, -1, 3)), zoom: clamp(frame.zoom),
       profile: clamp(frame.profile ?? 0),
     };
+    // The shell grows with the same scroll frame; resizing now keeps the canvas and camera in step instead of one observer tick apart.
+    if (this.host.clientWidth !== this.width || this.host.clientHeight !== this.height) this.resize();
     this.applyFrame();
     // A single synchronous draw makes model colour match the room canvas in the same scroll frame.
     if (this.loaded && this.inView) this.render();

@@ -1,22 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { sampleStory, STORY_END, STORY_STEPS, STORY_UNIT } from '../src/website/storyTimeline';
+import { sampleStory, DETAIL_STOP, STORY_END, STORY_FINISHES, STORY_LAST, STORY_STEPS, STORY_UNIT } from '../src/website/storyTimeline';
 
-test('story offers six distinct finishes, a 5 mm introduction, four layers and a complete final stop', () => {
-  assert.equal(STORY_STEPS.length, 12);
-  assert.deepEqual(STORY_STEPS.slice(0, 6).map(step => step.finish), [0, 1, 2, 3, 4, 5]);
-  assert.match(STORY_STEPS[6].description, /5\s*มม\./);
-  assert.ok(STORY_END > 11, 'Final details need a reading interval before the pinned section releases.');
+test('story offers four distinct finishes, a 5 mm introduction, four layers and a complete final stop', () => {
+  assert.equal(STORY_STEPS.length, 10);
+  assert.deepEqual(STORY_STEPS.slice(0, DETAIL_STOP).map(step => step.finish), [...STORY_FINISHES]);
+  assert.deepEqual([...STORY_FINISHES], [0, 3, 4, 5], 'Warm Taupe Oak and Golden Honey Oak are left out of the opening scroll.');
+  assert.match(STORY_STEPS[DETAIL_STOP].description, /5\s*มม\./);
+  assert.ok(STORY_END > STORY_LAST, 'Final details need a reading interval before the pinned section releases.');
   assert.ok(STORY_UNIT > 0 && STORY_UNIT <= 1, 'Each reading stop should require less than one viewport of native scroll.');
-  assert.equal(sampleStory(6).profile, 1, 'The 5 MM stop presents the assembled profile edge.');
-  assert.equal(sampleStory(6).explode, 0, 'An assembled thickness dimension cannot measure exploded gaps.');
-  assert.equal(sampleStory(11).profile, 0, 'Full layer overview returns from the temporary side profile.');
+  assert.equal(sampleStory(DETAIL_STOP - 1).detail, 0, 'The last finish stop is still the overview framing.');
+  assert.equal(sampleStory(DETAIL_STOP).detail, 1, 'The enlargement completes exactly at the 5 MM stop.');
+  assert.equal(sampleStory(DETAIL_STOP).profile, 1, 'The 5 MM stop presents the assembled profile edge.');
+  assert.equal(sampleStory(DETAIL_STOP).explode, 0, 'An assembled thickness dimension cannot measure exploded gaps.');
+  assert.equal(sampleStory(STORY_LAST).profile, 0, 'Full layer overview returns from the temporary side profile.');
   for (let step = 0; step < STORY_STEPS.length; step++) {
     const frame = sampleStory(step);
     assert.equal(frame.step, step);
-    assert.equal(frame.finishIndex, Math.min(step, 5));
+    assert.equal(frame.finishIndex, STORY_STEPS[step].finish);
     const visible = frame.labelsVisible.filter(opacity => opacity > .5).length;
-    assert.equal(visible, Math.max(0, Math.min(4, step - 6)), `Stop ${step} must expose the correct cumulative layer descriptions.`);
+    assert.equal(visible, Math.max(0, Math.min(4, step - DETAIL_STOP)), `Stop ${step} must expose the correct cumulative layer descriptions.`);
   }
 });
 
@@ -32,8 +35,10 @@ test('color, enlargement and layer progress remain bounded, finite and exactly r
     }
     if (index) {
       const prior = forward[index - 1];
-      const appearance = frame.from + (frame.to - frame.from) * frame.mix;
-      const priorAppearance = prior.from + (prior.to - prior.from) * prior.mix;
+      // Blend position along the story's own colour stops, independent of product numbering.
+      const stops: readonly number[] = STORY_FINISHES;
+      const appearance = stops.indexOf(frame.from) + (stops.indexOf(frame.to) - stops.indexOf(frame.from)) * frame.mix;
+      const priorAppearance = stops.indexOf(prior.from) + (stops.indexOf(prior.to) - stops.indexOf(prior.from)) * prior.mix;
       assert.ok(Math.abs(appearance - priorAppearance) < .035, `Visible finish blend jumps at ${frame.progress}`);
     }
     assert.ok(frame.labelsVisible.every(opacity => opacity >= 0 && opacity <= 1));
@@ -50,4 +55,5 @@ test('invalid and out-of-range scroll inputs cannot produce missing finish indic
   assert.deepEqual(sampleStory(-5), sampleStory(0));
   assert.deepEqual(sampleStory(100), sampleStory(STORY_END));
   for (const value of [NaN, Infinity, -Infinity]) assert.deepEqual(sampleStory(value), sampleStory(0));
+  for (const value of [-5, 100, NaN]) assert.ok(STORY_FINISHES.includes(sampleStory(value).finishIndex as (typeof STORY_FINISHES)[number]));
 });
