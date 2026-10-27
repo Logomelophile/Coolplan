@@ -70,6 +70,8 @@ async function uploadAndReset(label) {
     await page.locator('#compare-toggle').click();
     assert.equal((await state()).preview.compare, true);
     await page.screenshot({ path: outputPath(`${label}-upload-auto.png`), fullPage: false });
+    // Edge tools live in a collapsed "ปรับขอบพื้น" panel; open it first.
+    if (await page.locator('#visualizer-refinement').count() && !await page.locator('#visualizer-refinement').evaluate(element => element.open)) await page.locator('#visualizer-refinement summary').click();
     await page.locator('#tool-brush-add').click();
     assert.equal((await state()).preview.tool, 'brush-add');
     await page.locator('#tool-horizon').click();
