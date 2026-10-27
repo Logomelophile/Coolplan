@@ -55,6 +55,8 @@ export default defineConfig(({ mode }) => ({
   base: siteBase,
   plugins: [textureManifestPlugin(), projectLinksPlugin()],
   cacheDir: resolve(tmpdir(), 'coolplan-spc-vite-cache'),
+  // Build outputs are written while the dev server runs; watching them crashes the watcher on Windows (EBUSY).
+  server: {watch: {ignored: ['**/dist/**', '**/*-dist/**', '**/test-results/**']}},
   resolve: {alias: {'spc-plank-viewer': resolve(import.meta.dirname, 'src/index.ts')}},
   build: mode === 'v2' ? {
     outDir: 'v2-dist', emptyOutDir: true,

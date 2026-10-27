@@ -8,10 +8,10 @@ type Anchor={id:string;x:number;y:number;visible?:boolean};
 const FOLLOW_SECONDS=.14;
 type Callbacks={onFinish?:(index:number)=>void;onFrame?:(frame:ReturnType<typeof sampleStory>)=>void};
 const layers=[
-  {id:'wear',title:'Wear Layer',thai:'ชั้นเคลือบป้องกันผิว',text:'ผิวใสเหนือชั้นลวดลาย'},
-  {id:'decor',title:'Decor Film',thai:'ฟิล์มลวดลายไม้',text:'สีและรายละเอียดที่เลือกได้'},
-  {id:'core',title:'SPC Core',thai:'แกนกลาง SPC',text:'โครงสร้างหลักของแผ่นพื้น'},
-  {id:'backing',title:'IXPE Backing',thai:'ชั้นรองพื้น IXPE',text:'รองรับอยู่ใต้แผ่นพื้น'},
+  {id:'wear',title:'Wear Layer',thai:'ชั้นเคลือบป้องกันผิว',text:'ชั้นใสบนสุด ช่วยกันรอยขีดข่วนและคราบจากการใช้งานทุกวัน'},
+  {id:'decor',title:'Decor Film',thai:'ฟิล์มลวดลายไม้',text:'ฟิล์มพิมพ์ลายไม้ ให้สีและลวดลายของพื้นแต่ละรุ่น'},
+  {id:'core',title:'SPC Core',thai:'แกนกลาง SPC',text:'แกนผสมผงหิน แข็งแรงและคงรูป เป็นโครงสร้างหลักของแผ่น'},
+  {id:'backing',title:'IXPE Backing',thai:'ชั้นรองพื้น IXPE',text:'ชั้นโฟมรองใต้แผ่น ช่วยลดเสียงกระทบและให้สัมผัสนุ่มเวลาเดิน'},
 ];
 export class FloorScrollStory{
   readonly ready:Promise<void>;
@@ -38,7 +38,7 @@ export class FloorScrollStory{
   private status:HTMLElement;
   constructor(private callbacks:Callbacks={}){
     this.hero.insertAdjacentHTML('afterbegin','<div id="hero-room-background" aria-hidden="true"></div><div class="story-detail-wash" aria-hidden="true"></div>');
-    this.hero.insertAdjacentHTML('beforeend',`<div class="story-copy" id="story-copy"><span class="story-eyebrow" id="story-eyebrow"></span><h2 id="story-title"></h2><p id="story-description"></p><div class="story-thickness" id="story-thickness"><strong>5<span>MM</span></strong><small>ความหนารวมของแผ่นพื้น</small></div></div><svg class="story-leaders" id="story-leaders" aria-hidden="true">${layers.map(layer=>`<polyline data-leader="${layer.id}"/><circle data-dot="${layer.id}" r="5"/>`).join('')}</svg><div class="story-labels" id="story-labels">${layers.map((layer,index)=>`<div class="story-layer" data-layer="${layer.id}" data-shown="false"><span class="story-layer-number">0${index+1}</span><div><strong>${layer.title}</strong><b>${layer.thai}</b><small>${layer.text}</small></div></div>`).join('')}</div><div class="story-rail"><div class="story-rail-top"><span id="story-step-name">เลื่อนเพื่อสำรวจสีและชั้นวัสดุ</span><a href="#rooms" id="story-skip">เลือกสีพื้นด้านล่าง <span aria-hidden="true">↘</span></a></div><div class="story-rail-controls"><button id="story-prev" type="button" aria-label="ขั้นก่อนหน้า">←</button><div class="story-steps" role="group" aria-label="ลำดับการสำรวจ">${STORY_STEPS.map((step,index)=>`<button type="button" data-story-step="${index}" aria-label="ขั้น ${index+1}: ${step.title.replace('\n',' ')}" title="${step.title.replace('\n',' ')}"><span></span></button>`).join('')}</div><button id="story-next" type="button" aria-label="ขั้นถัดไป">→</button></div></div><p class="story-caption" id="story-caption">ชิ้นตัวอย่างวัสดุ · ขยายระยะระหว่างชั้นเพื่ออธิบายโครงสร้าง</p><div class="story-loading" id="story-loading" role="status">กำลังเตรียมห้องและวัสดุ 3D…</div>`);
+    this.hero.insertAdjacentHTML('beforeend',`<div class="story-copy" id="story-copy"><span class="story-eyebrow" id="story-eyebrow"></span><h2 id="story-title"></h2><p id="story-description"></p><div class="story-thickness" id="story-thickness"><strong>5<span>MM</span></strong><small>ความหนารวมของแผ่นพื้น</small></div></div><svg class="story-leaders" id="story-leaders" aria-hidden="true">${layers.map((layer,index)=>`<polyline data-leader="${layer.id}"/><circle data-dot="${layer.id}" r="5"/><text data-num="${layer.id}">${index+1}</text>`).join('')}</svg><div class="story-labels" id="story-labels">${layers.map((layer,index)=>`<div class="story-layer" data-layer="${layer.id}" data-shown="false"><span class="story-layer-number">0${index+1}</span><div><strong>${layer.title}</strong><b>${layer.thai}</b><small>${layer.text}</small></div></div>`).join('')}</div><div class="story-rail"><div class="story-rail-top"><span id="story-step-name">เลื่อนเพื่อสำรวจสีและชั้นวัสดุ</span><a href="#rooms" id="story-skip">เลือกสีพื้นด้านล่าง <span aria-hidden="true">↘</span></a></div><div class="story-rail-controls"><button id="story-prev" type="button" aria-label="ขั้นก่อนหน้า">←</button><div class="story-steps" role="group" aria-label="ลำดับการสำรวจ">${STORY_STEPS.map((step,index)=>`<button type="button" data-story-step="${index}" aria-label="ขั้น ${index+1}: ${step.title.replace('\n',' ')}" title="${step.title.replace('\n',' ')}"><span></span></button>`).join('')}</div><button id="story-next" type="button" aria-label="ขั้นถัดไป">→</button></div></div><p class="story-caption" id="story-caption">ชิ้นตัวอย่างวัสดุ · ขยายระยะระหว่างชั้นเพื่ออธิบายโครงสร้าง</p><div class="story-loading" id="story-loading" role="status">กำลังเตรียมห้องและวัสดุ 3D…</div>`);
     this.panel=document.getElementById('story-labels')!;this.overlay=document.getElementById('story-leaders') as unknown as SVGSVGElement;this.status=document.getElementById('story-loading')!;
     this.overlay.insertAdjacentHTML('beforeend','<g id="story-dimension" opacity="0"><path/><text>5 MM</text></g>');
     this.room=new HeroRoomFloor(document.getElementById('hero-room-background')!);
@@ -62,15 +62,13 @@ export class FloorScrollStory{
     const start=this.host.getBoundingClientRect().top+scrollY;
     const progress=Math.max(0,Math.min(STORY_END,(scrollY-start)/(this.hero.offsetHeight*STORY_UNIT)));
     document.body.classList.toggle('story-pinned',scrollY<start+this.hero.offsetHeight*STORY_END*STORY_UNIT);
+    // A new scroll position releases manual slider/finish overrides; the follow ticks below must not, or a slider change mid-glide is lost.
+    if(Math.abs(progress-this.target)>.00001&&progress<STORY_END){this.manualFinish=null;this.manualExplode=null;}
     this.target=progress;
     if(Math.abs(progress-this.frame.progress)<=.00001&&!force)return;
     // Wheel notches arrive as steps; a short damped follow turns them into one continuous move. Direct seeks and reduced motion snap.
-    if(force||this.reduced.matches){this.stopFollow();this.applyScroll(progress);}
+    if(force||this.reduced.matches){this.stopFollow();this.apply(progress);}
     else if(!this.follow){this.followTime=performance.now();this.follow=requestAnimationFrame(this.tick);}
-  }
-  private applyScroll(progress:number){
-    if(progress<STORY_END){this.manualFinish=null;this.manualExplode=null;}
-    this.apply(progress);
   }
   private stopFollow(){if(this.follow){cancelAnimationFrame(this.follow);this.follow=0;}}
   private tick=(now:number)=>{
@@ -78,8 +76,8 @@ export class FloorScrollStory{
     if(this.disposed)return;
     const dt=Math.min(.064,Math.max(0,(now-this.followTime)/1000));this.followTime=now;
     const diff=this.target-this.frame.progress;
-    if(Math.abs(diff)<.0005){this.applyScroll(this.target);return;}
-    this.applyScroll(this.frame.progress+diff*(1-Math.exp(-dt/FOLLOW_SECONDS)));
+    if(Math.abs(diff)<.0005){this.apply(this.target);return;}
+    this.apply(this.frame.progress+diff*(1-Math.exp(-dt/FOLLOW_SECONDS)));
     this.follow=requestAnimationFrame(this.tick);
   };
   private apply(progress:number){
@@ -90,7 +88,10 @@ export class FloorScrollStory{
     const step=STORY_STEPS[f.step];
     this.hero.style.setProperty('--story-detail',String(f.detail));this.hero.style.setProperty('--story-intro',String(f.intro));
     this.hero.dataset.storyStep=String(f.step);this.hero.classList.toggle('story-details',f.detail>.6);
-    document.getElementById('story-copy')!.style.opacity=String(1-f.intro);
+    // The copy and tool bar change layout when story-details flips at .6; fade them through that instant instead of jumping.
+    const across=Math.min(1,Math.abs(f.detail-.6)/.22),settled=across*across*(3-2*across);
+    this.hero.style.setProperty('--story-switch',String(1-settled));
+    document.getElementById('story-copy')!.style.opacity=String((1-f.intro)*settled);
     document.getElementById('story-eyebrow')!.textContent=step.eyebrow;document.getElementById('story-title')!.textContent=step.title;document.getElementById('story-description')!.textContent=step.description;
     const thickness=document.getElementById('story-thickness')!;thickness.style.opacity=String(f.thickness);thickness.setAttribute('aria-hidden',String(f.thickness<.5));
     document.getElementById('story-step-name')!.textContent=`${String(f.step+1).padStart(2,'0')} / ${STORY_STEPS.length} · ${f.step<DETAIL_STOP?'เลือกบรรยากาศที่เป็นคุณ':f.step===DETAIL_STOP?'เข้าใกล้รายละเอียด':f.step===STORY_LAST?'ครบทุกชั้นแล้ว':layers[f.step-DETAIL_STOP-1].title}`;
@@ -109,16 +110,18 @@ export class FloorScrollStory{
       const label=this.panel.querySelector<HTMLElement>(`[data-layer="${anchor.id}"]`),line=this.overlay.querySelector<SVGPolylineElement>(`[data-leader="${anchor.id}"]`),dot=this.overlay.querySelector<SVGCircleElement>(`[data-dot="${anchor.id}"]`);if(!label||!line||!dot)return;
       const rect=label.getBoundingClientRect(),x=anchor.x+sceneRect.left-heroRect.left,y=anchor.y+sceneRect.top-heroRect.top;
       const mobile=innerWidth<=520;
-      const endX=rect.left-heroRect.left+(mobile?rect.width/2:-12),endY=rect.top-heroRect.top+(mobile?-10:rect.height/2);
+      // Lines meet the row beside its number, not its vertical middle, so multi-line rows do not pull lines downward.
+      const badge=label.querySelector('.story-layer-number')?.getBoundingClientRect();
+      const endX=rect.left-heroRect.left+(mobile?rect.width/2:-12),endY=(badge?badge.top+badge.height/2:rect.top+rect.height/2)-heroRect.top;
       const index=layers.findIndex(layer=>layer.id===anchor.id),opacity=anchor.visible===false?0:this.frame.labelsVisible[index];
-      if(mobile){
-        // Route leaders outside the label grid so later layers never cross earlier text.
-        const left=index%2===0,gutter=left?8+index*3:heroRect.width-8-(index-1)*3;
-        const approachY=this.panel.getBoundingClientRect().top-heroRect.top-24-index*5;
-        const labelX=left?rect.left-heroRect.left-5:rect.right-heroRect.left+5,labelY=rect.top-heroRect.top+rect.height/2;
-        line.setAttribute('points',`${x},${y} ${gutter},${approachY} ${gutter},${labelY} ${labelX},${labelY}`);
-      }else line.setAttribute('points',`${x.toFixed(2)},${y.toFixed(2)} ${(endX-18).toFixed(2)},${endY.toFixed(2)} ${endX.toFixed(2)},${endY.toFixed(2)}`);
-      line.style.opacity=String(opacity);dot.style.opacity=String(opacity);dot.setAttribute('cx',String(x));dot.setAttribute('cy',String(y));
+      // The line leaves the layer edge and ends in a dot beside the row's number, one line per row.
+      // Phones have no room for lines: a numbered badge sits on the layer edge and matches the numbered list below.
+      const num=this.overlay.querySelector<SVGTextElement>(`[data-num="${anchor.id}"]`)!,dotX=mobile?x:endX,dotY=mobile?y:endY;
+      // Elbow 18px before the dot; when the layer edge is already past that point, run straight to the dot instead of folding back.
+      if(!mobile)line.setAttribute('points',x<endX-24?`${x.toFixed(2)},${y.toFixed(2)} ${(endX-18).toFixed(2)},${endY.toFixed(2)} ${endX.toFixed(2)},${endY.toFixed(2)}`:`${x.toFixed(2)},${y.toFixed(2)} ${endX.toFixed(2)},${endY.toFixed(2)}`);
+      line.style.opacity=String(mobile?0:opacity);dot.style.opacity=String(opacity);num.style.opacity=String(opacity);
+      dot.setAttribute('cx',String(dotX));dot.setAttribute('cy',String(dotY));num.setAttribute('x',String(dotX));num.setAttribute('y',String(dotY));
+      dot.classList.toggle('active',this.frame.focus===index);
     });
     const dimension=document.getElementById('story-dimension')!,points=this.scene?.getThicknessAnchors();
     const show=this.frame.progress>DETAIL_STOP-.25&&this.frame.progress<=DETAIL_STOP+.2&&this.frame.explode<.001&&points?.top.visible&&points.bottom.visible;
