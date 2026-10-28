@@ -95,6 +95,8 @@ async function assertWheelFinishes(label) {
 
 try {
   await initialize();
+  // Finishes now load progressively after the first picture; the per-step checks below assume the full set.
+  await page.waitForFunction(() => window.websiteDemo.diagnostics.viewer?.cachedModels === 6, null, { timeout: 90000 });
   const initial = await story();
   assert.equal(initial.step, 0);
   assert.equal(await page.locator('button[data-story-step]').count(), STEPS);

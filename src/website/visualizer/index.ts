@@ -286,7 +286,20 @@ export class FloorVisualizer {
       const image = await loadImage(sitePath(`/v2/assets/finish-${index + 1}.webp`));
       if (image && !this.disposed) this.materialPhotos.set(product.id, image);
     }));
-    this.ready = Promise.all([source, this.alphaImage(0), materials]).then(([loaded]) => {
+    // The configurator sits far below the hero: build its first scene only once the page is idle or the
+    // section is approaching, so the 3D story above gets the main thread first.
+    const near = new Promise<void>(resolve => {
+      let done = false;
+      const finish = (): void => { if (!done) { done = true; resolve(); } };
+      if (typeof IntersectionObserver !== 'undefined') {
+        const observer = new IntersectionObserver(entries => { if (entries.some(entry => entry.isIntersecting)) { observer.disconnect(); finish(); } }, { rootMargin: '120% 0px' });
+        observer.observe(host);
+      }
+      const idle = (): void => { if (typeof requestIdleCallback === 'function') requestIdleCallback(() => finish(), { timeout: 1500 }); else setTimeout(finish, 1200); };
+      if (document.readyState === 'complete') setTimeout(idle, 800); else window.addEventListener('load', () => setTimeout(idle, 800), { once: true });
+      setTimeout(finish, 4000);
+    });
+    this.ready = Promise.all([source, this.alphaImage(0), materials, near]).then(([loaded]) => {
       if (this.disposed) return;
       this.loadComplete = loaded;
       this.failed = !loaded;
@@ -294,7 +307,8 @@ export class FloorVisualizer {
         this.rebuild();
         this.hint('เลือกสีและลายปู แล้วลองหมุนลายหรือเปรียบเทียบกับภาพเดิมได้');
         this.warmAtlases();
-        SAMPLE_ROOMS.forEach((_, index) => { if (index) { void this.roomImage(index); void this.alphaImage(index); } });
+        const preload = (): void => SAMPLE_ROOMS.forEach((_, index) => { if (index) { void this.roomImage(index); void this.alphaImage(index); } });
+        if (typeof requestIdleCallback === 'function') requestIdleCallback(preload, { timeout: 4000 }); else setTimeout(preload, 1500);
       } else this.hint('โหลดภาพห้องไม่สำเร็จ กรุณาลองใหม่หรืออัปโหลดภาพของคุณ');
       this.emit();
     });

@@ -1,15 +1,30 @@
-import { AmbientLight, DirectionalLight, HemisphereLight, Mesh, PlaneGeometry, PMREMGenerator, Scene, ShadowMaterial, WebGLRenderer, Color } from 'three';
+import { AmbientLight, DirectionalLight, HemisphereLight, Mesh, PlaneGeometry, PMREMGenerator, Scene, ShadowMaterial, WebGLRenderer, Color, type WebGLRenderTarget } from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
-export function createStudio(scene: Scene, renderer: WebGLRenderer) {
+export interface StudioOptions {
+  /**
+   * Skip the PMREM environment at construction. Prefiltering the room environment
+   * compiles several shaders and renders a cube map on the main thread (up to a
+   * couple of seconds on Direct3D drivers); callers that want a fast first frame
+   * call `buildEnvironment()` once the first picture is on screen.
+   */
+  deferEnvironment?: boolean;
+}
+
+export function createStudio(scene: Scene, renderer: WebGLRenderer, options: StudioOptions = {}) {
   scene.background = new Color('#ffffff');
-  const environment = new RoomEnvironment();
-  const pmrem = new PMREMGenerator(renderer);
-  const target = pmrem.fromScene(environment, 0.04);
-  scene.environment = target.texture;
-  scene.environmentIntensity = 0.6;
-  environment.dispose();
-  pmrem.dispose();
+  let target: WebGLRenderTarget | null = null;
+  const buildEnvironment = (): void => {
+    if (target) return;
+    const environment = new RoomEnvironment();
+    const pmrem = new PMREMGenerator(renderer);
+    target = pmrem.fromScene(environment, 0.04);
+    scene.environment = target.texture;
+    scene.environmentIntensity = 0.6;
+    environment.dispose();
+    pmrem.dispose();
+  };
+  if (!options.deferEnvironment) buildEnvironment();
   const key = new DirectionalLight(0xfff8ef, 2.0);
   key.position.set(-45, 105, 65);
   key.castShadow = true;
@@ -41,9 +56,12 @@ export function createStudio(scene: Scene, renderer: WebGLRenderer) {
   return {
     ground,
     undersideKey,
+    buildEnvironment,
+    get hasEnvironment() { return Boolean(target); },
     dispose() {
       scene.environment = null;
-      target.dispose();
+      target?.dispose();
+      target = null;
       ground.geometry.dispose();
       ground.material.dispose();
       key.shadow.dispose();

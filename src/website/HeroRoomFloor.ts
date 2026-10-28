@@ -1,7 +1,7 @@
 import { getProduct } from '../data/products';
 import { sitePath } from '../sitePath';
 
-const IMAGE_URL = sitePath('/room/references/room-original.png');
+const IMAGE_URL = sitePath('/room/references/room-original.webp');
 const REFERENCE_WIDTH = 1672;
 const REFERENCE_HEIGHT = 941;
 const FINISH_IDS = ['light-natural-oak', 'warm-taupe-oak', 'golden-honey-oak', 'whitewashed-ash-oak', 'greige-oak', 'dark-walnut-brown'] as const;
@@ -65,7 +65,10 @@ export class HeroRoomFloor {
   private readonly ctx: CanvasRenderingContext2D;
   private readonly observer: ResizeObserver;
   private readonly image = new Image();
-  private readonly cache: HTMLCanvasElement[] = [];
+  private readonly cache: (HTMLCanvasElement | undefined)[] = [];
+  private source: ImageData | null = null;
+  private mask: Uint8Array | null = null;
+  private idle = 0;
   private loaded = false;
   private failed = false;
   private disposed = false;
@@ -128,7 +131,7 @@ export class HeroRoomFloor {
       from: this.from, to: this.to, mix: this.mix,
       width: this.canvas.width, height: this.canvas.height,
       sourceWidth: this.image.naturalWidth, sourceHeight: this.image.naturalHeight,
-      maskedPixels: this.maskedPixels, cachedFinishes: this.cache.length,
+      maskedPixels: this.maskedPixels, cachedFinishes: this.cache.filter(Boolean).length,
     };
   }
 
@@ -140,8 +143,9 @@ export class HeroRoomFloor {
     this.observer.disconnect();
     this.canvas.remove();
     this.canvas.width = this.canvas.height = 1;
-    for (const canvas of this.cache) canvas.width = canvas.height = 1;
+    for (const canvas of this.cache) if (canvas) canvas.width = canvas.height = 1;
     this.cache.length = 0;
+    if (typeof cancelIdleCallback === 'function') cancelIdleCallback(this.idle); else clearTimeout(this.idle);
     this.host.style.background = this.previousBackground;
   }
 
@@ -150,7 +154,15 @@ export class HeroRoomFloor {
     const original = makeCanvas(width, height);
     const originalContext = getContext(original);
     originalContext.drawImage(this.image, 0, 0);
-    this.cache.push(original);
+    this.cache[0] = original;
+    // Pixel access and the floor mask are deferred: the first paint is the untouched photo.
+    this.scheduleIdleFinishes();
+  }
+
+  private ensureSource(): void {
+    if (this.source && this.mask) return;
+    const width = this.image.naturalWidth, height = this.image.naturalHeight;
+    const originalContext = getContext(this.cache[0]!);
     const source = originalContext.getImageData(0, 0, width, height);
 
     // Alpha in this temporary canvas supplies antialiased one-pixel edges;
@@ -169,6 +181,30 @@ export class HeroRoomFloor {
       if (mask[p]) this.maskedPixels++;
     }
     maskCanvas.width = maskCanvas.height = 1;
+    this.source = source;
+    this.mask = mask;
+  }
+
+  private scheduleIdleFinishes(): void {
+    const next = (): void => {
+      if (this.disposed) return;
+      const index = FINISH_IDS.findIndex((_, i) => i > 0 && !this.cache[i]);
+      if (index < 0) return;
+      this.finishCanvas(index);
+      this.scheduleIdleFinishes();
+    };
+    // No timeout: a forced idle callback would run while the 3D story is still building. True idle only.
+    if (typeof requestIdleCallback === 'function') this.idle = requestIdleCallback(next);
+    else this.idle = window.setTimeout(next, 1500);
+  }
+
+  /** The photo with its floor recoloured to one finish; ~60 ms per finish, built once. */
+  private finishCanvas(finish: number): HTMLCanvasElement {
+    const cached = this.cache[finish];
+    if (cached) return cached;
+    this.ensureSource();
+    const source = this.source!, mask = this.mask!;
+    const width = source.width, height = source.height;
 
     const srgbToLinear = Float32Array.from({ length: 256 }, (_, i) => linear(i / 255));
     const linearToSrgb = Uint8Array.from({ length: 4096 }, (_, i) => {
@@ -179,7 +215,7 @@ export class HeroRoomFloor {
     // Calibrate against its visible oak rather than the catalog render's RGB,
     // which would push pale ash and greige toward a blue/magenta cast.
     const reference = [211, 187, 161].map(channel => linear(channel / 255));
-    for (let finish = 1; finish < FINISH_IDS.length; finish++) {
+    {
       const target = makeCanvas(width, height), context = getContext(target);
       const pixels = new ImageData(new Uint8ClampedArray(source.data), width, height);
       const ratio = palette(FINISH_IDS[finish]).map((channel, i) => channel / reference[i]);
@@ -203,7 +239,8 @@ export class HeroRoomFloor {
         }
       }
       context.putImageData(pixels, 0, 0);
-      this.cache.push(target);
+      this.cache[finish] = target;
+      return target;
     }
   }
 
@@ -224,7 +261,7 @@ export class HeroRoomFloor {
 
   private render(): void {
     if (!this.loaded || this.disposed) return;
-    const source = this.cache[this.from];
+    const source = this.finishCanvas(this.from);
     const scale = Math.max(this.canvas.width / source.width, this.canvas.height / source.height);
     const width = source.width * scale, height = source.height * scale;
     const x = (this.canvas.width - width) / 2, y = (this.canvas.height - height) / 2;
@@ -232,7 +269,7 @@ export class HeroRoomFloor {
     this.ctx.drawImage(source, x, y, width, height);
     if (this.mix > 0 && this.from !== this.to) {
       this.ctx.globalAlpha = this.mix;
-      this.ctx.drawImage(this.cache[this.to], x, y, width, height);
+      this.ctx.drawImage(this.finishCanvas(this.to), x, y, width, height);
       this.ctx.globalAlpha = 1;
     }
   }

@@ -38,7 +38,9 @@ export function mountHeader(active:'home'|'calculator'|'ceo') {
   menu.addEventListener('click',()=>{const open=menu.getAttribute('aria-expanded')!=='true';menu.setAttribute('aria-expanded',String(open));header.classList.toggle('menu-open',open);});
   header.addEventListener('keydown',event=>{if(event.key==='Escape'&&menu.getAttribute('aria-expanded')==='true'){menu.setAttribute('aria-expanded','false');header.classList.remove('menu-open');menu.focus();}});
   header.querySelectorAll('nav a,nav button').forEach(link=>link.addEventListener('click',()=>{menu.setAttribute('aria-expanded','false');header.classList.remove('menu-open');}));
-  const scrolled=()=>header.classList.toggle('is-scrolled',scrollY>20);
+  let wasScrolled:boolean|null=null;
+  // Only touch the DOM when the state flips: reading scrollY on a long page is cheap, a class toggle per event is not.
+  const scrolled=()=>{const now=scrollY>20;if(now!==wasScrolled){wasScrolled=now;header.classList.toggle('is-scrolled',now);}};
   window.addEventListener('scroll',scrolled,{passive:true});scrolled();
 }
 export function mountFooter() {
@@ -74,7 +76,7 @@ export function mountContactDialog() {
 }
 export function sprite(element:HTMLElement,crop:[number,number,number,number],source='home') {
   const [x,y,w,h]=crop, width=source==='home'?1122:1024,height=source==='home'?1402:1536;
-  element.style.backgroundImage=`url('${sitePath(`/website/assets/prototype-${source}.png`)}')`;
+  element.style.backgroundImage=`url('${sitePath(`/website/assets/prototype-${source}.${source==='home'?'webp':'png'}`)}')`;
   element.style.backgroundSize=`${width/w*100}% ${height/h*100}%`;
   element.style.backgroundPosition=`${x/(width-w)*100}% ${y/(height-h)*100}%`;
   element.style.aspectRatio=`${w}/${h}`;

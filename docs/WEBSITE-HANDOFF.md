@@ -131,6 +131,20 @@ npm run test:visualizer
 `build:website` ตรวจ TypeScript และสร้าง `website-dist/` สำหรับ Website, Calculator, CEO รวม Next Gen และลิงก์เปลี่ยนทาง ส่วนเดโมเดิมสร้างแยกด้วย `npm run build` เป็น `demo-dist/` และ `npm run build:room` เป็น `room-dist/` ใช้ `npm run build:site` เพื่อ build และรวม V1 ทั้งหมดเป็น `site-dist/` จากนั้น `npm run preview:site -- --port 5185 --strictPort` เพื่อตรวจเว็บรวม V2 เป็นงานทดลองแยกและไม่อยู่ในผลรวมนี้
 ลิงก์และภาพใช้รากโดเมนเป็นค่าเริ่มต้น เช่น `/website/` หากโฮสต์ใต้ path prefix ให้ตั้ง `COOLPLAN_BASE_PATH` เป็นเส้นทางที่ขึ้นต้นและลงท้ายด้วย `/` เช่น `/Coolplan/` ตอน build และ preview; workflow GitHub Pages ตั้งค่านี้จาก metadata ของ Pages ให้อัตโนมัติ
 
+## ประสิทธิภาพการโหลดฉาก 3D (hero)
+
+เป้าหมายคือเห็นภาพ 3D ภายใน ~1 วินาทีบนเดสก์ท็อปและ ~3 วินาทีบนมือถือ โดยไม่มีช่วงที่หน้าเว็บค้าง วิธีที่ใช้:
+
+- **สีแรกก่อน** `FloorStoryScene` สร้างเฉพาะสีแรกแล้วแสดงทันที (`ready`) อีก 5 สีทยอยสร้างต่อใน `loadRemaining()` โดยเริ่มจากสีที่ผู้ใช้กำลังเลื่อนไปถึง (`allReady` รอให้ครบ) ระหว่างนั้นถ้าเลื่อนถึงสีที่ยังไม่พร้อมจะแสดงสีที่ใกล้ที่สุดไปก่อน (`diagnostics.productId` = สีที่แสดงจริง, `requestedProductId` = สีที่ขอ)
+- **ลายไม้สร้างใน Web Worker** `src/textures/texture.worker.ts` + `textureWorkerPool.ts` (2–4 worker) คืนค่าเป็น `ImageBitmap` แล้วห่อด้วย `textureSetFromBitmaps()` ส่งเข้า `createMaterials(product, {prebuilt})` ชิ้นตัวอย่างใช้ 1024×256 (ตัวดูสินค้าเต็มยังใช้ 2048×512 บนเธรดหลักเหมือนเดิม)
+- **Shader คอมไพล์แบบขนาน** เรียก `renderer.compileAsync()` หลังทำให้ชิ้นแรกมองเห็น (compileAsync ข้ามวัตถุที่ซ่อนอยู่) และปิด `debug.checkShaderErrors` นอก dev
+- **Environment (PMREM) มาทีหลัง** `createStudio(scene, renderer, {deferEnvironment: true})` แล้ว `finishEnvironment()` สร้างในเฟรมถัดจากภาพแรก (ขั้นนี้เคยเป็น long task ยาวที่สุดตอนเปิดหน้า)
+- **ภาพห้อง hero ย้อมสีทีละสีเมื่อถึง** `HeroRoomFloor` อ่านพิกเซลและทำ mask เมื่อต้องการสีที่ไม่ใช่สีเดิมครั้งแรก ที่เหลือทำตอน idle และไม่ถ่วง `story.ready` อีก
+- **ตัวจำลองห้องด้านล่างรอ idle** `FloorVisualizer` สร้างฉากแรกเมื่อหน้าว่างหรือเมื่อส่วนนั้นใกล้เข้ามาในจอ รูปห้องตัวอย่างที่เหลือโหลดตอน idle
+- **รูปเบา** แถบลายไม้ `public/website/assets/plank-*.webp` (~25 KB ต่อไฟล์ แทน material-*.jpg 2.3 MB), `room-original.webp` 136 KB, `prototype-home.webp` 168 KB (`sprite()` เลือก webp ให้เอง) ไฟล์ PNG/JPG เดิมยังอยู่เพราะชุดทดสอบและสคริปต์ V2 อ้างถึง
+
+ตัวเลขที่วัดได้ (build จริงบนเครื่องพัฒนา, headless Chrome): ภาพแรก 1.2 s เดสก์ท็อป / 2.9 s มือถือจำลอง CPU ช้า 4 เท่า, ครบ 6 สี 3.3 s / 5.9 s, ข้อมูลภาพตอนเปิดหน้า ~1.75 MB (ก่อนแก้ 18.5 s / 58 s และ 17 MB บนเว็บจริง) ดู `window.websiteDemo.diagnostics.viewer.timings` สำหรับเวลาของแต่ละขั้น
+
 ## จุดแก้ไขหลัก
 
 | ไฟล์ | สิ่งที่ดูแล |

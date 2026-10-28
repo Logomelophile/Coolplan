@@ -50,7 +50,8 @@ export class FloorScrollStory{
     window.addEventListener('scroll',this.schedule,{signal,passive:true});window.addEventListener('resize',this.schedule,{signal,passive:true});
     this.reduced.addEventListener('change',this.updateReduced,{signal});this.updateReduced();
     this.apply(0);
-    this.ready=Promise.all([this.scene.ready,this.room.ready]).then(()=>{
+    this.room.ready.then(()=>{if(!this.disposed&&this.loaded)this.readScroll(true);}).catch(()=>undefined);
+    this.ready=this.scene.ready.then(()=>{
       if(this.disposed)return;this.loaded=true;this.status.hidden=true;this.readScroll(true);
       if(!this.scene.diagnostics.webgl){document.getElementById('hero-hint')!.textContent='อุปกรณ์นี้ไม่รองรับ 3D · ใช้ปุ่มด้านล่างเพื่อสำรวจสีและข้อมูลวัสดุ';this.hero.classList.add('story-no-webgl');}
     }).catch(error=>{if(!this.disposed){this.status.textContent='โหลดวัสดุไม่สำเร็จ กรุณาโหลดหน้าใหม่ หรือเลื่อนต่อเพื่อเลือกพื้น';this.hero.classList.add('story-load-error');}console.error(error);});

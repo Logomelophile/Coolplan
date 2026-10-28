@@ -48,7 +48,7 @@ async function chooseRoom(index) {
 async function furnitureDifference(target = canvas()) {
   return target.evaluate(async (canvas, websiteUrl) => {
     const root = new URL('../', websiteUrl);
-    const image = new Image(); image.src = new URL('room/references/room-original.png', root).href; await image.decode();
+    const image = new Image(); image.src = new URL('room/references/room-original.webp', root).href; await image.decode();
     const original = document.createElement('canvas'); original.width = canvas.width; original.height = canvas.height;
     const { frame, display } = window.websiteDemo.diagnostics.preview;
     original.getContext('2d').drawImage(image, frame.x, frame.y, frame.width, frame.height, display.x, display.y, display.width, display.height);

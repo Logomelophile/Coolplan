@@ -7,6 +7,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { getProduct } from '../data/products';
 import { createPlank, type PlankModel } from '../geometry/plankGeometry';
 import { createMaterials, type MaterialBundle } from '../materials/materialFactory';
+import { backingTilePlan, textureSetFromBitmaps, type TextureSet } from '../textures';
+import { getTextureWorkerPool } from '../textures/textureWorkerPool';
 import { createStudio } from '../lighting';
 import type { ProductConfig } from '../types';
 import { sitePath } from '../sitePath';
@@ -61,13 +63,21 @@ const patches: [number, [number, number, number, number]][] = [
 
 /** A scroll-owned cutaway scene. One world unit is one centimetre. */
 export class FloorStoryScene {
+  /** Resolves when the first finish is on screen. */
   readonly ready: Promise<void>;
+  /** Resolves when every finish has been built (background work after `ready`). */
+  allReady: Promise<void> = Promise.resolve();
+  private wanted: number[] = [];
+  private displayed = 0;
+  private building = new Set<number>();
+  private readonly born = performance.now();
+  private timings: Record<string, number> = {};
   private scene = new Scene();
   private camera = new OrthographicCamera(-60, 60, 40, -40, .1, 600);
   private renderer?: WebGLRenderer;
   private controls?: OrbitControls;
   private studio?: ReturnType<typeof createStudio>;
-  private models: ModelState[] = [];
+  private models: (ModelState | undefined)[] = [];
   private observer: ResizeObserver;
   private intersection: IntersectionObserver;
   private abort = new AbortController();
@@ -130,7 +140,8 @@ export class FloorStoryScene {
     canvas.setAttribute('aria-label', 'แผ่นพื้น 3D ลากเมาส์เพื่อหมุน เลื่อนหน้าเพื่อเปลี่ยนสีและแยกชั้นวัสดุ');
     Object.assign(canvas.style, {width: '100%', height: '100%', display: 'block', background: 'transparent'});
     host.prepend(canvas);
-    this.studio = createStudio(this.scene, this.renderer);
+    // The prefiltered environment is the single most expensive startup step; it arrives one frame after the first picture.
+    this.studio = createStudio(this.scene, this.renderer, {deferEnvironment: true});
     this.studio.ground.material.opacity = .09;
     this.scene.background = null;
     this.renderer.setClearColor(0x000000, 0);
@@ -161,12 +172,18 @@ export class FloorStoryScene {
     }, {signal: this.abort.signal});
     this.resetView();
     this.resize();
+    // Shader link status is read synchronously by three.js when this is on; the check is a dev-only aid.
+    this.renderer.debug.checkShaderErrors = Boolean((import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV);
     this.ready = this.load().then(() => {
       if (this.disposed) return;
       this.loaded = true;
       this.status.hidden = true;
       this.applyFrame();
+      const renderStarted = performance.now();
       this.render();
+      this.timings.firstRenderMs = Math.round(performance.now() - renderStarted);
+      this.timings.readyMs = Math.round(performance.now() - this.born);
+      this.allReady = this.finishEnvironment().then(() => this.loadRemaining()).then(() => { this.timings.allFinishesMs = Math.round(performance.now() - this.born); });
     }).catch(error => {
       if (this.disposed) return;
       this.status.hidden = false;
@@ -175,17 +192,56 @@ export class FloorStoryScene {
     });
   }
 
+  /** First finish only: one reference strip, textures from the worker pool, shaders compiled in parallel. */
   private async load(): Promise<void> {
-    const references = await Promise.all(patches.map(async ([sheet]) => {
-      const image = new Image();
-      image.src = sitePath(`/website/assets/material-${sheet}.jpg`);
-      await image.decode();
-      return image;
-    }));
+    await this.buildModel(0);
+    this.timings.firstModelMs = Math.round(performance.now() - this.born);
     if (this.disposed || !this.renderer) return;
-    const anisotropy = this.renderer.capabilities.getMaxAnisotropy();
-    for (let index = 0; index < ids.length; index++) {
+    // compileAsync only visits visible objects: show the first sample before asking for its programs.
+    const first = this.models[0];
+    if (first) first.model.group.visible = true;
+    try {
+      // KHR_parallel_shader_compile where available: the first frame no longer blocks on program linking.
+      await this.renderer.compileAsync(this.scene, this.camera);
+    } catch { /* older drivers fall back to compiling on first render */ }
+    this.timings.compiledMs = Math.round(performance.now() - this.born);
+  }
+
+  /** Image-based lighting after the first paint: build the PMREM, let the new programs link in parallel, then redraw. */
+  private async finishEnvironment(): Promise<void> {
+    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+    if (this.disposed || !this.renderer || !this.studio) return;
+    this.studio.buildEnvironment();
+    try { await this.renderer.compileAsync(this.scene, this.camera); } catch { /* compiled on first render instead */ }
+    if (this.disposed) return;
+    this.timings.environmentMs = Math.round(performance.now() - this.born);
+    this.render();
+  }
+
+  /** Remaining finishes, the one the visitor is scrolling towards first, with a frame yielded between each. */
+  private async loadRemaining(): Promise<void> {
+    const pending = new Set(ids.map((_, index) => index).filter(index => !this.models[index]));
+    while (pending.size && !this.disposed) {
+      const next = this.wanted.find(index => pending.has(index)) ?? Math.min(...pending);
+      pending.delete(next);
+      try { await this.buildModel(next); } catch (error) { console.warn('[floor-story] finish failed', ids[next], error); }
       if (this.disposed) return;
+      // The requested finish may have arrived: show it now rather than on the next scroll event.
+      if (this.loaded && (this.active === next || this.displayed !== this.active)) { this.applyFrame(); this.render(); }
+      await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+    }
+  }
+
+  private async buildModel(index: number): Promise<void> {
+    if (this.models[index] || this.building.has(index) || this.disposed || !this.renderer) return;
+    this.building.add(index);
+    try {
+      const [sheet] = patches[index];
+      const reference = new Image();
+      reference.decoding = 'async';
+      reference.src = sitePath(`/website/assets/plank-${sheet}.webp`);
+      const referenceReady = reference.decode();
+      const anisotropy = this.renderer.capabilities.getMaxAnisotropy();
       const product = structuredClone(getProduct(ids[index]));
       // Website cutaway sample: these dimensions do not alter the original sales catalog.
       product.dimensions = {lengthMm: 600, widthMm: 300, thicknessMm: 5};
@@ -195,9 +251,24 @@ export class FloorStoryScene {
         if (layer.material.kind === 'core') layer.material.color = '#e4e3df';
       }
       product.maps = undefined;
-      const bundle = await createMaterials(product, {maxAnisotropy: anisotropy});
+      // 1024 x 256 is indistinguishable from 2048 x 512 on a 600 x 300 mm sample and five times cheaper to make.
+      const pool = getTextureWorkerPool();
+      let prebuilt: {surface: TextureSet; backing: TextureSet} | undefined;
+      if (pool) {
+        try {
+          const [surfaceMaps, backingMaps] = await Promise.all([
+            pool.generate('surface', product, 1024, 256),
+            pool.generate('backing', backingTilePlan(product).product, 1024, 256),
+          ]);
+          prebuilt = {surface: textureSetFromBitmaps(product, surfaceMaps, 'surface'), backing: textureSetFromBitmaps(product, backingMaps, 'backing')};
+        } catch (error) {
+          console.warn('[floor-story] texture worker unavailable, generating on the main thread', error);
+        }
+      }
+      if (this.disposed) { prebuilt?.surface.dispose(); prebuilt?.backing.dispose(); return; }
+      const bundle = await createMaterials(product, {maxAnisotropy: anisotropy, prebuilt});
+      await referenceReady;
       if (this.disposed) {bundle.dispose(); return;}
-      const [, [x, y, width, height]] = patches[index];
       const canvas = document.createElement('canvas');
       canvas.width = 1024;
       canvas.height = 512;
@@ -205,7 +276,7 @@ export class FloorStoryScene {
       if (!context) {bundle.dispose(); throw new Error('Canvas 2D is unavailable.');}
       context.translate(512, 256);
       context.rotate(-Math.PI / 2);
-      context.drawImage(references[index], x, y, width, height, -256, -512, 512, 1024);
+      context.drawImage(reference, 0, 0, reference.naturalWidth, reference.naturalHeight, -256, -512, 512, 1024);
       const photo = new CanvasTexture(canvas);
       photo.name = `floor-story-reference-${index + 1}`;
       photo.colorSpace = SRGBColorSpace;
@@ -237,19 +308,14 @@ export class FloorStoryScene {
       wear.mesh.add(outline);
       model.group.visible = false;
       this.scene.add(model.group);
-      this.models.push({model, bundle, product, photo, wearOutline: outline, blend});
-      // Yield between CPU texture builds so the page remains scrollable while all six finishes load.
-      await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
-    }
-    if (this.disposed || !this.renderer) return;
-    // Every finish uses the same shader program; initialize textures before scroll starts.
-    for (const state of this.models) {
-      this.renderer.initTexture(state.photo);
-      for (const material of state.bundle.materials.values()) {
-        for (const texture of [material.map, material.normalMap, material.roughnessMap]) {
-          if (texture) this.renderer.initTexture(texture);
-        }
+      this.models[index] = {model, bundle, product, photo, wearOutline: outline, blend};
+      // Upload this finish's textures now so its first appearance does not stall the scroll frame.
+      this.renderer.initTexture(photo);
+      for (const material of bundle.materials.values()) {
+        for (const texture of [material.map, material.normalMap, material.roughnessMap]) if (texture) this.renderer.initTexture(texture);
       }
+    } finally {
+      this.building.delete(index);
     }
   }
 
@@ -269,14 +335,17 @@ export class FloorStoryScene {
   }
 
   private applyFrame(): void {
-    if (!this.models.length) return;
     const {from, to, mix, explode, focus, zoom, profile = 0} = this._frame;
     this.active = mix >= 1 ? to : from;
-    const state = this.models[this.active];
-    if (!state) return;
-    this.models.forEach((item, index) => {item.model.group.visible = index === this.active;});
+    this.wanted = [this.active, to, from].filter((value, index, list) => list.indexOf(value) === index);
+    // While a finish is still being built, keep showing the nearest one that exists.
+    const loadedIndices = this.models.map((item, index) => item ? index : -1).filter(index => index >= 0);
+    if (!loadedIndices.length) return;
+    this.displayed = this.models[this.active] ? this.active : this.models[from] ? from : this.models[this.displayed] ? this.displayed : loadedIndices[0];
+    const state = this.models[this.displayed]!;
+    this.models.forEach((item, index) => {if (item) item.model.group.visible = index === this.displayed;});
     state.blend.map.value = this.models[to]?.photo ?? state.photo;
-    state.blend.mix.value = mix >= 1 ? 0 : mix;
+    state.blend.mix.value = mix >= 1 || !this.models[to] ? 0 : mix;
     for (const [id, entry] of state.model.layers) {
       const order = layerIds.indexOf(id as FloorStoryLayerId);
       // Separation is a visual explanation of construction, never a dimensioned factory specification.
@@ -367,7 +436,7 @@ export class FloorStoryScene {
   }
 
   projectLayerAnchors(): FloorStoryAnchor[] {
-    const state = this.models[this.active];
+    const state = this.models[this.displayed];
     if (!state) return [];
     this.camera.updateMatrixWorld();
     this.scene.updateMatrixWorld(true);
@@ -401,15 +470,16 @@ export class FloorStoryScene {
   get diagnostics() {
     return {
       webgl: Boolean(this.renderer) && !this.contextLost, loaded: this.loaded, disposed: this.disposed,
-      frame: {...this._frame}, explode: this._frame.explode, productId: ids[this.active], cachedModels: this.models.length,
-      visibleModels: this.models.filter(state => state.model.group.visible).length,
-      layerCount: this.models[this.active]?.model.layers.size ?? 0,
+      frame: {...this._frame}, explode: this._frame.explode, productId: ids[this.displayed], requestedProductId: ids[this.active],
+      cachedModels: this.models.filter(Boolean).length, loadedFinishes: this.models.map((state, index) => state ? ids[index] : null).filter(Boolean),
+      visibleModels: this.models.filter(state => state?.model.group.visible).length,
+      layerCount: this.models[this.displayed]?.model.layers.size ?? 0,
       dimensions: {lengthMm: 600, widthMm: 300, thicknessMm: 5},
       layerThicknessMm: {...thicknesses}, layerThicknessSumMm: Object.values(thicknesses).reduce((sum, value) => sum + value, 0),
       cameraPosition: this.camera.position.toArray(), target: this.controls?.target.toArray(),
       cameraZoom: this.camera.zoom, anchors: this.anchors.map(anchor => ({...anchor})),
       thickness: structuredClone(this.thickness), calls: this.renderer?.info.render.calls ?? 0,
-      memory: this.renderer ? {...this.renderer.info.memory} : null,
+      memory: this.renderer ? {...this.renderer.info.memory} : null, programs: this.renderer?.info.programs?.length ?? 0, timings: {...this.timings},
     };
   }
 
@@ -423,6 +493,7 @@ export class FloorStoryScene {
     this.controls?.removeEventListener('change', this.requestRender);
     this.controls?.dispose();
     for (const state of this.models) {
+      if (!state) continue;
       state.wearOutline.geometry.dispose();
       state.wearOutline.material.dispose();
       state.photo.dispose();

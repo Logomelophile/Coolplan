@@ -1,6 +1,6 @@
 import { CanvasTexture, Color, MeshPhysicalMaterial, NoColorSpace, RepeatWrapping, SRGBColorSpace, TextureLoader, Vector2, type Texture } from 'three';
 import type { ProductConfig } from '../types';
-import { generateBackingTextures, generateSurfaceTextures } from '../textures';
+import { generateBackingTextures, generateSurfaceTextures, type TextureSet } from '../textures';
 
 export interface MaterialOptions {
   /** Prefix for relative image URLs. Absolute and protocol URLs are unchanged. */
@@ -9,6 +9,8 @@ export interface MaterialOptions {
   discoveredMaps?: ProductConfig['maps'];
   discoverMaps?: boolean;
   maxAnisotropy?: number;
+  /** Texture sets already built elsewhere (for example by the texture worker pool); the factory then skips CPU generation and owns their disposal. */
+  prebuilt?: { surface: TextureSet; backing: TextureSet };
 }
 
 export interface MaterialBundle {
@@ -63,8 +65,8 @@ function textureThumbnail(texture: Texture, fallback: string): string {
 }
 
 export async function createMaterials(product: ProductConfig, options: MaterialOptions = {}): Promise<MaterialBundle> {
-  const surface = generateSurfaceTextures(product);
-  const backing = generateBackingTextures(product);
+  const surface = options.prebuilt?.surface ?? generateSurfaceTextures(product);
+  const backing = options.prebuilt?.backing ?? generateBackingTextures(product);
   const coreTexture = makeCoreTexture(product.seed ^ 0x4e21bd);
   const externalTextures = new Set<Texture>();
   const anisotropy = Math.max(1, Math.min(options.maxAnisotropy ?? 8, 16));

@@ -1,4 +1,4 @@
-import type { CanvasTexture } from 'three';
+import type { Texture } from 'three';
 
 export interface SurfacePixels {
   readonly width: number;
@@ -10,9 +10,9 @@ export interface SurfacePixels {
 }
 
 export interface TextureSet {
-  readonly albedo: CanvasTexture;
-  readonly normal: CanvasTexture;
-  readonly roughness: CanvasTexture;
+  readonly albedo: Texture;
+  readonly normal: Texture;
+  readonly roughness: Texture;
   readonly thumbnail: string;
   dispose(): void;
 }
