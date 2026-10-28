@@ -1,5 +1,6 @@
 import { sitePath } from '../sitePath';
 import { COMPANY } from './catalog';
+import { SHOWCASE_ITEMS } from './showcase';
 
 /**
  * The "experience" run that follows the pinned floor story:
@@ -17,23 +18,32 @@ export const INTRO_LINES = [
   { lead: 'ทุกตารางเมตรคือความไว้วางใจ', text: 'ที่เราตั้งใจส่งมอบด้วยทีมช่างของเราเอง' },
 ];
 
-export interface IntroDiagnostics { progress: number; typed: number; total: number }
+export interface IntroDiagnostics { progress: number; typed: number; total: number; counter: number; cards: number }
 
 export class ExperienceIntro {
   private readonly sticky: HTMLElement;
-  private readonly lines: { lead: HTMLElement; text: HTMLElement; total: number }[] = [];
+  private readonly lines: { row: HTMLElement; lead: HTMLElement; text: HTMLElement; total: number }[] = [];
+  private readonly cards: HTMLElement[] = [];
   private readonly counter: HTMLElement | null;
+  private readonly outro: HTMLElement | null;
   private readonly abort = new AbortController();
   private readonly observer: IntersectionObserver | null = null;
   private readonly total: number;
+  private readonly reduced: boolean;
   private visible = false;
-  private visibleSince = 0;
+  private target = 0;
   private progress = 0;
-  private typed = -1;
   private raf = 0;
   private disposed = false;
 
+  /** Scroll-progress timeline (fractions of the pinned distance). */
+  private static readonly TYPE = { start: 0, end: .5 };
+  private static readonly COUNT = { start: .1, end: .55 };
+  private static readonly PILE = { start: .48, end: .9 };
+  private static readonly OUTRO = { start: .86, end: 1 };
+
   constructor(private readonly section: HTMLElement) {
+    this.reduced = reduced();
     this.sticky = section.querySelector<HTMLElement>('.experience-sticky')!;
     const list = section.querySelector<HTMLElement>('.experience-lines')!;
     INTRO_LINES.forEach((line, index) => {
@@ -46,71 +56,135 @@ export class ExperienceIntro {
       text.className = 'experience-text';
       row.append(lead, text);
       list.append(row);
-      this.lines.push({ lead, text, total: line.lead.length + line.text.length });
+      this.lines.push({ row, lead, text, total: line.lead.length + line.text.length });
     });
     this.total = this.lines.reduce((sum, line) => sum + line.total, 0);
     this.counter = section.querySelector<HTMLElement>('.experience-counter strong');
-    if (reduced()) {
+    this.outro = section.querySelector<HTMLElement>('.experience-outro');
+    const pile = section.querySelector<HTMLElement>('.experience-pile');
+    if (pile) {
+      SHOWCASE_ITEMS.forEach(item => {
+        const card = document.createElement('figure');
+        card.className = `experience-card is-${item.orientation}`;
+        const img = document.createElement('img');
+        img.src = sitePath(item.image);
+        img.alt = '';
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        card.append(img);
+        pile.append(card);
+        this.cards.push(card);
+      });
+    }
+    if (this.reduced) {
       section.classList.add('is-reduced');
       this.render(1);
       return;
     }
     const signal = this.abort.signal;
     window.addEventListener('scroll', this.onScroll, { passive: true, signal });
+    window.addEventListener('resize', this.onScroll, { signal });
     if (typeof IntersectionObserver !== 'undefined') {
       this.observer = new IntersectionObserver(entries => {
         this.visible = entries.some(entry => entry.isIntersecting);
-        if (this.visible) { this.visibleSince = this.visibleSince || performance.now(); this.loop(); }
-      }, { rootMargin: '10% 0px' });
+        if (this.visible) this.loop();
+      }, { rootMargin: '15% 0px' });
       this.observer.observe(section);
     } else { this.visible = true; this.loop(); }
     this.onScroll();
+    this.progress = this.target;
+    this.render(this.progress);
   }
 
-  get diagnostics(): IntroDiagnostics { return { progress: this.progress, typed: this.typed, total: this.total }; }
+  get diagnostics(): IntroDiagnostics {
+    return { progress: this.progress, typed: Math.round(this.typedFraction(this.progress) * this.total), total: this.total, counter: this.counterValue(this.progress), cards: this.cards.filter(card => card.classList.contains('is-in')).length };
+  }
 
+  /** Strictly scroll-linked: scrolling back up rewinds every part of the motion. */
   private onScroll = (): void => {
     const rect = this.section.getBoundingClientRect();
     const total = this.section.offsetHeight - this.sticky.clientHeight;
-    const scrolled = total > 0 ? clamp(-rect.top / total, 0, 1) : 1;
-    this.progress = Math.max(this.progress, scrolled);
-    if (this.visible) this.loop();
+    this.target = total > 0 ? clamp(-rect.top / total, 0, 1) : 1;
+    // Always ease towards the new target; the loop stops by itself once it arrives.
+    this.loop();
   };
 
   private loop = (): void => {
     cancelAnimationFrame(this.raf);
     const tick = (): void => {
       if (this.disposed) return;
-      // Idle visitors still get the story: time contributes once the panel has been in view a moment.
-      const idle = this.visibleSince ? clamp((performance.now() - this.visibleSince - 600) / 7000, 0, 1) : 0;
-      const target = Math.max(this.progress, idle);
-      const typedTarget = Math.round(target * this.total);
-      if (typedTarget > this.typed) {
-        this.typed = Math.min(typedTarget, this.typed + Math.max(1, Math.round(this.total / 160)));
-        this.render(this.typed / this.total);
-        this.raf = requestAnimationFrame(tick);
-      } else if (this.visible && this.typed < this.total) this.raf = requestAnimationFrame(tick);
+      // Short easing towards the scroll position keeps typing and card flight smooth without lagging behind.
+      this.progress += (this.target - this.progress) * .16;
+      if (Math.abs(this.target - this.progress) < .0005) this.progress = this.target;
+      this.render(this.progress);
+      if (this.progress !== this.target) this.raf = requestAnimationFrame(tick);
     };
     this.raf = requestAnimationFrame(tick);
   };
 
-  private render(fraction: number): void {
-    let remaining = Math.round(fraction * this.total);
+  private static phase(p: number, range: { start: number; end: number }): number {
+    return clamp((p - range.start) / (range.end - range.start), 0, 1);
+  }
+
+  private typedFraction(p: number): number { return ExperienceIntro.phase(p, ExperienceIntro.TYPE); }
+
+  private counterValue(p: number): number {
+    const t = ExperienceIntro.phase(p, ExperienceIntro.COUNT);
+    const eased = 1 - Math.pow(1 - t, 3);
+    return Math.round(COMPANY.totalSqm * eased);
+  }
+
+  private render(p: number): void {
+    // 1. Typing (reversible: text is a pure function of progress).
+    let remaining = Math.round(this.typedFraction(p) * this.total);
     this.lines.forEach((line, index) => {
       const source = INTRO_LINES[index];
       const leadCount = clamp(remaining, 0, source.lead.length);
       const textCount = clamp(remaining - source.lead.length, 0, source.text.length);
       line.lead.textContent = source.lead.slice(0, leadCount);
       line.text.textContent = source.text.slice(0, textCount);
-      const row = line.lead.parentElement!;
-      row.classList.toggle('is-typing', remaining > 0 && remaining < line.total);
-      row.classList.toggle('is-done', remaining >= line.total);
-      row.classList.toggle('is-pending', remaining <= 0);
+      line.row.classList.toggle('is-typing', remaining > 0 && remaining < line.total);
+      line.row.classList.toggle('is-done', remaining >= line.total);
+      line.row.classList.toggle('is-pending', remaining <= 0);
       remaining -= line.total;
     });
-    this.section.style.setProperty('--p', fraction.toFixed(4));
-    if (this.counter) this.counter.textContent = Math.round(COMPANY.totalSqm * clamp(fraction * 1.4, 0, 1)).toLocaleString('th-TH');
-    this.typed = Math.round(fraction * this.total);
+    // 2. Counter stops exactly at the catalogue figure.
+    const count = this.counterValue(p);
+    if (this.counter) this.counter.textContent = count.toLocaleString('th-TH');
+    this.section.classList.toggle('is-counted', count >= COMPANY.totalSqm);
+    // 3. Photo pile: each card flies in from its own side and settles into an overlapping stack.
+    const pileT = ExperienceIntro.phase(p, ExperienceIntro.PILE);
+    const n = this.cards.length;
+    const width = this.sticky.clientWidth, height = this.sticky.clientHeight;
+    const compact = width < 851;
+    this.cards.forEach((card, index) => {
+      const slot = 1 / Math.max(1, n);
+      const t = clamp((pileT - index * slot * .82) / (slot * 1.6), 0, 1);
+      const e = 1 - Math.pow(1 - t, 3);
+      // Deterministic resting pose per card: a loose fan around the pile centre.
+      const angle = (index / n) * Math.PI * 2 + .6;
+      const radius = (compact ? .2 : .19) * Math.min(width, height) * (.5 + (index % 3) * .32);
+      const restX = Math.cos(angle) * radius * (compact ? 1 : 1.25), restY = Math.sin(angle) * radius * .7;
+      const restR = ((index * 37) % 23) - 11;
+      const restS = compact ? .78 + (index % 4) * .06 : .9 + (index % 4) * .06;
+      // Entrance: alternate from the left, right and below, further out than the viewport edge.
+      const side = index % 3;
+      const fromX = side === 0 ? -width * .7 : side === 1 ? width * .7 : restX * 2;
+      const fromY = side === 2 ? height * .9 : restY - height * .25;
+      const fromR = restR + (side === 1 ? 28 : -28);
+      const x = fromX + (restX - fromX) * e, y = fromY + (restY - fromY) * e;
+      const r = fromR + (restR - fromR) * e, s = .55 + (restS - .55) * e;
+      card.style.transform = `translate(-50%,-50%) translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0) rotate(${r.toFixed(2)}deg) scale(${s.toFixed(3)})`;
+      card.style.opacity = String(clamp(e * 1.6, 0, 1));
+      card.style.zIndex = String(10 + index);
+      card.classList.toggle('is-in', t > .98);
+    });
+    this.section.style.setProperty('--pile', pileT.toFixed(4));
+    // 4. Outro: copy recedes, the pile becomes the hero and the hand-off caption appears; the next section follows at once.
+    const outroT = ExperienceIntro.phase(p, ExperienceIntro.OUTRO);
+    this.section.style.setProperty('--outro', outroT.toFixed(4));
+    if (this.outro) this.outro.style.opacity = String(outroT);
+    this.section.style.setProperty('--p', p.toFixed(4));
   }
 
   dispose(): void {

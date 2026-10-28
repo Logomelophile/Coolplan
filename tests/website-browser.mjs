@@ -162,8 +162,13 @@ try {
   // Experience run: typed intro, trust counters, catalogue collections and the price-list calculator.
   const introTop = await page.evaluate(() => document.getElementById('experience-intro').getBoundingClientRect().top + scrollY);
   const introHeight = await page.evaluate(() => document.getElementById('experience-intro').offsetHeight);
-  await page.evaluate(({ top, height }) => scrollTo({ top: top + (height - innerHeight) * .95, behavior: 'instant' }), { top: introTop, height: introHeight });
-  await page.waitForFunction(() => { const i = window.websiteDemo.diagnostics.experience?.intro; return i && i.typed >= i.total * .8; }, null, { timeout: 15000 });
+  // Scroll-linked timeline: typing finishes by mid-way, the counter stops at 175,900, the photo pile completes near the end, and scrolling back rewinds.
+  await page.evaluate(({ top, height }) => scrollTo({ top: top + (height - innerHeight) * .6, behavior: 'instant' }), { top: introTop, height: introHeight });
+  await page.waitForFunction(() => { const i = window.websiteDemo.diagnostics.experience?.intro; return i && i.typed === i.total && i.counter === 175900; }, null, { timeout: 15000 });
+  await page.evaluate(({ top, height }) => scrollTo({ top: top + (height - innerHeight) * .97, behavior: 'instant' }), { top: introTop, height: introHeight });
+  await page.waitForFunction(() => window.websiteDemo.diagnostics.experience?.intro?.cards === 10, null, { timeout: 15000 });
+  await page.evaluate(({ top, height }) => scrollTo({ top: top + (height - innerHeight) * .25, behavior: 'instant' }), { top: introTop, height: introHeight });
+  await page.waitForFunction(() => { const i = window.websiteDemo.diagnostics.experience?.intro; return i && i.cards === 0 && i.typed < i.total && i.counter < 175900; }, null, { timeout: 15000 });
   assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('.story-rail')).display), 'none');
   await page.evaluate(() => document.getElementById('trust').scrollIntoView({ block: 'center', behavior: 'instant' }));
   await page.waitForFunction(() => { const t = window.websiteDemo.diagnostics.experience?.trust; return t && t.revealed && t.counters[0] >= 175899; }, null, { timeout: 15000 });
@@ -186,7 +191,7 @@ try {
   assert.equal(await page.locator('#packages .packages-cta').count(), 3);
   assert.match(await page.locator('#packages').innerText(), /550,000/);
   await page.screenshot({ path: outputPath('pricing-desktop.png'), fullPage: false });
-  check('Experience run: intro types to completion, story rail is retired, trust counters reach 175,900, catalogue filters and expansion work, and the price-list calculator matches the 2026 rates.');
+  check('Experience run: scroll-linked intro types, counts to 175,900, piles ten photos and rewinds on the way back; story rail is retired, trust counters reach 175,900, catalogue filters and expansion work, and the price-list calculator matches the 2026 rates.');
 
   assert.equal(await page.locator('#product-grid .product-card').count(), 6);
   const originalHash = await previewHash();
