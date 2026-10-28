@@ -135,6 +135,30 @@ try {
   await escapeExpanded('hero-expand', 'hero-3d-shell', 'hero-fullscreen-close');
   check('Hero: wheel scrolls the page and advances the story; actual drag changes camera; slider, layer toggle and fullscreen Escape work.');
 
+  // Showcase gallery: pinned scroll moves the track and the counter; herringbone section lays its pattern and the CTA switches the simulator.
+  const showcaseTop = await page.evaluate(() => document.getElementById('showcase').getBoundingClientRect().top + scrollY);
+  const showcaseHeight = await page.evaluate(() => document.getElementById('showcase').offsetHeight);
+  await page.evaluate(y => scrollTo({ top: y, behavior: 'instant' }), showcaseTop);
+  await page.waitForTimeout(400);
+  const showcaseStart = await page.evaluate(() => window.websiteDemo.diagnostics.showcase);
+  assert.equal(showcaseStart.frames, 10);
+  await page.evaluate(({ top, height }) => scrollTo({ top: top + (height - innerHeight) * .6, behavior: 'instant' }), { top: showcaseTop, height: showcaseHeight });
+  await page.waitForFunction(() => window.websiteDemo.diagnostics.showcase.progress > .5 && window.websiteDemo.diagnostics.showcase.trackX < -500);
+  const showcaseMid = await page.evaluate(() => window.websiteDemo.diagnostics.showcase);
+  assert.ok(showcaseMid.active > showcaseStart.active, `active frame advanced ${showcaseStart.active} -> ${showcaseMid.active}`);
+  assert.match(await page.locator('#showcase-counter').innerText(), /\d\d \/ 10/);
+  await page.evaluate(() => document.getElementById('herringbone').scrollIntoView({ block: 'start', behavior: 'instant' }));
+  await page.waitForFunction(() => { const h = window.websiteDemo.diagnostics.herringbone; return h && h.visible && h.laid >= h.planks * .5; }, null, { timeout: 15000 });
+  await page.locator('[data-shade="CPW-KH5-735"]').click();
+  await page.waitForFunction(() => window.websiteDemo.diagnostics.herringbone.shade === 'CPW-KH5-735');
+  assert.equal(await page.locator('[data-shade="CPW-KH5-735"]').getAttribute('aria-pressed'), 'true');
+  await page.locator('#herringbone-cta').click();
+  await page.waitForFunction(() => window.websiteDemo.diagnostics.preview.pattern === 'herringbone');
+  assert.equal(await page.locator('[data-pattern="herringbone"]').getAttribute('aria-pressed'), 'true');
+  await page.locator('[data-pattern="straight"]').click();
+  await page.screenshot({ path: outputPath('showcase-desktop.png'), fullPage: false });
+  check(`Showcase gallery (${showcaseMid.mode}) advances frames with scroll; herringbone section lays its pattern, switches shades and its CTA selects the herringbone lay-up.`);
+
   assert.equal(await page.locator('#product-grid .product-card').count(), 6);
   const originalHash = await previewHash();
   await page.locator('[data-filter="4"]').click();

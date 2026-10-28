@@ -40,6 +40,7 @@ async function layout() {
     documentWidth: document.documentElement.scrollWidth,
     hero: document.getElementById('hero').getBoundingClientRect().toJSON(),
     rooms: document.getElementById('rooms').getBoundingClientRect().toJSON(),
+    next: (document.getElementById('showcase') ?? document.getElementById('rooms')).getBoundingClientRect().toJSON(),
     finishCards: [...document.querySelectorAll('.story-layer[data-shown="true"]')].map(node => ({ id: node.dataset.layer, box: node.getBoundingClientRect().toJSON() })),
   }));
 }
@@ -185,11 +186,12 @@ try {
 
   await page.evaluate(() => scrollTo({ top: document.getElementById('floor-story').offsetTop + document.getElementById('floor-story').offsetHeight, behavior: 'instant' }));
   await page.waitForFunction(() => document.getElementById('hero').getBoundingClientRect().top < -innerHeight * .35);
-  assert.ok((await layout()).rooms.top < (await layout()).viewport.height);
+  // The section after the pinned story (the showcase gallery, or the configurator when absent) must now be on screen.
+  assert.ok((await layout()).next.top < (await layout()).viewport.height);
   await seek(2);
   await page.locator('#story-skip').click();
   await page.waitForFunction(() => document.getElementById('rooms').getBoundingClientRect().top < innerHeight / 2);
-  check('After the last step, ordinary scrolling releases the hero; the skip control also reaches the room selector.');
+  check('After the last step, ordinary scrolling releases the hero into the next section; the skip control still reaches the room selector.');
 
   await page.setViewportSize({ width: 390, height: 844 });
   await initialize();

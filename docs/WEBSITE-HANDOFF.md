@@ -140,6 +140,8 @@ npm run test:visualizer
 | `src/website/FloorScrollStory.ts`, `storyTimeline.ts`, `story.css` | ลำดับ 12 ขั้น ฉากตรึง ปุ่มนำทาง ข้อความและเส้นชี้ |
 | `src/website/FloorStoryScene.ts` | วัสดุทั้งหก มุมกล้อง ชั้น WebGL และตำแหน่งเส้นชี้ของชิ้นตัวอย่าง 5 มม. |
 | `src/website/HeroRoomFloor.ts` | เปลี่ยนสีพื้นในภาพห้องหลักโดยรักษาเฟอร์นิเจอร์และแสงเงา |
+| `src/website/showcase.ts`, `showcase.css` | ส่วน "ผลงานจริงจากหน้างาน": แกลเลอรีกรอบรูปเลื่อนซ้ายตามการเลื่อนหน้า (เดสก์ท็อป pinned) / เลื่อนนิ้วแบบ snap (มือถือ, reduced motion) รายการรูปและคำบรรยายใน `SHOWCASE_ITEMS` รูปอยู่ที่ `public/website/showcase/` (จากรูปที่ลูกค้าส่งและแค็ตตาล็อก 2026 หน้า 20–23) |
+| `src/website/herringbone.ts`, `herringbone.css` | ส่วน "ลายก้างปลา" จากแค็ตตาล็อก 2026 หน้า 14–15 (125 × 650 มม., 5 มม., 6 เฉด CPW-KH5): เวทีปูลายทีละแผ่นตามการเลื่อน, เลือกเฉดสี, ปุ่มไปตัวจำลองพร้อมเลือกลายก้างปลา รูป swatch อยู่ที่ `public/website/herringbone/` |
 | `src/website/visualizer/` | ตัวแสดงพื้นในภาพห้อง: `index.ts` (API/สถานะ/ย้อนรอยระบาย), `samplePhotos.ts` (ภาพและขอบเฟอร์นิเจอร์ 7 ห้อง), `render/FloorRenderer.ts` (WebGL2 + CPU), `texture/layout.ts` (ลายก้างปลา), `texture/plankAtlas.ts` (ลายจากภาพวัสดุ พร้อม procedural fallback), `ui/Toolbar.ts` (ปุ่มสำหรับลูกค้า), `vision.worker.ts` (โมเดลสำหรับภาพอัปโหลด), `models.ts` (URL โมเดล override ได้ด้วย `VITE_MODEL_*`) ดูการออกแบบ AI และข้อจำกัดใน `docs/floor-visualizer-design.md` §7 |
 | `server/` | ตัวเลือกฝั่งเซิร์ฟเวอร์: `floor-api/` (FastAPI segment/depth, ยังไม่ได้รัน) และ `edge/room-advice.ts` (Cloudflare Worker → OpenRouter สำหรับ "แนะนำสีด้วย AI" เปิดด้วย `VITE_ROOM_ADVICE_URL`) |
 | `src/website/calculator.ts`, `calculator.css` | ราคา สูตร แบบฟอร์ม และใบประมาณราคา |

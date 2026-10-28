@@ -1,6 +1,10 @@
 import './shared.css';
 import './home.css';
 import './brand-introduction.css';
+import './showcase.css';
+import './herringbone.css';
+import { mountShowcase } from './showcase';
+import { mountHerringbone } from './herringbone';
 import { FloorScrollStory } from './FloorScrollStory';
 import './visualizer.css';
 import { FloorVisualizer, type FloorVisualizerDiagnostics as RoomPreviewDiagnostics } from './visualizer';
@@ -31,6 +35,8 @@ const listen = (node:EventTarget,event:string,callback:EventListener) => node.ad
 mountHeader('home');
 mountFooter();
 mountContactDialog();
+const showcase=mountShowcase(document.getElementById('showcase'));
+const herringbone=mountHerringbone(document.getElementById('herringbone'));
 document.querySelectorAll<HTMLElement>('[data-icon]').forEach(el=>el.innerHTML=icon(el.dataset.icon!));
 
 function syncPreview(value:RoomPreviewDiagnostics) {
@@ -66,6 +72,9 @@ $('preview-hint').insertAdjacentElement('afterend',rotateButton);
 listen(rotateButton,'click',()=>preview.rotate());
 tools.element.querySelector('.visualizer-quick')!.prepend(rotateButton);
 document.querySelectorAll<HTMLButtonElement>('[data-pattern]').forEach(button=>listen(button,'click',()=>preview.setPattern(button.dataset.pattern as FloorPattern)));
+// Herringbone section CTA: switch the simulator to the herringbone lay-up and bring it into view.
+const herringboneCta=document.getElementById('herringbone-cta');
+if(herringboneCta)listen(herringboneCta,'click',()=>{preview.setPattern('herringbone');$('products').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});track({name:'visualizer_tool',tool:'herringbone-cta'});});
 // Desktop visitors can continue on their phone: QR of this page with a hash that jumps to the visualizer.
 const qr=mountQrDialog(`${location.origin}${location.pathname}${UPLOAD_HASH}`);
 const qrButton=document.createElement('button');qrButton.type='button';qrButton.id='open-on-phone';qrButton.className='rotate-planks';qrButton.innerHTML=`${icon('camera')}<span>ถ่ายด้วยมือถือ</span>`;
@@ -182,6 +191,6 @@ const ready=(async()=>{
   await preview.ready;
 })();
 
-function dispose(){if(state.disposed)return;closeExpanded();state.disposed=true;abort.abort();story?.dispose();preview.dispose();tools?.dispose();qr.dispose();}
+function dispose(){if(state.disposed)return;closeExpanded();state.disposed=true;abort.abort();story?.dispose();preview.dispose();tools?.dispose();qr.dispose();showcase?.dispose();herringbone?.dispose();}
 listen(window,'pagehide',event=>{if(!(event as PageTransitionEvent).persisted)dispose();});
-Object.assign(window,{websiteDemo:{ready,get state(){return {...state};},get diagnostics(){return {viewer:story?.diagnostics.scene,preview:preview.diagnostics};},get story(){return story?.state;},seekStep:(index:number,smooth=false)=>story?.seekStep(index,smooth),setProgress,dispose}});
+Object.assign(window,{websiteDemo:{ready,get state(){return {...state};},get diagnostics(){return {viewer:story?.diagnostics.scene,preview:preview.diagnostics,showcase:showcase?.diagnostics,herringbone:herringbone?.diagnostics};},get story(){return story?.state;},seekStep:(index:number,smooth=false)=>story?.seekStep(index,smooth),setProgress,dispose}});
