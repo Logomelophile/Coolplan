@@ -159,6 +159,35 @@ try {
   await page.screenshot({ path: outputPath('showcase-desktop.png'), fullPage: false });
   check(`Showcase gallery (${showcaseMid.mode}) advances frames with scroll; herringbone section lays its pattern, switches shades and its CTA selects the herringbone lay-up.`);
 
+  // Experience run: typed intro, trust counters, catalogue collections and the price-list calculator.
+  const introTop = await page.evaluate(() => document.getElementById('experience-intro').getBoundingClientRect().top + scrollY);
+  const introHeight = await page.evaluate(() => document.getElementById('experience-intro').offsetHeight);
+  await page.evaluate(({ top, height }) => scrollTo({ top: top + (height - innerHeight) * .95, behavior: 'instant' }), { top: introTop, height: introHeight });
+  await page.waitForFunction(() => { const i = window.websiteDemo.diagnostics.experience?.intro; return i && i.typed >= i.total * .8; }, null, { timeout: 15000 });
+  assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('.story-rail')).display), 'none');
+  await page.evaluate(() => document.getElementById('trust').scrollIntoView({ block: 'center', behavior: 'instant' }));
+  await page.waitForFunction(() => { const t = window.websiteDemo.diagnostics.experience?.trust; return t && t.revealed && t.counters[0] >= 175899; }, null, { timeout: 15000 });
+  assert.match(await page.locator('.trust-ring strong').first().innerText(), /175,900/);
+  await page.evaluate(() => document.getElementById('collections').scrollIntoView({ block: 'start', behavior: 'instant' }));
+  assert.equal((await state()).collections.visible, 8);
+  await page.locator('[data-family="lvt"]').click();
+  assert.equal((await state()).collections.visible, 2);
+  await page.locator('[data-family="all"]').click();
+  await page.locator('[data-series="herringbone"] .collection-expand').click();
+  assert.equal((await state()).collections.expanded, 'herringbone');
+  await page.locator('[data-series="laminate-8"] .collection-estimate').click();
+  await page.waitForFunction(() => window.websiteDemo.diagnostics.pricing.rowIndex === 8);
+  await page.locator('#estimate-sqm').fill('30');
+  await page.locator('#estimate-sqm').dispatchEvent('input');
+  const estimate = (await state()).pricing;
+  assert.equal(estimate.sqm, 30);
+  assert.equal(estimate.total, 30 * 650 + 30 * 100 + 2500, 'laminate 8 mm for 30 m² includes the small-area travel fee');
+  assert.match(await page.locator('#estimate-total').innerText(), /25,000/);
+  assert.equal(await page.locator('#packages .packages-cta').count(), 3);
+  assert.match(await page.locator('#packages').innerText(), /550,000/);
+  await page.screenshot({ path: outputPath('pricing-desktop.png'), fullPage: false });
+  check('Experience run: intro types to completion, story rail is retired, trust counters reach 175,900, catalogue filters and expansion work, and the price-list calculator matches the 2026 rates.');
+
   assert.equal(await page.locator('#product-grid .product-card').count(), 6);
   const originalHash = await previewHash();
   await page.locator('[data-filter="4"]').click();

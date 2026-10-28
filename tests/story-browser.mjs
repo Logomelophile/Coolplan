@@ -40,7 +40,7 @@ async function layout() {
     documentWidth: document.documentElement.scrollWidth,
     hero: document.getElementById('hero').getBoundingClientRect().toJSON(),
     rooms: document.getElementById('rooms').getBoundingClientRect().toJSON(),
-    next: (document.getElementById('showcase') ?? document.getElementById('rooms')).getBoundingClientRect().toJSON(),
+    next: (document.getElementById('experience-intro') ?? document.getElementById('showcase') ?? document.getElementById('rooms')).getBoundingClientRect().toJSON(),
     finishCards: [...document.querySelectorAll('.story-layer[data-shown="true"]')].map(node => ({ id: node.dataset.layer, box: node.getBoundingClientRect().toJSON() })),
   }));
 }
@@ -171,25 +171,23 @@ try {
   check('Wheel over the interactive model changes native document scroll without locking the page.');
 
   await seek(DETAIL + 1);
-  await page.locator('#story-next').focus();
-  await page.keyboard.press('Enter');
+  // The visual navigation rail is retired; its controls stay in the DOM for programmatic/assistive use.
+  await page.evaluate(() => document.getElementById('story-next').click());
   await page.waitForFunction(step => window.websiteDemo.story.step === step, DETAIL + 2);
-  await page.locator('#story-prev').focus();
-  await page.keyboard.press('Enter');
+  await page.evaluate(() => document.getElementById('story-prev').click());
   await page.waitForFunction(step => window.websiteDemo.story.step === step, DETAIL + 1);
-  await page.locator(`button[data-story-step="${LAST}"]`).focus();
-  await page.keyboard.press('Enter');
+  await page.evaluate(last => document.querySelector(`button[data-story-step="${last}"]`).click(), LAST);
   await page.waitForFunction(step => window.websiteDemo.story.step === step, LAST);
   assert.match(await page.locator('#story-thickness').innerText(), /5\s*MM/i);
   assert.equal(await page.locator('.story-layer[data-shown="true"]').count(), 4);
-  check('Keyboard next, previous and direct step buttons reach the complete four-layer, 5 MM explanation.');
+  check('Next, previous and direct step controls reach the complete four-layer, 5 MM explanation.');
 
   await page.evaluate(() => scrollTo({ top: document.getElementById('floor-story').offsetTop + document.getElementById('floor-story').offsetHeight, behavior: 'instant' }));
   await page.waitForFunction(() => document.getElementById('hero').getBoundingClientRect().top < -innerHeight * .35);
-  // The section after the pinned story (the showcase gallery, or the configurator when absent) must now be on screen.
+  // The section after the pinned story (the typed experience intro, else the gallery or configurator) must now be on screen.
   assert.ok((await layout()).next.top < (await layout()).viewport.height);
   await seek(2);
-  await page.locator('#story-skip').click();
+  await page.evaluate(() => document.getElementById('story-skip').click());
   await page.waitForFunction(() => document.getElementById('rooms').getBoundingClientRect().top < innerHeight / 2);
   check('After the last step, ordinary scrolling releases the hero into the next section; the skip control still reaches the room selector.');
 
@@ -225,10 +223,8 @@ try {
   const compact = await layout();
   assertPinned(compact, 'Compact mobile');
   for (const label of compact.finishCards) assert.ok(label.box.top >= -1 && label.box.bottom <= 668, `Compact mobile layer ${label.id} leaves the viewport`);
-  const rail = await page.locator('.story-rail').boundingBox();
-  assert.ok(rail && rail.y >= 0 && rail.y + rail.height <= 668, 'Compact mobile navigation must remain reachable inside the pinned viewport.');
   await page.screenshot({ path: outputPath('mobile-compact-step-11.png') });
-  check('Compact 375×667 mobile: all layer explanations and native navigation remain visible in the pinned viewport.');
+  check('Compact 375×667 mobile: all layer explanations remain visible in the pinned viewport.');
 
   for (const viewport of [{ width: 1200, height: 540 }, { width: 390, height: 540 }, { width: 844, height: 390 }]) {
     await page.setViewportSize(viewport);
@@ -237,25 +233,22 @@ try {
     await seek(LAST);
     const value = await layout();
     assertPinned(value, label);
-    const rail = await page.locator('.story-rail').boundingBox();
-    assert.ok(rail && rail.y >= 0 && rail.y + rail.height <= viewport.height + 1, `${label}: navigation leaves the viewport`);
     for (const card of value.finishCards) {
       assert.ok(card.box.left >= -1 && card.box.right <= viewport.width + 1, `${label}: layer ${card.id} leaves the viewport horizontally`);
-      assert.ok(card.box.top >= 0 && card.box.bottom <= rail.y, `${label}: layer ${card.id} overlaps navigation or leaves the viewport`);
+      assert.ok(card.box.top >= 0 && card.box.bottom <= viewport.height + 1, `${label}: layer ${card.id} leaves the viewport`);
     }
     await page.screenshot({ path: outputPath(`short-${viewport.width}x${viewport.height}-step-11.png`) });
   }
-  check('Short desktop, portrait, and landscape viewports keep layer details and navigation visible without disabling scrolling.');
+  check('Short desktop, portrait, and landscape viewports keep layer details visible without disabling scrolling.');
 
   await page.setViewportSize({ width: 1200, height: 900 });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await assertWheelFinishes('Reduced motion');
-  await page.locator('#story-skip').click();
+  await page.evaluate(() => document.getElementById('story-skip').click());
   await page.waitForFunction(() => document.getElementById('rooms').getBoundingClientRect().top < innerHeight / 2);
   assert.equal(await page.evaluate(() => document.body.style.overflow), '');
   await seek(LAST);
   assert.equal((await story()).step, LAST);
-  await page.locator('#story-next').focus();
   assert.deepEqual(report.errors, []);
   check('Reduced-motion mode supports direct navigation and skip without a scroll trap or browser errors.');
 } catch (error) {
