@@ -1,6 +1,5 @@
 import { sitePath } from '../sitePath';
 import { motionPreference } from './motionPreference';
-import { COMPANY } from './catalog';
 import { ExperienceIntro, type IntroDiagnostics } from './experienceDashboard';
 export { ExperienceIntro } from './experienceDashboard';
 export type { IntroDiagnostics } from './experienceDashboard';
@@ -9,9 +8,7 @@ export type { IntroDiagnostics } from './experienceDashboard';
  * The "experience" run that follows the pinned floor story:
  *  1. #experience-intro  – two readable lines and a dashboard linked to page scroll
  *  2. #featured          – three real project photo stories and an installation warranty story
- *  3. #trust             – animated rings / counters, partner marquee and ticking check marks
  */
-const reduced = (): boolean => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
 
 interface FeaturedPhoto { image: string; alt: string; caption: string }
@@ -272,16 +269,11 @@ class FeaturedStoryMotion {
   }
 }
 
-export interface TrustDiagnostics { revealed: boolean; counters: number[] }
-
 export class Experience {
   readonly intro: ExperienceIntro | null;
   private readonly abort = new AbortController();
   private readonly motion = motionPreference;
-  private readonly observers: IntersectionObserver[] = [];
   private readonly featured: FeaturedStoryMotion[] = [];
-  private counters: number[] = [];
-  private revealed = false;
   private disposed = false;
 
   constructor(private readonly root: ParentNode) {
@@ -290,7 +282,6 @@ export class Experience {
     this.buildFeatured();
     // One preference event updates every story together, including offscreen stories.
     this.motion.addEventListener('change', this.syncFeaturedMotion, { signal: this.abort.signal });
-    this.buildTrust();
   }
 
   private syncFeaturedMotion = (): void => {
@@ -298,17 +289,8 @@ export class Experience {
     this.featured.forEach(story => story.setReducedMotion(value));
   };
 
-  get diagnostics(): { intro: IntroDiagnostics | null; featured: FeaturedDiagnostics[]; trust: TrustDiagnostics } {
-    return { intro: this.intro?.diagnostics ?? null, featured: this.featured.map(story => story.diagnostics), trust: { revealed: this.revealed, counters: [...this.counters] } };
-  }
-
-  private observe(target: Element, onVisible: () => void, threshold = .3): void {
-    if (reduced() || typeof IntersectionObserver === 'undefined') { onVisible(); return; }
-    const observer = new IntersectionObserver(entries => {
-      if (entries.some(entry => entry.isIntersecting)) { onVisible(); observer.disconnect(); }
-    }, { threshold });
-    observer.observe(target);
-    this.observers.push(observer);
+  get diagnostics(): { intro: IntroDiagnostics | null; featured: FeaturedDiagnostics[] } {
+    return { intro: this.intro?.diagnostics ?? null, featured: this.featured.map(story => story.diagnostics) };
   }
 
   private buildFeatured(): void {
@@ -337,66 +319,16 @@ export class Experience {
     return photos.map((photo, index) => `<figure class="featured-photo featured-photo-${index + 1}" tabindex="0" role="button" aria-pressed="false" aria-label="${photo.caption} · คลิกค้างเพื่อลากรูป ใช้ปุ่มลูกศรเพื่อขยับ และ Home เพื่อคืนตำแหน่ง"><div class="featured-photo-image"><img src="${sitePath(photo.image)}" alt="${photo.alt}" loading="lazy" decoding="async" draggable="false" width="960" height="960" /></div><figcaption><span>${String(index + 1).padStart(2, '0')}</span>${photo.caption}</figcaption></figure>`).join('');
   }
 
-  private buildTrust(): void {
-    const section = this.root.querySelector<HTMLElement>('#trust');
-    if (!section) return;
-    const rings = section.querySelectorAll<HTMLElement>('.trust-ring');
-    this.counters = Array.from(rings, () => 0);
-    const marquee = section.querySelector<HTMLElement>('.trust-marquee-track');
-    if (marquee) {
-      const items = [...COMPANY.partners.map(partner => `${partner.name} · ${partner.sqm.toLocaleString('th-TH')} ตร.ม.`), ...COMPANY.portfolio.map(item => `${item} ตร.ม.`)];
-      marquee.innerHTML = [...items, ...items].map(text => `<span>${text}</span>`).join('');
-    }
-    this.observe(section, () => {
-      this.revealed = true;
-      section.classList.add('is-visible');
-      rings.forEach((ring, index) => this.animateRing(ring, index));
-      section.querySelectorAll<HTMLElement>('.trust-check').forEach((check, index) => {
-        check.style.setProperty('--i', String(index));
-        setTimeout(() => check.classList.add('is-checked'), reduced() ? 0 : 500 + index * 260);
-      });
-    }, .25);
-  }
-
-  /** Counts a ring's number up and sweeps its arc, eased, over ~1.6 s. */
-  private animateRing(ring: HTMLElement, index: number): void {
-    const target = Number(ring.dataset.value ?? 0);
-    const fill = Number(ring.dataset.fill ?? 1);
-    const number = ring.querySelector<HTMLElement>('strong');
-    const arc = ring.querySelector<SVGCircleElement>('circle.trust-ring-arc');
-    const circumference = arc ? 2 * Math.PI * Number(arc.getAttribute('r')) : 0;
-    const format = (value: number): string => `${Math.round(value).toLocaleString('th-TH')}${ring.dataset.suffix ?? ''}`;
-    if (reduced()) {
-      if (number) number.textContent = format(target);
-      if (arc) arc.style.strokeDashoffset = String(circumference * (1 - fill));
-      this.counters[index] = target;
-      return;
-    }
-    const started = performance.now() + index * 180;
-    const duration = 1600;
-    const step = (now: number): void => {
-      if (this.disposed) return;
-      const t = clamp((now - started) / duration, 0, 1);
-      const eased = 1 - Math.pow(1 - t, 3);
-      if (number) number.textContent = format(target * eased);
-      if (arc) arc.style.strokeDashoffset = String(circumference * (1 - fill * eased));
-      this.counters[index] = target * eased;
-      if (t < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }
-
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
     this.intro?.dispose();
     this.featured.forEach(story => story.dispose());
     this.abort.abort();
-    this.observers.forEach(observer => observer.disconnect());
   }
 }
 
 export function mountExperience(root: ParentNode = document): Experience | null {
-  if (!root.querySelector('#experience-intro') && !root.querySelector('#featured') && !root.querySelector('#trust')) return null;
+  if (!root.querySelector('#experience-intro') && !root.querySelector('#featured')) return null;
   return new Experience(root);
 }

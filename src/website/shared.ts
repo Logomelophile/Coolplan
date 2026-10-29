@@ -63,6 +63,13 @@ export function mountContactDialog() {
   const holder=document.createElement('div');
   holder.innerHTML=`<dialog class="site-dialog contact-dialog" id="contact-dialog" aria-labelledby="contact-heading"><button class="dialog-close" data-dialog-close type="button" aria-label="ปิด">${icon('close')}</button><span class="dialog-eyebrow">LET'S CREATE YOUR SPACE</span><h2 id="contact-heading">คุยเรื่องพื้นที่ของคุณ</h2><p>ปรึกษาเรื่องวัสดุ การติดตั้ง และขอใบเสนอราคากับ ${contact.name}</p><a class="contact-method" href="tel:${contact.tel}">${icon('phone')}<span><small>โทรหา${contact.name}</small>084 670 7551</span>${icon('arrow')}</a><a class="contact-method" href="mailto:${contact.email}?subject=${encodeURIComponent('สอบถามพื้น SPC และขอใบเสนอราคา COOLPLAN')}">${icon('mail')}<span><small>ส่งอีเมลถึงเรา</small>${contact.email}</span>${icon('arrow')}</a><a class="primary-button purple" href="/calculator/">คำนวณงบประมาณเบื้องต้น ${icon('arrow')}</a></dialog><dialog class="site-dialog" id="about-dialog" aria-labelledby="about-heading"><button class="dialog-close" data-dialog-close type="button" aria-label="ปิด">${icon('close')}</button><span class="dialog-eyebrow">COOLPLAN · SPC FLOORING</span><h2 id="about-heading">พื้นที่ดี เริ่มต้นจากพื้นฐานที่ดีกว่า</h2><p>เลือกพื้น SPC ลายไม้ที่เข้ากับสไตล์ของคุณ สำรวจสีและชั้นวัสดุ เปรียบเทียบบรรยากาศในห้อง และวางงบประมาณก่อนเลือกพื้น</p><div class="about-services"><div>${icon('diamond')}<strong>เลือกวัสดุ</strong><p>ดูสี ลายไม้ และโครงสร้างของแผ่นพื้น</p></div><div>${icon('room')}<strong>วางแผนพื้นที่</strong><p>คำนวณค่าวัสดุและค่าติดตั้งเบื้องต้น</p></div><div>${icon('chat')}<strong>ปรึกษาโดยตรง</strong><p>สอบถามรายละเอียดกับ${contact.name}</p></div></div><button class="primary-button purple" type="button" data-contact-open>ปรึกษาผู้เชี่ยวชาญ ${icon('arrow')}</button></dialog>`;
   document.body.append(holder);
+  const contactDialog = holder.querySelector<HTMLDialogElement>('#contact-dialog')!;
+  const selectedSpec = document.createElement('p');
+  selectedSpec.id = 'contact-selection';
+  selectedSpec.className = 'contact-selection';
+  selectedSpec.hidden = true;
+  contactDialog.querySelector('p')!.after(selectedSpec);
+  const contactEmail = contactDialog.querySelector<HTMLAnchorElement>('a[href^="mailto:"]')!;
   localizeSiteLinks(document);
   holder.querySelectorAll<HTMLDialogElement>('dialog').forEach(dialog=>{
     dialog.querySelector('[data-dialog-close]')!.addEventListener('click',()=>dialog.close());
@@ -71,6 +78,12 @@ export function mountContactDialog() {
   document.addEventListener('click',event=>{
     const button=(event.target as Element).closest('[data-contact-open],[data-about-open]');if(!button)return;
     event.preventDefault();holder.querySelectorAll<HTMLDialogElement>('dialog[open]').forEach(d=>d.close());
+    if (button.hasAttribute('data-contact-open')) {
+      const context = button.getAttribute('data-contact-context')?.trim() ?? '';
+      selectedSpec.textContent = context;
+      selectedSpec.hidden = !context;
+      contactEmail.href = `mailto:${contact.email}?subject=${encodeURIComponent('สอบถามพื้น SPC และขอใบเสนอราคา COOLPLAN')}${context ? `&body=${encodeURIComponent(`สนใจสอบถามรายละเอียดและขอใบเสนอราคา\n\n${context}`)}` : ''}`;
+    }
     (document.getElementById(button.hasAttribute('data-contact-open')?'contact-dialog':'about-dialog') as HTMLDialogElement).showModal();
   });
 }

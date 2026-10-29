@@ -2,6 +2,7 @@ import { sitePath } from '../sitePath';
 import { icon } from './shared';
 import { money, NIGHT_WORK_PER_NIGHT, PACKAGES, PREP_OPTIONS, PRICE_LIST, PRICE_NOTES, SERIES, TRAVEL_FEE, type Series } from './catalog';
 import { track } from './visualizer/analytics';
+import { PackageSpecs, type PackageSpecDiagnostics } from './packageSpecs';
 
 /**
  * #collections — every catalogue series as a card (swatch mosaic, size, price
@@ -110,12 +111,13 @@ export class Collections {
   dispose(): void { if (!this.disposed) { this.disposed = true; this.abort.abort(); } }
 }
 
-export interface PricingDiagnostics { sqm: number; rowIndex: number; total: number; perSqm: number }
+export interface PricingDiagnostics { sqm: number; rowIndex: number; total: number; perSqm: number; spec?: PackageSpecDiagnostics }
 
 export class Pricing {
   private readonly form: HTMLFormElement;
   private readonly abort = new AbortController();
   private result: PricingDiagnostics = { sqm: 0, rowIndex: 0, total: 0, perSqm: 0 };
+  private readonly specs: PackageSpecs | null;
   private disposed = false;
 
   constructor(private readonly section: HTMLElement) {
@@ -123,6 +125,14 @@ export class Pricing {
     this.buildCalculator();
     this.buildTable();
     this.buildPackages();
+    const specHost = section.querySelector<HTMLElement>('#package-specs');
+    this.specs = specHost ? new PackageSpecs(specHost, seriesId => {
+      const index = PRICE_LIST.findIndex(row => row.seriesId === seriesId);
+      if (index >= 0) {
+        this.form.querySelector<HTMLSelectElement>('#estimate-product')!.value = String(index);
+        this.compute();
+      }
+    }) : null;
     document.addEventListener('coolplan:estimate', this.onEstimateRequest as EventListener, { signal: this.abort.signal });
     if (!reduced() && typeof IntersectionObserver !== 'undefined') {
       const observer = new IntersectionObserver(entries => {
@@ -133,7 +143,7 @@ export class Pricing {
     } else section.classList.add('is-visible');
   }
 
-  get diagnostics(): PricingDiagnostics { return { ...this.result }; }
+  get diagnostics(): PricingDiagnostics { return { ...this.result, spec: this.specs?.diagnostics }; }
 
   private onEstimateRequest = (event: CustomEvent<{ seriesId: string }>): void => {
     const index = PRICE_LIST.findIndex(row => row.seriesId === event.detail.seriesId);
@@ -216,18 +226,22 @@ export class Pricing {
 
   private buildPackages(): void {
     const host = this.section.querySelector<HTMLElement>('#packages')!;
-    host.innerHTML = `<table class="packages-table"><caption>เปรียบเทียบแพ็กเกจพื้น SPC ลายไม้ รวมค่าติดตั้ง</caption><thead><tr><th scope="col"><span class="packages-corner">เลือกพื้นที่<br>ที่ใช่สำหรับคุณ</span></th>${PACKAGES.map(pkg => `<th scope="col"><span class="packages-area">${pkg.sqm.toLocaleString('th-TH')}<small>ตร.ม.</small></span><span class="packages-subtitle">${pkg.subtitle}</span></th>`).join('')}</tr></thead><tbody>
-      <tr class="packages-price"><th scope="row">ราคาแพ็กเกจ<span>รวมค่าติดตั้ง</span></th>${PACKAGES.map(pkg => `<td><strong>${money(pkg.total)}</strong><small>ต่อแพ็กเกจ</small></td>`).join('')}</tr>
-      <tr><th scope="row">ราคาต่อตารางเมตร</th>${PACKAGES.map(pkg => `<td><strong>${money(pkg.perSqm)}</strong><span class="packages-cell-unit"> / ตร.ม.</span></td>`).join('')}</tr>
-      <tr><th scope="row">ระยะเวลาทำงาน</th>${PACKAGES.map(pkg => `<td>${pkg.days}</td>`).join('')}</tr>
-      <tr><th scope="row">รับประกันการติดตั้ง</th>${PACKAGES.map(pkg => `<td><span class="packages-warranty"><i class="packages-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>${pkg.warrantyYears} ปี</span></td>`).join('')}</tr>
-      <tr class="packages-actions"><th scope="row"><a href="#estimate-calculator">หรือคำนวณตามพื้นที่จริง <span aria-hidden="true">↓</span></a></th>${PACKAGES.map(pkg => `<td><button type="button" class="primary-button packages-cta" data-package="${pkg.id}" data-contact-open aria-label="สอบถามแพ็กเกจ ${pkg.title}">เลือกแพ็กเกจนี้ <span aria-hidden="true">↗</span></button></td>`).join('')}</tr>
-      <tr class="packages-detail-row"><th scope="row">รายละเอียด</th>${PACKAGES.map(pkg => `<td><details><summary>ดูรายละเอียดแพ็กเกจ</summary><p class="packages-description">${pkg.description}</p></details></td>`).join('')}</tr>
+    host.innerHTML = `<table class="packages-table"><caption>แพ็กเกจพื้น SPC ลายไม้ รวมค่าติดตั้ง</caption><thead><tr><th scope="col">แพ็กเกจ</th>${PACKAGES.map(pkg => `<th scope="col"><span class="packages-title">${pkg.title}</span><span class="packages-subtitle">${pkg.subtitle}</span></th>`).join('')}</tr></thead><tbody>
+      <tr><th scope="row">รายละเอียด</th>${PACKAGES.map(pkg => `<td class="packages-description">${pkg.description}</td>`).join('')}</tr>
+      <tr><th scope="row">ราคาต่อ ตร.ม. (รวมติดตั้ง)</th>${PACKAGES.map(pkg => `<td><strong>${money(pkg.perSqm)}</strong></td>`).join('')}</tr>
+      <tr><th scope="row">ระยะเวลาในการทำงาน</th>${PACKAGES.map(pkg => `<td>${pkg.days}</td>`).join('')}</tr>
+      <tr><th scope="row">รับประกันการติดตั้ง 10 ปี</th>${PACKAGES.map(() => `<td><i class="packages-check" aria-label="รวมอยู่ในแพ็กเกจ"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i></td>`).join('')}</tr>
+      <tr class="packages-price"><th scope="row">ราคา</th>${PACKAGES.map(pkg => `<td><strong>${money(pkg.total)}</strong></td>`).join('')}</tr>
+      <tr><th scope="row"></th>${PACKAGES.map(pkg => `<td><button type="button" class="primary-button packages-cta" data-package="${pkg.id}" data-contact-open>เลือกแพ็กเกจนี้</button></td>`).join('')}</tr>
     </tbody></table>`;
-    host.querySelectorAll<HTMLButtonElement>('[data-package]').forEach(button => button.addEventListener('click', () => track({ name: 'visualizer_quote', product: `package:${button.dataset.package}` }), { signal: this.abort.signal }));
+    host.querySelectorAll<HTMLButtonElement>('[data-package]').forEach(button => button.addEventListener('click', () => {
+      const pkg = PACKAGES.find(item => item.id === button.dataset.package)!;
+      button.dataset.contactContext = `แพ็กเกจ ${pkg.title} · ${this.specs?.summary ?? 'SPC ลายไม้'} · ให้ทีมงานยืนยันรุ่น โฟมรองพื้น และราคาตามสเปค`;
+      track({ name: 'visualizer_quote', product: `package:${button.dataset.package}` });
+    }, { signal: this.abort.signal }));
   }
 
-  dispose(): void { if (!this.disposed) { this.disposed = true; this.abort.abort(); } }
+  dispose(): void { if (!this.disposed) { this.disposed = true; this.specs?.dispose(); this.abort.abort(); } }
 }
 
 export function mountCollections(section: HTMLElement | null): Collections | null { return section ? new Collections(section) : null; }

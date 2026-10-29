@@ -249,21 +249,25 @@ try {
   const introTop = await page.evaluate(() => document.getElementById('experience-intro').getBoundingClientRect().top + scrollY);
   const introHeight = await page.evaluate(() => document.getElementById('experience-intro').offsetHeight);
   await page.evaluate(({ top, height }) => scrollTo({ top: top + (height - innerHeight) * .12, behavior: 'instant' }), { top: introTop, height: introHeight });
-  await page.waitForFunction(() => { const i = window.websiteDemo.diagnostics.experience?.intro; return i && !i.animating && i.progress < .14; });
+  await page.waitForFunction(() => { const i = window.websiteDemo.diagnostics.experience?.intro; return i && !i.animating && Math.abs(i.progress - .12) < .01; });
   const introEarly = await page.evaluate(() => window.websiteDemo.diagnostics.experience.intro);
   assert.equal(introEarly.panels, 3);
+  const earlyArcs = await page.locator('.experience-ring-arc').evaluateAll(arcs => arcs.map(arc => parseFloat(getComputedStyle(arc).strokeDashoffset)));
+  assert.equal(earlyArcs.length, 3);
   assert.equal(await page.locator('.experience-dashboard-heading h2 span').count(), 2);
   await page.evaluate(({ top, height }) => scrollTo({ top: top + (height - innerHeight) * .97, behavior: 'instant' }), { top: introTop, height: introHeight });
   await page.waitForFunction(() => { const i = window.websiteDemo.diagnostics.experience?.intro; return i && !i.animating && i.counter === 175900 && i.active === 2; });
   assert.equal(await page.locator('.experience-counter strong').innerText(), '175,900');
   assert.match(await page.locator('.experience-stat.is-active .experience-stat-label').innerText(), /รับประกันการติดตั้ง/);
+  const fullArcs = await page.locator('.experience-ring-arc').evaluateAll(arcs => arcs.map(arc => parseFloat(getComputedStyle(arc).strokeDashoffset)));
+  assert.ok(fullArcs.every((offset, index) => offset <= earlyArcs[index]) && fullArcs[2] < earlyArcs[2] - 80, 'Circular gauges visibly fill as the page advances');
+  assert.deepEqual(await page.locator('.experience-ring-value strong').allInnerTexts(), ['175,900+', '21', '10']);
   await page.screenshot({ path: outputPath('experience-dashboard-desktop.png') });
   await page.evaluate(({ top, height }) => scrollTo({ top: top + (height - innerHeight) * .25, behavior: 'instant' }), { top: introTop, height: introHeight });
   await page.waitForFunction(() => { const i = window.websiteDemo.diagnostics.experience?.intro; return i && !i.animating && i.active === 0 && i.counter < 175900; });
+  assert.ok(await page.locator('.experience-ring-arc').last().evaluate(arc => parseFloat(getComputedStyle(arc).strokeDashoffset)) > fullArcs[2] + 80, 'Circular gauges rewind with scroll');
   assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('.story-rail')).display), 'none');
-  await page.evaluate(() => document.getElementById('trust').scrollIntoView({ block: 'center', behavior: 'instant' }));
-  await page.waitForFunction(() => { const t = window.websiteDemo.diagnostics.experience?.trust; return t && t.revealed && t.counters[0] >= 175900; }, null, { timeout: 15000 });
-  assert.match(await page.locator('.trust-ring strong').first().innerText(), /175,900/);
+  assert.equal(await page.locator('#trust,.trust-ring').count(), 0, 'The lower duplicate dashboard is removed');
   await page.evaluate(() => document.getElementById('collections').scrollIntoView({ block: 'start', behavior: 'instant' }));
   assert.equal((await state()).collections.visible, 8);
   await page.locator('[data-family="lvt"]').click();
@@ -282,14 +286,47 @@ try {
   assert.equal(await page.locator('#packages .packages-cta').count(), 3);
   assert.match(await page.locator('#packages').innerText(), /550,000/);
   const pricingOrder = await page.evaluate(() => {
+    const specs = document.querySelector('#package-specs');
     const packages = document.querySelector('.pricing-package-stage');
     const calculator = document.querySelector('#estimate-calculator');
     const table = document.querySelector('#packages table');
-    return { packagesFirst: Boolean(packages.compareDocumentPosition(calculator) & Node.DOCUMENT_POSITION_FOLLOWING), height: packages.offsetHeight, viewport: innerHeight, columns: table.querySelectorAll('thead th').length };
+    return { specsFirst: Boolean(specs.compareDocumentPosition(packages) & Node.DOCUMENT_POSITION_FOLLOWING), packagesFirst: Boolean(packages.compareDocumentPosition(calculator) & Node.DOCUMENT_POSITION_FOLLOWING), columns: table.querySelectorAll('thead th').length };
   });
-  assert.ok(pricingOrder.packagesFirst && pricingOrder.height >= pricingOrder.viewport && pricingOrder.columns === 4, 'A full-screen three-package comparison comes before the calculator');
+  assert.ok(pricingOrder.specsFirst && pricingOrder.packagesFirst && pricingOrder.columns === 4, 'The visual spec selector comes before the restored three-package table, followed by the calculator');
   await page.screenshot({ path: outputPath('pricing-desktop.png'), fullPage: false });
-  check('Experience dashboard: two-line headline is visible immediately, scroll fills three stats and counts to 175,900 reversibly; four-image gallery, full-screen packages before calculator, trust counters and catalogue interactions work.');
+  check('The single dark dashboard shows the unchanged two-line headline, three reversible circular gauges and background counter; four-image gallery, packages before calculator and catalogue interactions work.');
+
+  await page.locator('[data-spec-thickness="4"]').click();
+  await page.waitForFunction(() => window.websiteDemo.diagnostics.pricing.rowIndex === 0);
+  assert.equal((await state()).pricing.spec.thicknessMm, 4);
+  assert.equal((await state()).pricing.spec.pattern, 'straight');
+  const priceWithoutFoam = (await state()).pricing.total;
+  await page.locator('[data-spec-foam="true"]').click();
+  assert.equal((await state()).pricing.spec.foam, true);
+  assert.equal((await state()).pricing.total, priceWithoutFoam, 'Foam requests do not invent an extra charge');
+  await page.waitForFunction(() => getComputedStyle(document.querySelector('#package-model-foam')).opacity === '1');
+  await page.locator('[data-spec-pattern="herringbone"]').click();
+  await page.waitForFunction(() => window.websiteDemo.diagnostics.pricing.rowIndex === 4);
+  assert.equal((await state()).pricing.spec.thicknessMm, 5, 'Herringbone selects a supported 5 mm model');
+  assert.equal(await page.locator('[data-spec-thickness="5"]').getAttribute('aria-pressed'), 'true');
+  const firstSpecImage = await page.locator('#package-model-texture').getAttribute('href');
+  await page.locator('[data-spec-shade="1"]').click();
+  const selectedSpec = (await state()).pricing.spec;
+  assert.notEqual(await page.locator('#package-model-texture').getAttribute('href'), firstSpecImage);
+  assert.equal(await page.locator('#package-model-texture').getAttribute('href'), selectedSpec.image);
+  assert.match(await page.locator('#package-selected-spec').innerText(), /5 มม.*ลายก้างปลา.*โฟม/);
+  assert.equal((await state()).pricing.total, 30 * 940 + 2500, 'Selected model uses the catalogue herringbone rate');
+  assert.match(await page.locator('#packages').innerText(), /23,700/);
+  await page.locator('.packages-cta').first().click();
+  assert.equal(await page.locator('#contact-dialog').evaluate(dialog => dialog.open), true);
+  const selectedContext = await page.locator('#contact-selection').innerText();
+  assert.ok(selectedContext.includes(selectedSpec.code) && selectedContext.includes('แพ็กเกจ 30') && selectedContext.includes('โฟม'));
+  const quoteEmail = new URL(await page.locator('#contact-dialog a[href^="mailto:"]').getAttribute('href'));
+  assert.ok(quoteEmail.searchParams.get('body').includes(selectedSpec.code), 'Quote email draft retains the selected finish without sending it');
+  await page.keyboard.press('Escape');
+  await page.locator('#package-specs').evaluate(el => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
+  await page.screenshot({ path: outputPath('package-specs-desktop.png') });
+  check('Visual spec picker changes thickness, foam model, pattern and real catalogue finishes; valid combinations update the calculator and selected specs carry into package enquiries.');
 
   assert.equal(await page.locator('#product-grid .product-card').count(), 6);
   const originalHash = await previewHash();
@@ -330,6 +367,7 @@ try {
   assert.equal(await page.locator('#contact-dialog a[href^="tel:"]').getAttribute('href'), 'tel:+66846707551');
   assert.match(await page.locator('#contact-dialog a[href^="mailto:"]').getAttribute('href'), /^mailto:coolplanworkshop@gmail\.com\?subject=/);
   assert.match(await page.locator('#contact-dialog').innerText(), /คุณคะน้า/);
+  assert.equal(await page.locator('#contact-selection').isVisible(), false, 'A general contact enquiry clears the prior package selection');
   await page.keyboard.press('Escape');
   check('Contact dialog displays the named contact and correct phone/email link destinations; no external call or email is opened.');
 
@@ -337,7 +375,7 @@ try {
   await initialize();
   report.mobile = await noOverflow();
   await page.screenshot({ path: outputPath('homepage-mobile.png') });
-  for (const selector of ['#client-logos', '#experience-intro', '#project-cafe', '#project-office', '#project-narasiri', '#installation-warranty', '#pricing', '#estimate-calculator']) {
+  for (const selector of ['#client-logos', '#experience-intro', '#project-cafe', '#project-office', '#project-narasiri', '#installation-warranty', '#package-specs', '#pricing', '#estimate-calculator']) {
     await page.locator(selector).evaluate(el => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
     await page.waitForFunction(selector => {
       const section = document.querySelector(selector);
@@ -358,6 +396,7 @@ try {
   assert.equal(await logoGroups.last().isVisible(), false);
   assert.equal(await page.locator('.client-logos-toggle').isVisible(), false);
   assert.equal(await page.locator('#installation-warranty .featured-photo').count(), 3);
+  assert.deepEqual(await page.locator('.experience-ring-value strong').allInnerTexts(), ['175,900+', '21', '10']);
   await page.screenshot({ path: outputPath('warranty-reduced-motion-mobile.png') });
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
