@@ -1,6 +1,6 @@
 # COOLPLAN — เอกสารส่งมอบเว็บไซต์
 
-อัปเดต 28 ตุลาคม 2026 · [เริ่มบนเครื่องใหม่ด้วย Git](LOCAL-HANDOFF.md) · Repository: https://github.com/Logomelophile/Coolplan
+อัปเดต 29 ตุลาคม 2026 · [เริ่มบนเครื่องใหม่ด้วย Git](LOCAL-HANDOFF.md) · Repository: https://github.com/Logomelophile/Coolplan
 
 เว็บไซต์ภาษาไทยสร้างตามภาพต้นแบบที่ผู้ใช้ให้ โดยปรับการจัดวางให้ใช้งานได้ทั้งเดสก์ท็อปและมือถือ รูปแบบ ฟอนต์ และการแสดงสีอาจต่างกันตามขนาดจอและเบราว์เซอร์
 
@@ -18,6 +18,8 @@
 
 ข้อมูลติดต่อบนเว็บไซต์: **คุณคะน้า · 084 670 7551 · coolplanworkshop@gmail.com**
 ปุ่มโทรใช้ `tel:` และปุ่มอีเมลใช้ `mailto:` โดยเปิดแอปที่ผู้ใช้ตั้งไว้
+
+ดูแผนและจุดสำรองรอบล่าสุด: [งานปรับหน้าแรก 29 ตุลาคม](REDESIGN-2026-10-29.md)
 
 ## ฟังก์ชันที่ส่งมอบ
 
@@ -161,9 +163,9 @@ npm run test:visualizer
 | `src/website/HeroRoomFloor.ts` | เปลี่ยนสีพื้นในภาพห้องหลักโดยรักษาเฟอร์นิเจอร์และแสงเงา |
 | `src/website/catalog.ts` | ข้อมูลสินค้าและราคาแหล่งเดียว: ซีรีส์จากแค็ตตาล็อก 2026 (รหัสสี ขนาด ความหนา), ใบราคา 2026 (วัสดุ/ค่าติดตั้งต่อ ตร.ม., ค่าปรับพื้น, ค่าเดินทาง, งานกลางคืน), แพ็กเกจ 30/100/1,000 ตร.ม. และข้อมูลบริษัท (175,900 ตร.ม., พาร์ตเนอร์) แก้ราคาที่นี่ที่เดียว |
 | `src/website/clientLogos.ts`, `clientLogos.css`, `clientLogos.json` | `#client-logos` แถวเลื่อนวนก่อน intro: ภาพสร้างใหม่ของโลโก้ 21 แบรนด์ที่ระบุจากแค็ตตาล็อกหน้า 24 หัวข้อ Our Customer, ปุ่มพัก, รองรับ Reduce Motion; ชื่อ/รูป/ขนาดอยู่ใน JSON ฝั่ง source เพื่อให้ import ได้ทั้ง dev/build และ PNG/ที่มา/prompt อยู่ใน `docs/client-logos/` |
-| `src/website/experienceDashboard.ts`, `experienceDashboard.css`, `experienceTimeline.ts` | `#experience-intro` พื้นขาว พิมพ์ Head/Sub ตาม scroll ทีละ grapheme; **เลข 2005 ตัวเดิม** เคลื่อนและย่อไปเกาะต้นเส้นโดยไม่ fade หรือแทนด้วยเลขอีกตัว วาดเส้นม่วงตัดส้มและเปิดหมุด 3 หมวด; วง Dashboard ซ้ายกับภาพจริง **3 ใบต่อหมุด รวม 9 ใบ** บินมาซ้อน จากนั้น DOM เดิมย่อไปสะสมใต้หมุดถัดไป (ชุดสุดท้ายเก็บที่ 2026) โดยไม่หายไป เลื่อนย้อนกลับก็ขยายกลับมา ใช้ `.experience-story-token` / `frame.archived` คุม geometry และคืน DOM เข้าเลย์เอาต์ปกติเมื่อ reduced motion; หมุดและปุ่มเริ่มเรื่องราวใหม่ใช้ย้อนดูได้ `.experience-scroll` เป็นฉากตรึง ส่วน `#experience-evidence` มี clock แยกสำหรับแถบชื่อ/กล่องข้อความ; **ห้ามปิด Motion ด้วยเงื่อนไขความสูงจอ** (IAB จริง 622×532 เคยเข้า static fallback) จอเตี้ยยังเล่น Motion และเก็บ miniature ครบ; ภาพ Narasiri ระบุว่าเป็นบ้านแยกจากข้อความคอนโด ข้อมูลจาก `COMPANY`/`PACKAGES` |
-| `src/website/experience.ts`, `experience.css` | `#featured` ผลงานเด่น คาเฟ่ → Office → Narasiri (`FEATURED`) และ `#installation-warranty` ภาพทีมช่าง (`INSTALLATION_PHOTOS`); รูปมี motion ย้อนตาม scroll ลากด้วยเมาส์ภายในกรอบ และรูปที่เลือกอยู่ด้านหน้า ลูกศรขยับ/Home คืนตำแหน่ง diagnostics.experience.featured มี selectedPhoto/dragging/offsets; แต่ละ section จำกัดขอบไม่ทับข้อความถัดไป; CSS ซ่อน `.story-rail` โดยเก็บปุ่มใน DOM |
-| `src/website/collections.ts`, `collections.css`, `packageSpecs.ts`, `packageSpecs.css` | `#pricing` เริ่มด้วยตัวเลือก `#package-specs`: โมเดล SVG พร้อมภาพแค็ตตาล็อก เลือก SPC 4/5 มม. ลายตรง/ก้างปลา เฉดสี และความต้องการโฟม จากนั้นตารางแพ็กเกจรูปแบบเดิมและ `#estimate-calculator` / `#pricing-rates`; ลายก้างปลาเลือก 5 มม. อัตโนมัติ ตัวเลือกอัปเดตรุ่นใน calculator และติดไปกับคำถามใน contact dialog; โฟมเป็นความต้องการให้ทีมงานยืนยัน ไม่เพิ่มราคาเองหรืออ้าง SKU/ความหนาโฟมที่เอกสารไม่ระบุ ราคาแพ็กเกจอ้างอิงเดิมไม่เปลี่ยน |
+| `src/website/experienceDashboard.ts`, `experienceDashboard.css`, `experienceRedesign.css`, `experienceTimeline.ts` | เริ่ม Head/Sub จากว่าง พิมพ์อัตโนมัติเมื่อเข้าจอก่อน pin แล้วเผย “ตั้งแต่ปี 2005”; เลขเดิมย้ายไปต้นเส้น วงส้มใหญ่กับภาพจริง 3 ใบซ้อนขวาต่อหมุด จากนั้นย่อเก็บและดึงวง DOM เดิมมารวมในกรอบ Dashboard สีม่วงตอนท้าย พร้อมเลข 175,900 แถบชื่อโครงการ/กล่องรับรองอยู่ภายใน sticky แล้ว ใช้ `frame.gather` และ proof clock ตาม progress; เก็บภาพ Narasiri แยกจากข้อความคอนโด ไม่ปิด Motion จากความสูงจอ และมี normal flow เมื่อ reduced motion |
+| `src/website/experience.ts`, `experience.css` | ผลงาน คาเฟ่ → Office → Narasiri เริ่มด้วยกองรูปกลางกรอบ เมื่อเริ่มเลื่อนภาพแยกสลับซ้าย/ขวาและข้อความพิมพ์ตาม progress; ปุ่ม/ลาก/ยกชั้น/Home ยังใช้ controller เดิม ช่วงรับประกันใช้ flight offset แยกจาก drag offset เพื่อให้ภาพลอยเข้าจริง คง reduced motion และการพัก RAF นอกจอ |
+| `src/website/collections.ts`, `collections.css`, `packageSpecs.ts`, `packageSpecs.css`, `floorSelections.ts`, `SpecimenModel.ts` | ตัวกรองแนวนอนใต้คำอธิบาย เลือกหลายตระกูลร่วมกับความหนา/ขนาด/ทากาว มีทั้งหมด/reset และ empty state; 14 ตัวเลือกสินค้าเก็บครบ 12 ราคา + ขนาดต่างกันใน 8 ซีรีส์ ไม่ใช้ตารางราคาแยกแล้ว รูป swatch ผูกด้วยรหัสตรงรุ่น สีไม่มีภาพใช้ placeholder พร้อมคำอธิบาย; `#package-specs` รวมตัวเลือกทุกตระกูล/รุ่น/ความหนา/ขนาด/โฟม/ลาย/สี กับ form คำนวณและ Three.js 3D ที่หมุนได้ โหลดแบบ lazy ใกล้จอ แพ็กเกจอยู่ด้านล่าง โฟมเป็นคำขอให้ยืนยัน ไม่สร้างราคาเพิ่มเอง ราคาอ้าง `catalog.ts` |
 | `src/website/showcase.ts`, `showcase.css` | ส่วน "ผลงานจริงจากหน้างาน": แกลเลอรี 4 ภาพ คาเฟ่ → Office → Narasiri → Pet Hotel เลื่อนซ้ายตามหน้า (เดสก์ท็อป pinned) / เลื่อนนิ้วแบบ snap (มือถือ, reduced motion) รายการใน `SHOWCASE_ITEMS` และรูปใน `public/website/showcase/` |
 | `src/website/herringbone.ts`, `herringbone.css` | ส่วน "ลายก้างปลา" จากแค็ตตาล็อก 2026 หน้า 14–15 (125 × 650 มม., 5 มม., 6 เฉด CPW-KH5): เวทีปูลายทีละแผ่นตามการเลื่อน, เลือกเฉดสี, ปุ่มไปตัวจำลองพร้อมเลือกลายก้างปลา รูป swatch อยู่ที่ `public/website/herringbone/` |
 | `src/website/visualizer/` | ตัวแสดงพื้นในภาพห้อง: `index.ts` (API/สถานะ/ย้อนรอยระบาย), `samplePhotos.ts` (ภาพและขอบเฟอร์นิเจอร์ 7 ห้อง), `render/FloorRenderer.ts` (WebGL2 + CPU), `texture/layout.ts` (ลายก้างปลา), `texture/plankAtlas.ts` (ลายจากภาพวัสดุ พร้อม procedural fallback), `ui/Toolbar.ts` (ปุ่มสำหรับลูกค้า), `vision.worker.ts` (โมเดลสำหรับภาพอัปโหลด), `models.ts` (URL โมเดล override ได้ด้วย `VITE_MODEL_*`) ดูการออกแบบ AI และข้อจำกัดใน `docs/floor-visualizer-design.md` §7 |

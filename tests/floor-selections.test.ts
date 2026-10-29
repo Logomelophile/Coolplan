@@ -1,0 +1,8 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { PRICE_LIST } from '../src/website/catalog';
+import { FLOOR_SELECTIONS, filterFloors, catalogueFinishes } from '../src/website/floorSelections';
+test('every price-list row is selectable without losing catalogue size variants', () => { assert.equal(FLOOR_SELECTIONS.length, 14); assert.equal(new Set(FLOOR_SELECTIONS.map(p => p.id)).size, 14); for (let i = 0; i < PRICE_LIST.length; i++)
+    assert.ok(FLOOR_SELECTIONS.some(p => p.priceIndex === i)); assert.equal(FLOOR_SELECTIONS.find(p => p.id === 'spc-4-180')!.priceIndex, 0); assert.equal(FLOOR_SELECTIONS.find(p => p.id === 'spc-5-188')!.priceIndex, 1); });
+test('multi-select families combine with thickness, size and installation filters', () => { const base = { families: [], thickness: null, size: '', glue: false }; assert.equal(filterFloors(base).length, 14); assert.equal(filterFloors({ ...base, families: ['spc', 'herringbone'], thickness: 5 }).length, 3); assert.equal(filterFloors({ ...base, glue: true }).length, 3); assert.equal(filterFloors({ ...base, families: ['laminate'], thickness: 12 }).length, 2); assert.equal(filterFloors({ ...base, size: '188 × 590' }).length, 1); assert.equal(filterFloors({ ...base, families: ['spc'], glue: true }).length, 0); });
+test('shade images match their exact code, and unavailable photographs stay explicitly missing', () => { const s = FLOOR_SELECTIONS.find(p => p.id === 'spc-5-188')!.series!; const finishes = catalogueFinishes(s); assert.equal(finishes.length, s.codes.length); assert.match(finishes.find(f => f.code === 'CPW-SP507-A3')!.image!, /cpw-sp507-a3/); assert.equal(finishes.find(f => f.code === 'CPW-SP520-B3')!.image, null); });

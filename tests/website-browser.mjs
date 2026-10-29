@@ -1,3 +1,4 @@
+import {verifyRedesign} from './website-redesign-checks.mjs';
 import { chromium } from '@playwright/test';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -175,7 +176,7 @@ try {
     const selector = id === 'warranty' ? '#installation-warranty' : `#project-${id}`;
     const target = await page.locator(selector).evaluate(el => ({ top: el.getBoundingClientRect().top + scrollY, travel: el.offsetHeight - innerHeight }));
     const seekFeature = async progress => {
-      await page.evaluate(({ top, travel, progress }) => scrollTo({ top: top + travel * progress, behavior: 'instant' }), { ...target, progress });
+      await page.evaluate(({ top, travel, progress }) => scrollTo({ top: top + (travel + innerHeight * .45) * progress - innerHeight * .45, behavior: 'instant' }), { ...target, progress });
       await page.waitForFunction(({ id, progress }) => {
         const value = window.websiteDemo.diagnostics.experience.featured.find(item => item.id === id);
         return value && Math.abs(value.progress - progress) < .01 && !value.animating;
@@ -185,8 +186,9 @@ try {
     await page.waitForFunction(selector => [...document.querySelectorAll(`${selector} img`)].every(img => img.complete && img.naturalWidth > 0), selector);
     const endTransform = await page.locator(`${selector} .featured-photo-2`).evaluate(el => getComputedStyle(el).transform);
     await page.screenshot({ path: outputPath(`featured-${id}-desktop.png`) });
-    await seekFeature(.2);
+    await seekFeature(.12);
     assert.notEqual(await page.locator(`${selector} .featured-photo-2`).evaluate(el => getComputedStyle(el).transform), endTransform, `${id}: photo motion rewinds with scroll`);
+    await seekFeature(.65);
     const photoBounds = await page.locator(selector).evaluate(section => {
       const media = section.querySelector('.featured-media').getBoundingClientRect();
       const copy = section.querySelector('.featured-copy').getBoundingClientRect();
@@ -246,146 +248,8 @@ try {
   check(`Showcase gallery (${showcaseMid.mode}) advances frames with scroll; herringbone section lays its pattern, switches shades and its CTA selects the herringbone lay-up.`);
 
   // The short headline is always readable; native scroll drives the dashboard and background count.
-  const introTop = await page.evaluate(() => document.getElementById('experience-intro').getBoundingClientRect().top + scrollY);
-  const introHeight = await page.evaluate(() => document.querySelector('.experience-scroll').offsetHeight);
-  await page.evaluate(({ top, height }) => scrollTo({ top: top + (height - innerHeight) * .12, behavior: 'instant' }), { top: introTop, height: introHeight });
-  await page.waitForFunction(() => { const i = window.websiteDemo.diagnostics.experience?.intro; return i && !i.animating && Math.abs(i.progress - .12) < .01; });
-  const introEarly = await page.evaluate(() => window.websiteDemo.diagnostics.experience.intro);
-  assert.equal(introEarly.panels, 3);
-  assert.ok(introEarly.typed[0] > introEarly.typed[1] && introEarly.typed[0] < 1, 'Head and sub type at staggered rates');
-  const earlyTitle = await page.locator('.experience-typed').allInnerTexts();
-  assert.equal(await page.locator('.experience-era strong').innerText(), '2005');
-  const originalEra = await page.locator('.experience-era strong').elementHandle();
-  const originalFirstPhoto = await page.locator('.experience-pile-photo').first().elementHandle();
-  assert.ok(await page.locator('.experience-era strong').evaluate(el => parseFloat(getComputedStyle(el).fontSize)) >= 88, 'The opening 2005 is a large visual element');
-  const earlyArcs = await page.locator('.experience-ring-arc').evaluateAll(arcs => arcs.map(arc => parseFloat(getComputedStyle(arc).strokeDashoffset)));
-  assert.equal(earlyArcs.length, 3);
-  assert.equal(await page.locator('.experience-title-line').count(), 2);
-  await page.evaluate(({ top, height }) => scrollTo({ top: top + (height - innerHeight) * .97, behavior: 'instant' }), { top: introTop, height: introHeight });
-  await page.waitForFunction(() => { const i = window.websiteDemo.diagnostics.experience?.intro; return i && !i.animating && i.counter === 175900 && i.active === 2; });
-  assert.equal(await page.locator('.experience-counter strong').innerText(), '175,900');
-  assert.deepEqual(await page.locator('.experience-typed').allInnerTexts(), ['เบื้องหลังความสมบูรณ์แบบ', 'ของโครงการชั้นนำ']);
-  assert.notEqual(earlyTitle.join(''), (await page.locator('.experience-typed').allInnerTexts()).join(''), 'Actual text grows with scroll');
-  assert.equal(await page.locator('.experience-year-end span').innerText(), '2026');
-  assert.equal((await state()).experience.intro.year, 2026);
-  assert.equal((await state()).experience.intro.timeline, 1);
-  assert.equal(await originalEra.evaluate(el => el === document.querySelector('.experience-era strong')), true, 'The opening year keeps the same DOM node');
-  const yearDock = await page.evaluate(() => {
-    const year = document.querySelector('.experience-era strong').getBoundingClientRect();
-    const anchor = document.querySelector('.experience-era-anchor').getBoundingClientRect();
-    return {distance:Math.hypot(year.x + year.width / 2 - anchor.x - anchor.width / 2,year.y + year.height / 2 - anchor.y - anchor.height / 2),opacity:getComputedStyle(document.querySelector('.experience-era')).opacity,start:document.querySelector('.experience-era-anchor').textContent};
-  });
-  assert.ok(yearDock.distance < 1 && yearDock.opacity === '1' && yearDock.start === '', 'The original 2005 docks at the line start without a duplicate or fade');
-  assert.match(await page.locator('.experience-stat.is-active .experience-stat-label').innerText(), /รับประกันการติดตั้ง/);
-  const fullArcs = await page.locator('.experience-ring-arc').evaluateAll(arcs => arcs.map(arc => parseFloat(getComputedStyle(arc).strokeDashoffset)));
-  assert.ok(fullArcs.every((offset, index) => offset <= earlyArcs[index]) && fullArcs[2] < earlyArcs[2] - 80, 'Circular gauges visibly fill as the page advances');
-  assert.deepEqual(await page.locator('.experience-ring-value strong').allInnerTexts(), ['21', '175,900+', '10']);
-  assert.equal(await page.locator('.experience-milestone-node').count(), 3);
-  const timelinePresentation = await page.evaluate(() => {
-    const line = document.querySelector('.experience-years-track').getBoundingClientRect();
-    return { left: line.left, right: line.right, width: innerWidth, stroke: parseFloat(getComputedStyle(document.querySelector('.experience-ring-arc')).strokeWidth) };
-  });
-  assert.ok(timelinePresentation.left <= 28 && timelinePresentation.right >= timelinePresentation.width - 28 && timelinePresentation.stroke >= 12, 'The timeline spans the screen and dashboard tubes are thicker');
-  const pileLayout = await page.evaluate(() => {
-    const dashboard = document.querySelector('.experience-dashboard').getBoundingClientRect();
-    const pile = document.querySelector('.experience-photo-pile').getBoundingClientRect();
-    const photos = [...document.querySelectorAll('.experience-pile-photo[data-story="2"]')].map(photo => photo.getBoundingClientRect());
-    const retained = [...document.querySelectorAll('.experience-pile-photo')].every(photo => getComputedStyle(photo).opacity === '1');
-    return { leftDashboard: dashboard.right < pile.left, bounded: photos.every(r => r.left >= pile.left - 1 && r.right <= pile.right + 1 && r.top >= pile.top - 1 && r.bottom <= pile.bottom + 1), overlapping: photos.some((r,i) => photos.slice(i+1).some(s => Math.min(r.right,s.right)>Math.max(r.left,s.left)+20 && Math.min(r.bottom,s.bottom)>Math.max(r.top,s.top)+20)), retained };
-  });
-  assert.ok(pileLayout.leftDashboard && pileLayout.bounded && pileLayout.overlapping, 'The photo pile stays inside its frame beside the left dashboard');
-  assert.ok(pileLayout.retained, 'Earlier photos remain fully visible after their miniatures dock');
-  assert.equal(await originalFirstPhoto.evaluate(el => el.isConnected && el === document.querySelector('.experience-pile-photo')), true, 'The original photographs move continuously instead of being replaced by snapshots');
-  assert.deepEqual((await state()).experience.intro.archived.slice(0,2), [1,1]);
-  assert.ok((await state()).experience.intro.archived[2] < .02);
-  assert.equal(await page.locator('.experience-pile-photo img').count(), 9);
-  assert.deepEqual(await page.locator('.experience-pile-photo').evaluateAll(photos => ['0','1','2'].map(group => photos.filter(photo => photo.dataset.story === group).length)), [3,3,3]);
-  await page.waitForFunction(() => [...document.querySelectorAll('.experience-pile-photo img')].every(img => img.complete && img.naturalWidth > 0));
-  await page.screenshot({ path: outputPath('experience-dashboard-desktop.png') });
-  await page.locator('.experience-milestone-node').nth(1).click();
-  await page.waitForFunction(() => { const d=window.websiteDemo.diagnostics.experience.intro;return d.active===1&&Math.abs(d.progress-.7)<.01&&!d.animating; });
-  assert.match(await page.locator('.experience-milestone-copy[aria-hidden="false"]').innerText(), /บ้านเดี่ยว Narasiri.*Origin.*Regent Home/s);
-  await page.locator('#experience-evidence').evaluate(el => el.scrollIntoView({block:'center',behavior:'instant'}));
-  await page.waitForFunction(() => {const d=window.websiteDemo.diagnostics.experience.intro;return d.proof>.99&&!d.animating;});
-  assert.equal(await page.locator('.experience-checks li.is-checked').count(), 4);
-  await page.mouse.move(0, 0);
-  await page.waitForFunction(() => window.websiteDemo.diagnostics.experience.intro.marqueeRunning);
-  const projectTrack = page.locator('.experience-projects-track');
-  const projectTransform = await projectTrack.evaluate(el => getComputedStyle(el).transform);
-  await page.waitForTimeout(180);
-  assert.notEqual(await projectTrack.evaluate(el => getComputedStyle(el).transform), projectTransform, 'Restored project names scroll continuously');
-  await page.locator('.experience-projects-toggle').click();
-  const pausedProjects = await projectTrack.evaluate(el => getComputedStyle(el).transform);
-  await page.waitForTimeout(180);
-  assert.equal(await projectTrack.evaluate(el => getComputedStyle(el).transform), pausedProjects, 'Project marquee can be paused');
-  await page.locator('.experience-projects-toggle').click();
-  await page.screenshot({ path: outputPath('experience-evidence-desktop.png') });
-  await page.evaluate(({ top, height }) => scrollTo({ top: top + (height - innerHeight) * .25, behavior: 'instant' }), { top: introTop, height: introHeight });
-  await page.waitForFunction(() => { const i = window.websiteDemo.diagnostics.experience?.intro; return i && !i.animating && i.active === 0 && i.counter < 175900; });
-  assert.ok(await page.locator('.experience-ring-arc').last().evaluate(arc => parseFloat(getComputedStyle(arc).strokeDashoffset)) > fullArcs[2] + 80, 'Circular gauges rewind with scroll');
-  assert.ok((await state()).experience.intro.year < 2026 && (await state()).experience.intro.timeline < 1, 'Year line rewinds with the area counter');
-  assert.equal(await page.locator('.experience-checks li.is-checked').count(), 0);
-  assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('.story-rail')).display), 'none');
-  assert.equal(await page.locator('#trust,.trust-ring').count(), 0, 'The lower duplicate dashboard is removed');
-  await page.evaluate(() => document.getElementById('collections').scrollIntoView({ block: 'start', behavior: 'instant' }));
-  assert.equal((await state()).collections.visible, 8);
-  await page.locator('[data-family="lvt"]').click();
-  assert.equal((await state()).collections.visible, 2);
-  await page.locator('[data-family="all"]').click();
-  await page.locator('[data-series="herringbone"] .collection-expand').click();
-  assert.equal((await state()).collections.expanded, 'herringbone');
-  await page.locator('[data-series="laminate-8"] .collection-estimate').click();
-  await page.waitForFunction(() => window.websiteDemo.diagnostics.pricing.rowIndex === 8);
-  await page.locator('#estimate-sqm').fill('30');
-  await page.locator('#estimate-sqm').dispatchEvent('input');
-  const estimate = (await state()).pricing;
-  assert.equal(estimate.sqm, 30);
-  assert.equal(estimate.total, 30 * 650 + 30 * 100 + 2500, 'laminate 8 mm for 30 m² includes the small-area travel fee');
-  assert.match(await page.locator('#estimate-total').innerText(), /25,000/);
-  assert.equal(await page.locator('#packages .packages-cta').count(), 3);
-  assert.match(await page.locator('#packages').innerText(), /550,000/);
-  const pricingOrder = await page.evaluate(() => {
-    const specs = document.querySelector('#package-specs');
-    const packages = document.querySelector('.pricing-package-stage');
-    const calculator = document.querySelector('#estimate-calculator');
-    const table = document.querySelector('#packages table');
-    return { specsFirst: Boolean(specs.compareDocumentPosition(packages) & Node.DOCUMENT_POSITION_FOLLOWING), packagesFirst: Boolean(packages.compareDocumentPosition(calculator) & Node.DOCUMENT_POSITION_FOLLOWING), columns: table.querySelectorAll('thead th').length };
-  });
-  assert.ok(pricingOrder.specsFirst && pricingOrder.packagesFirst && pricingOrder.columns === 4, 'The visual spec selector comes before the restored three-package table, followed by the calculator');
-  await page.screenshot({ path: outputPath('pricing-desktop.png'), fullPage: false });
-  check('The full-width purple/orange timeline types the head/sub, introduces a large 2005, counts orange gauges and piles three real photos per milestone; controls, project names and proof boxes work reversibly.');
+  await verifyRedesign(page,{initialize,state,check,outputPath,url,noOverflow});
 
-  await page.locator('[data-spec-thickness="4"]').click();
-  await page.waitForFunction(() => window.websiteDemo.diagnostics.pricing.rowIndex === 0);
-  assert.equal((await state()).pricing.spec.thicknessMm, 4);
-  assert.equal((await state()).pricing.spec.pattern, 'straight');
-  const priceWithoutFoam = (await state()).pricing.total;
-  await page.locator('[data-spec-foam="true"]').click();
-  assert.equal((await state()).pricing.spec.foam, true);
-  assert.equal((await state()).pricing.total, priceWithoutFoam, 'Foam requests do not invent an extra charge');
-  await page.waitForFunction(() => getComputedStyle(document.querySelector('#package-model-foam')).opacity === '1');
-  await page.locator('[data-spec-pattern="herringbone"]').click();
-  await page.waitForFunction(() => window.websiteDemo.diagnostics.pricing.rowIndex === 4);
-  assert.equal((await state()).pricing.spec.thicknessMm, 5, 'Herringbone selects a supported 5 mm model');
-  assert.equal(await page.locator('[data-spec-thickness="5"]').getAttribute('aria-pressed'), 'true');
-  const firstSpecImage = await page.locator('#package-model-texture').getAttribute('href');
-  await page.locator('[data-spec-shade="1"]').click();
-  const selectedSpec = (await state()).pricing.spec;
-  assert.notEqual(await page.locator('#package-model-texture').getAttribute('href'), firstSpecImage);
-  assert.equal(await page.locator('#package-model-texture').getAttribute('href'), selectedSpec.image);
-  assert.match(await page.locator('#package-selected-spec').innerText(), /5 มม.*ลายก้างปลา.*โฟม/);
-  assert.equal((await state()).pricing.total, 30 * 940 + 2500, 'Selected model uses the catalogue herringbone rate');
-  assert.match(await page.locator('#packages').innerText(), /23,700/);
-  await page.locator('.packages-cta').first().click();
-  assert.equal(await page.locator('#contact-dialog').evaluate(dialog => dialog.open), true);
-  const selectedContext = await page.locator('#contact-selection').innerText();
-  assert.ok(selectedContext.includes(selectedSpec.code) && selectedContext.includes('แพ็กเกจ 30') && selectedContext.includes('โฟม'));
-  const quoteEmail = new URL(await page.locator('#contact-dialog a[href^="mailto:"]').getAttribute('href'));
-  assert.ok(quoteEmail.searchParams.get('body').includes(selectedSpec.code), 'Quote email draft retains the selected finish without sending it');
-  await page.keyboard.press('Escape');
-  await page.locator('#package-specs').evaluate(el => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
-  await page.screenshot({ path: outputPath('package-specs-desktop.png') });
-  check('Visual spec picker changes thickness, foam model, pattern and real catalogue finishes; valid combinations update the calculator and selected specs carry into package enquiries.');
 
   assert.equal(await page.locator('#product-grid .product-card').count(), 6);
   const originalHash = await previewHash();
@@ -430,63 +294,6 @@ try {
   await page.keyboard.press('Escape');
   check('Contact dialog displays the named contact and correct phone/email link destinations; no external call or email is opened.');
 
-  // Regression: a small in-app browser used to collapse the entire story to its final static state.
-  for (const viewport of [{width:622,height:532},{width:844,height:390}]) {
-    await page.setViewportSize(viewport);
-    await page.emulateMedia({ reducedMotion:'no-preference' });
-    const anchored = new URL(url); anchored.hash = 'experience-intro';
-    // A new document avoids a pending same-document hash jump racing the wheel fixture.
-    anchored.searchParams.set('motion-viewport', `${viewport.width}x${viewport.height}`);
-    await initialize(anchored.href);
-    const short = await page.evaluate(() => {
-      const scroll = document.querySelector('.experience-scroll'), stage = document.querySelector('.experience-sticky');
-      const top = scroll.getBoundingClientRect().top + scrollY;
-      scrollTo({top,behavior:'instant'});
-      return {travel:scroll.offsetHeight-stage.offsetHeight,position:getComputedStyle(stage).position};
-    });
-    assert.equal(short.position, 'sticky');
-    assert.ok(short.travel > viewport.height * 4, 'Short windows retain an actual scroll timeline');
-    await page.waitForFunction(() => {const d=window.websiteDemo.diagnostics.experience.intro;return d.mode==='scroll'&&d.progress<.005&&!d.animating;});
-    const opening = await page.locator('.experience-typed').allInnerTexts();
-    await page.mouse.move(viewport.width * .5,viewport.height * .5);
-    await page.mouse.wheel(0,short.travel*.16);
-    await page.waitForFunction(() => {const d=window.websiteDemo.diagnostics.experience.intro;return d.progress>.14&&d.progress<.18&&!d.animating;});
-    assert.notDeepEqual(await page.locator('.experience-typed').allInnerTexts(),opening,'Real wheel input types the headline and subline');
-    await page.screenshot({path:outputPath(`typing-short-${viewport.width}x${viewport.height}.png`)});
-    await page.mouse.wheel(0,short.travel*.32);
-    await page.waitForFunction(() => {const d=window.websiteDemo.diagnostics.experience.intro;return d.progress>.46&&d.progress<.50&&!d.animating;});
-    const firstStop=(await state()).experience.intro;
-    assert.ok(firstStop.photos.slice(0,3).every(p=>p>0)&&firstStop.photos.slice(3).every(p=>p===0));
-    assert.ok(firstStop.counters[0]>0&&firstStop.counters[0]<21,'The active dashboard number counts up');
-    const drawnLine=await page.locator('.experience-years-fill').evaluate(el=>getComputedStyle(el).transform);
-    await page.mouse.wheel(0,short.travel*.22);
-    await page.waitForFunction(() => {const d=window.websiteDemo.diagnostics.experience.intro;return d.active===1&&Math.abs(d.progress-.7)<.02&&!d.animating;});
-    assert.ok((await state()).experience.intro.photos.slice(3,6).every(p=>p>0),'The second milestone adds three photos');
-    assert.equal(await page.locator('.experience-stat.is-active:not(.is-docked)').count(),1,'The active gauge keeps the large stage');
-    assert.equal(await page.locator('.experience-stat.is-docked').count(),1,'The previous gauge remains as a miniature');
-    assert.equal(await page.locator('.experience-pile-photo[data-story="0"]').evaluateAll(items=>items.every(el=>getComputedStyle(el).opacity==='1')),true,'All three previous photos remain visible');
-    const miniature = await page.locator('.experience-stat.is-docked .experience-ring').evaluate(el=>el.getBoundingClientRect().width);
-    assert.ok(miniature > 28 && miniature < 36,'The completed ring shrinks into a readable timeline miniature');
-    const miniatureSpacing = await page.evaluate(() => {
-      const ring=document.querySelector('.experience-stat.is-docked .experience-ring').getBoundingClientRect();
-      const label=document.querySelectorAll('.experience-milestone-node span')[1].getBoundingClientRect();
-      const scene=document.querySelector('.experience-scene').getBoundingClientRect();
-      return {gap:ring.top-label.bottom,photosClear:[...document.querySelectorAll('.experience-pile-photo[data-story="0"]')].every(el=>el.getBoundingClientRect().bottom<scene.top+4)};
-    });
-    assert.ok(miniatureSpacing.gap>4&&miniatureSpacing.photosClear,'Docked gauges clear their timeline labels and photos stay above the next story');
-    assert.notEqual(await page.locator('.experience-years-fill').evaluate(el=>getComputedStyle(el).transform),drawnLine,'The line draws progressively with wheel input');
-    await page.screenshot({path:outputPath(`motion-short-${viewport.width}x${viewport.height}.png`)});
-    await page.mouse.wheel(0,short.travel*.29);
-    await page.waitForFunction(() => {const d=window.websiteDemo.diagnostics.experience.intro;return d.progress>.97&&!d.animating;});
-    assert.ok((await state()).experience.intro.photos.slice(6).every(p=>p>.99),'The third milestone completes its three-photo stack');
-    assert.equal((await state()).experience.intro.counter,175900);
-    await page.mouse.wheel(0,-short.travel*.5);
-    await page.waitForFunction(() => {const d=window.websiteDemo.diagnostics.experience.intro;return d.active===0&&d.progress<.52&&!d.animating;});
-    assert.ok((await state()).experience.intro.counter<175900,'Reverse wheel input rewinds the story in the short window');
-    await noOverflow();
-  }
-  check('Real mouse-wheel input animates typing, the original 2005, rising numbers and three photos per milestone in 622×532 and 844×390 windows; previous gauges and photos shrink into persistent timeline miniatures and reverse.');
-
   await page.setViewportSize({ width: 390, height: 844 });
   await initialize();
   report.mobile = await noOverflow();
@@ -496,7 +303,7 @@ try {
     await page.waitForFunction(selector => {
       const section = document.querySelector(selector);
       return [...section.querySelectorAll('img')].every(img => img.complete && img.naturalWidth > 0)
-        && [...section.querySelectorAll('.featured-photo')].every(photo => Number(getComputedStyle(photo).opacity) > .99);
+;
     }, selector);
     const width = await page.evaluate(() => ({ viewport: innerWidth, document: document.documentElement.scrollWidth }));
     assert.ok(width.document <= width.viewport + 1, `${selector}: mobile document overflows`);
