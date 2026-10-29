@@ -467,6 +467,13 @@ try {
     assert.equal(await page.locator('.experience-pile-photo[data-story="0"]').evaluateAll(items=>items.every(el=>getComputedStyle(el).opacity==='1')),true,'All three previous photos remain visible');
     const miniature = await page.locator('.experience-stat.is-docked .experience-ring').evaluate(el=>el.getBoundingClientRect().width);
     assert.ok(miniature > 28 && miniature < 36,'The completed ring shrinks into a readable timeline miniature');
+    const miniatureSpacing = await page.evaluate(() => {
+      const ring=document.querySelector('.experience-stat.is-docked .experience-ring').getBoundingClientRect();
+      const label=document.querySelectorAll('.experience-milestone-node span')[1].getBoundingClientRect();
+      const scene=document.querySelector('.experience-scene').getBoundingClientRect();
+      return {gap:ring.top-label.bottom,photosClear:[...document.querySelectorAll('.experience-pile-photo[data-story="0"]')].every(el=>el.getBoundingClientRect().bottom<scene.top+4)};
+    });
+    assert.ok(miniatureSpacing.gap>4&&miniatureSpacing.photosClear,'Docked gauges clear their timeline labels and photos stay above the next story');
     assert.notEqual(await page.locator('.experience-years-fill').evaluate(el=>getComputedStyle(el).transform),drawnLine,'The line draws progressively with wheel input');
     await page.screenshot({path:outputPath(`motion-short-${viewport.width}x${viewport.height}.png`)});
     await page.mouse.wheel(0,short.travel*.29);

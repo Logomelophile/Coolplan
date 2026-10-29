@@ -208,21 +208,25 @@ export class ExperienceIntro {
     const scene = this.section.querySelector('.experience-scene')!.getBoundingClientRect();
     const dashboard = this.section.querySelector('.experience-dashboard')!.getBoundingClientRect();
     const pile = this.pile.getBoundingClientRect();
-    const line = this.yearFill.getBoundingClientRect();
     const compact = this.sticky.clientWidth <= 850 || this.sticky.clientHeight <= 620;
     const dockRing = compact ? 32 : 44, dockPhoto = compact ? 38 : 60;
+    const labelBottom = Math.max(...this.milestones.map(node => {
+      const label = node.querySelector<HTMLElement>('span')!;
+      const entranceY = parseFloat(getComputedStyle(label).translate.split(' ')[1]) || 0;
+      return label.getBoundingClientRect().bottom - entranceY;
+    })) - lineEntranceY - scene.top;
+    const dockTop = labelBottom + 8;
     this.tokenPoses = this.panelHosts.map((host, index) => {
       const node = index < 2 ? this.milestones[index + 1].getBoundingClientRect() : this.section.querySelector('.experience-year-end')!.getBoundingClientRect();
       const center = Math.max(34, Math.min(this.sticky.clientWidth - 34, node.left + node.width / 2 - stage.left)) + stage.left - scene.left;
-      const top = line.top - scene.top - lineEntranceY;
       host.style.width = `${dashboard.width}px`; host.style.height = `${dashboard.height}px`;
       this.photoHosts[index].style.width = `${pile.width}px`; this.photoHosts[index].style.height = `${pile.height}px`;
       const panel = this.panels[index], ring = panel.querySelector<HTMLElement>('.experience-ring')!;
       const metricScale = dockRing / ring.clientWidth;
       const photoScale = dockPhoto / Math.max(1, this.photos[index * 3].offsetWidth);
       return {
-        panel: { x: dashboard.left - scene.left, y: dashboard.top - scene.top, endX: center - dockRing / 2 - (panel.offsetLeft + ring.offsetLeft) * metricScale, endY: top + (compact ? 34 : 37) - (panel.offsetTop + ring.offsetTop) * metricScale, scale: metricScale },
-        photo: { x: pile.left - scene.left, y: pile.top - scene.top, endX: center - dockPhoto / 2 - 5, endY: top + (compact ? 70 : 86), scale: photoScale },
+        panel: { x: dashboard.left - scene.left, y: dashboard.top - scene.top, endX: center - dockRing / 2 - (panel.offsetLeft + ring.offsetLeft) * metricScale, endY: dockTop - (panel.offsetTop + ring.offsetTop) * metricScale, scale: metricScale },
+        photo: { x: pile.left - scene.left, y: pile.top - scene.top, endX: center - dockPhoto / 2 - 5, endY: dockTop + dockRing + 6, scale: photoScale },
       };
     });
   }

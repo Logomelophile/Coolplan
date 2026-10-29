@@ -175,7 +175,7 @@
 }
 
 /* A completed dashboard and its original photos travel to the next timeline node. */
-#experience-intro .experience-sticky{grid-template-rows:auto 144px minmax(0,1fr) 22px}
+#experience-intro .experience-sticky{grid-template-rows:auto 164px minmax(0,1fr) 22px}
 .experience-story-tokens{position:absolute;inset:0;z-index:4;pointer-events:none}
 .experience-story-tokens[hidden]{display:none}
 .experience-story-token{position:absolute;inset:0;pointer-events:none}
@@ -193,7 +193,7 @@
 .experience-token-dashboard .experience-stat p{font-size:11px}
 .experience-token-dashboard .experience-stat-label{font-size:15px}
 @media(max-width:850px){
-  #experience-intro .experience-sticky{grid-template-rows:auto 118px minmax(0,1fr) 22px}
+  #experience-intro .experience-sticky{grid-template-rows:auto 138px minmax(0,1fr) 22px}
   .experience-token-dashboard .experience-ring{width:94px}
   .experience-token-dashboard .experience-ring-value strong,.experience-token-dashboard .experience-stat:nth-child(1) .experience-ring-value strong{font-size:29px}
   .experience-token-dashboard .experience-stat[aria-label^="พื้นที่"] .experience-ring-value strong{font-size:17px}
@@ -202,14 +202,17 @@
   .experience-token-dashboard .experience-stat p{display:none}
 }
 @media(max-height:620px){
-  #experience-intro .experience-sticky{grid-template-rows:auto 118px minmax(0,1fr) 18px}
+  #experience-intro .experience-sticky{grid-template-rows:auto 138px minmax(0,1fr) 18px}
   .experience-token-dashboard .experience-ring{width:112px}
   .experience-token-dashboard .experience-ring-value strong,.experience-token-dashboard .experience-stat:nth-child(1) .experience-ring-value strong{font-size:34px}
   .experience-token-dashboard .experience-stat[aria-label^="พื้นที่"] .experience-ring-value strong{font-size:23px}
   .experience-token-dashboard .experience-stat p{display:none}
 }
 @media(max-height:420px){
-  #experience-intro .experience-sticky{grid-template-rows:auto 108px minmax(0,1fr) 16px}
+  #experience-intro .experience-sticky{grid-template-rows:auto 138px minmax(0,1fr) 16px}
+  .experience-milestone-story{grid-template-rows:40px minmax(0,1fr)}
+  .experience-pile-photo{padding:3px;max-width:min(240px,calc((var(--pile-height,180px) - 20px) * 1.2))}
+  .experience-pile-photo figcaption{display:none}
   .experience-token-dashboard .experience-ring{width:84px}
   .experience-token-dashboard .experience-ring-value strong,.experience-token-dashboard .experience-stat:nth-child(1) .experience-ring-value strong{font-size:27px}
   .experience-token-dashboard .experience-stat[aria-label^="พื้นที่"] .experience-ring-value strong{font-size:17px}
