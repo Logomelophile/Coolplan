@@ -1,5 +1,8 @@
 /** Source dimensions keep project photographs intact before their lazy image loads. */
 const SIZES: Record<string, readonly [number, number]> = {
+    'orbit-wood-cafe': [640,960], 'orbit-van': [788,1400], 'orbit-studio': [1050,1400],
+    'orbit-restaurant': [1050,1400], 'orbit-warm-stairs': [960,1280],
+    'preparation-primer': [1050,1400], 'preparation-leveling': [1280,960],
     'cafe-herringbone': [717, 960], 'cafe-herringbone-top': [717, 960],
     'chevron-hall': [736, 981], 'customer-connected-room': [960, 719],
     'customer-open-plan': [960, 540], 'experience-herringbone-hall': [1440, 1080],

@@ -1,4 +1,5 @@
 import {verifyRedesign} from './website-redesign-checks.mjs';
+import {verifyOrbit} from './website-orbit-checks.mjs';
 import { chromium } from '@playwright/test';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -146,11 +147,11 @@ try {
   await page.waitForFunction(() => [...document.querySelectorAll('.client-logos-group img')].every(img => img.complete && img.naturalWidth > 0));
   const logoTransform = () => page.locator('.client-logos-track').evaluate(el => getComputedStyle(el).transform);
   const moving = await logoTransform();
-  await page.waitForTimeout(180);
+  await page.waitForFunction(previous => getComputedStyle(document.querySelector('.client-logos-track')).transform !== previous, moving);
   assert.notEqual(await logoTransform(), moving, 'Customer logos move continuously');
   await page.locator('.client-logos-window').hover();
   const hovered = await logoTransform();
-  await page.waitForTimeout(180);
+  await page.waitForFunction(previous => getComputedStyle(document.querySelector('.client-logos-track')).transform !== previous, hovered);
   assert.notEqual(await logoTransform(), hovered, 'Hover does not pause the customer ribbon');
   await page.locator('.client-logos-window').focus();
   assert.equal(await page.locator('.client-logos-track').evaluate(el => getComputedStyle(el).animationPlayState), 'running');
@@ -165,16 +166,17 @@ try {
   await page.locator('#client-logos').evaluate(el => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
   const handoff = await page.evaluate(() => {
     const logos = document.querySelector('#client-logos').getBoundingClientRect();
-    const title = document.querySelector('.experience-dashboard-heading').getBoundingClientRect();
-    return { logoBottom: logos.bottom, titleTop: title.top, titleBottom: title.bottom, height: innerHeight, text: document.querySelector('.experience-dashboard-heading h2').getAttribute('aria-label') };
+    const title = document.querySelector('.orbit-heading').getBoundingClientRect();
+    return { logoBottom: logos.bottom, titleTop: title.top, titleBottom: title.bottom, height: innerHeight, text: document.querySelector('.orbit-heading h2').getAttribute('aria-label') };
   });
   assert.ok(handoff.titleBottom < handoff.height, 'The opening typed headline is readable as the customer strip passes');
   assert.equal(handoff.text.replace(/\s+/g, ''), 'เบื้องหลังความสมบูรณ์แบบของโครงการชั้นนำ');
   await page.screenshot({ path: outputPath('client-logos-desktop.png') });
   check('Authentic customer logos load, loop before the experience intro, and can be paused and resumed.');
+  await verifyOrbit(page,{state,check,outputPath});
 
-  assert.deepEqual(await page.locator('#featured .featured-item').evaluateAll(items => items.map(item => item.id)), ['project-cafe', 'project-office', 'project-narasiri']);
-  const featureIds = ['cafe', 'office', 'narasiri', 'warranty'];
+  assert.deepEqual(await page.locator('#featured .featured-item').evaluateAll(items => items.map(item => item.id)), ['project-cafe', 'project-office']);
+  const featureIds = ['cafe', 'office', 'warranty'];
   for (const id of featureIds) {
     const selector = id === 'warranty' ? '#installation-warranty' : `#project-${id}`;
     const target = await page.locator(selector).evaluate(el => ({ top: el.getBoundingClientRect().top + scrollY, travel: el.offsetHeight - innerHeight }));
@@ -223,9 +225,9 @@ try {
       await page.keyboard.press('Home');
     }
   }
-  assert.match(await page.locator('#installation-warranty').innerText(), /รับประกันการติดตั้ง 10 ปี/);
+  assert.match(await page.locator('#installation-warranty').innerText(), /รับประกันติดตั้ง 10 ปี/);
   assert.match(await page.locator('#installation-warranty').innerText(), /เปลี่ยนให้ฟรี/);
-  check('Café, Office and Narasiri appear in order, each has multiple loaded photos and reversible scroll motion, followed by the 10-year installation warranty and team photos.');
+  check('Café and Office lead into the professional installation story, three supplied team photos and the 10-year warranty.');
 
   // Showcase gallery: pinned scroll moves the track and the counter; herringbone section lays its pattern and the CTA switches the simulator.
   const showcaseTop = await page.evaluate(() => document.getElementById('showcase').getBoundingClientRect().top + scrollY);
@@ -308,7 +310,7 @@ try {
   await initialize();
   report.mobile = await noOverflow();
   await page.screenshot({ path: outputPath('homepage-mobile.png') });
-  for (const selector of ['#client-logos', '#experience-intro', '#project-cafe', '#project-office', '#project-narasiri', '#installation-warranty', '#package-specs', '#pricing', '#estimate-calculator']) {
+  for (const selector of ['#client-logos', '#experience-intro', '#project-cafe', '#project-office', '#installation-warranty', '#package-specs', '#pricing', '#estimate-calculator']) {
     await page.locator(selector).evaluate(el => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
     await page.waitForFunction(selector => {
       const section = document.querySelector(selector);
@@ -318,7 +320,7 @@ try {
     const width = await page.evaluate(() => ({ viewport: innerWidth, document: document.documentElement.scrollWidth }));
     assert.ok(width.document <= width.viewport + 1, `${selector}: mobile document overflows`);
     if (selector === '#experience-intro') {
-      const headline = await page.locator('.experience-title-line').evaluateAll(lines => lines.map(line => ({ height: line.getBoundingClientRect().height, lineHeight: parseFloat(getComputedStyle(line).lineHeight) })));
+      const headline = await page.locator('.orbit-title-line').evaluateAll(lines => lines.map(line => ({ height: line.getBoundingClientRect().height, lineHeight: parseFloat(getComputedStyle(line).lineHeight) })));
       assert.ok(headline.every(line => line.height < line.lineHeight * 1.2), 'Mobile dashboard title uses exactly two lines');
     }
     await page.screenshot({ path: outputPath(`${selector.slice(1)}-mobile.png`) });
@@ -354,7 +356,7 @@ try {
   check('Repeated homepage disposal removes the 3D scene, hero room and preview canvases without errors.');
   assert.deepEqual(report.errors, []);
 } catch (error) {
-  report.failed = { message: error.message, stack: error.stack, motion: await page.evaluate(() => ({ reduced: matchMedia('(prefers-reduced-motion: reduce)').matches, logos: window.websiteDemo?.diagnostics.clientLogos, intro: window.websiteDemo?.diagnostics.experience?.intro, viewport: {width:innerWidth,height:innerHeight,y:scrollY}, scrollTop:document.querySelector('.experience-scroll')?.getBoundingClientRect().top, featured: window.websiteDemo?.diagnostics.experience?.featured })).catch(() => null) };
+  report.failed = { message: error.message, stack: error.stack, motion: await page.evaluate(() => ({ reduced: matchMedia('(prefers-reduced-motion: reduce)').matches, logos: window.websiteDemo?.diagnostics.clientLogos, orbit:window.websiteDemo?.diagnostics.experience?.orbit, classes:document.querySelector('#experience-intro')?.className, intro: window.websiteDemo?.diagnostics.experience?.intro, viewport: {width:innerWidth,height:innerHeight,y:scrollY}, scrollTop:document.querySelector('.experience-scroll')?.getBoundingClientRect().top, featured: window.websiteDemo?.diagnostics.experience?.featured })).catch(() => null) };
   await page.screenshot({ path: outputPath('failure.png'), fullPage: true }).catch(() => {});
   throw error;
 } finally {

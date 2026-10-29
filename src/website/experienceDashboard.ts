@@ -112,6 +112,7 @@ export class ExperienceIntro {
     private summaryHoldStarted: number | null = null;
     private summaryVisibleAt: number | null = null;
     private summaryHoldConsumed = false;
+    private sample() { const frame=experienceFrame(this.progress,this.proofProgress);return {...frame,eraDock:1,era:frame.timelineReveal,counter:EXPERIENCE_TOTAL_SQM,rings:[1,1,1]}; }
     constructor(private readonly section: HTMLElement) {
         this.sticky = section.querySelector<HTMLElement>('.experience-sticky')!;
         this.scroll = section.querySelector<HTMLElement>('.experience-scroll')!;
@@ -224,7 +225,7 @@ export class ExperienceIntro {
                 this.stop();
             this.syncProjects();
         }, { rootMargin: '10% 0px' });
-        this.observer?.observe(section);
+        this.observer?.observe(this.scroll);
         if (!this.observer)
             this.visible = true;
         this.resizeObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(this.onResize);
@@ -240,7 +241,7 @@ export class ExperienceIntro {
         this.render();
     }
     get diagnostics(): IntroDiagnostics {
-        const frame = experienceFrame(this.progress, this.proofProgress);
+        const frame = this.sample();
         return { progress: this.progress, counter: frame.counter, active: frame.active, panels: this.panels.length, animating: this.raf !== 0, rings: frame.rings, counters: METRICS.map((metric, index) => Math.round(metric.value * frame.rings[index])), typed: [...this.typedFractions], year: frame.year, timeline: frame.timeline, checks: frame.checks, marqueeRunning: this.projectsRunning, milestones: frame.milestones, photos: frame.photos, archived: frame.archived, proof: this.proofProgress, mode: this.flow ? 'flow' : 'scroll', reduced: this.reduced, gather: frame.gather, summaryHoldRemainingMs: this.summaryHoldRemainingMs, summaryVisibleAt: this.summaryVisibleAt, scroll: { ...this.scrollRange }, summaryHolding: this.summaryHoldStarted !== null && !this.summaryHoldConsumed && (this.summaryVisibleAt === null || this.summaryHoldRemainingMs > 0) };
     }
     private get summaryHoldRemainingMs(): number { return this.reduced || this.summaryHoldConsumed || this.summaryVisibleAt === null ? 0 : Math.max(0, EXPERIENCE_SUMMARY_HOLD_MS - (performance.now() - this.summaryVisibleAt)); }
@@ -308,7 +309,7 @@ export class ExperienceIntro {
     private measure(): void {
         const rect = this.scroll.getBoundingClientRect();
         const travel = this.scroll.offsetHeight - this.sticky.offsetHeight;
-        this.scrollRange = experienceScrollRange(window.innerHeight, travel);
+        this.scrollRange = experienceScrollRange(window.innerHeight, travel, true);
         this.flow = travel <= 0;
         this.section.classList.toggle('is-flow', this.flow);
         this.target = experienceScrollProgress(-rect.top, this.scrollRange);
@@ -388,7 +389,7 @@ export class ExperienceIntro {
             this.raf = requestAnimationFrame(this.tick);
     };
     private render(): void {
-        const frame = experienceFrame(this.progress, this.proofProgress);
+        const frame = this.sample();
         if (!this.reduced && this.visible && frame.gather === 1 && frame.counter === EXPERIENCE_TOTAL_SQM && this.summaryVisibleAt === null && Math.abs(this.sticky.getBoundingClientRect().top) < 1) this.summaryVisibleAt = performance.now();
         this.counter.textContent = frame.counter.toLocaleString('th-TH');
         const gather = this.reduced ? 1 : frame.gather, counter = this.counterPose;

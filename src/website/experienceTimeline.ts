@@ -16,18 +16,20 @@ export const EXPERIENCE_STAGES = [
 ];
 export interface ExperienceScrollRange { leadPx: number; introPx: number; travelPx: number; breakpoint: number }
 /** A short, responsive title/year entry followed by a longer photographic story. */
-export function experienceScrollRange(height: number, travel: number): ExperienceScrollRange {
+export function experienceScrollRange(height: number, travel: number, timelineOnly = false): ExperienceScrollRange {
     const viewport = Number.isFinite(height) ? Math.max(1, height) : 800;
     const travelPx = Number.isFinite(travel) ? Math.max(0, travel) : 0;
-    return { leadPx: Math.min(200, Math.max(100, viewport * .28)), introPx: Math.min(travelPx * .45, Math.min(520, Math.max(260, viewport * .6))), travelPx, breakpoint: EXPERIENCE_STAGES[0].start };
+    return { leadPx: timelineOnly ? 0 : Math.min(200, Math.max(100, viewport * .28)), introPx: timelineOnly ? 0 : Math.min(travelPx * .45, Math.min(520, Math.max(260, viewport * .6))), travelPx, breakpoint: EXPERIENCE_STAGES[0].start };
 }
 export function experienceScrollProgress(scrolled: number, range: ExperienceScrollRange): number {
     if (range.travelPx <= 0) return 1;
     const offset = Number.isFinite(scrolled) ? scrolled : -range.leadPx;
+    if (range.introPx === 0) return range.breakpoint + (1-range.breakpoint)*clamp(offset/range.travelPx);
     return offset <= range.introPx ? range.breakpoint * clamp((offset + range.leadPx) / (range.introPx + range.leadPx)) : range.breakpoint + (1 - range.breakpoint) * clamp((offset - range.introPx) / (range.travelPx - range.introPx));
 }
 export function experienceScrollOffset(progress: number, range: ExperienceScrollRange): number {
     const p = clamp(Number.isFinite(progress) ? progress : 0);
+    if (range.introPx === 0) return Math.max(0,(p-range.breakpoint)/(1-range.breakpoint))*range.travelPx;
     return p <= range.breakpoint ? p / range.breakpoint * (range.introPx + range.leadPx) - range.leadPx : range.introPx + (p - range.breakpoint) / (1 - range.breakpoint) * (range.travelPx - range.introPx);
 }
 /** One reversible scroll clock keeps the years, distance and reveals in step. */

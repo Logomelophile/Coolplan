@@ -2,6 +2,7 @@ import { sitePath } from '../sitePath';
 import { motionPreference } from './motionPreference';
 import { projectPhotoSize } from './projectPhotos';
 import { ExperienceIntro, type IntroDiagnostics } from './experienceDashboard';
+import { ExperienceOrbit } from './experienceOrbit';
 export { ExperienceIntro } from './experienceDashboard';
 export type { IntroDiagnostics } from './experienceDashboard';
 /**
@@ -45,22 +46,11 @@ export const FEATURED: FeaturedProject[] = [
             { image: '/website/showcase/office-lounge.webp', alt: 'มุมนั่งพักอีกด้านในออฟฟิศเดียวกันกับห้องประชุม', caption: 'อีกมุมของออฟฟิศเดียวกัน' },
         ],
     },
-    {
-        id: 'narasiri', eyebrow: 'RESIDENTIAL / NARASIRI', title: 'บ้านเดี่ยว @ Narasiri',
-        subtitle: 'รายละเอียดที่ต่อเนื่อง จากห้องถึงบันได',
-        text: 'พื้นก้างปลาโทนอ่อน โทนเข้ม และรายละเอียดบันไดในบ้านเดี่ยว Narasiri ภาพจากหน้างานที่ชวนมองพื้นใกล้ขึ้น ทั้งลายไม้ แนวปู และความรู้สึกของแต่ละพื้นที่',
-        chips: ['บ้านพักอาศัย', 'พื้นสองโทน', 'รายละเอียดบันได'],
-        photos: [
-            { image: '/website/showcase/narasiri-light.webp', alt: 'พื้นลายก้างปลาโทนอ่อนในบ้านเดี่ยวโครงการ Narasiri', caption: 'ลายก้างปลาโทนอ่อน' },
-            { image: '/website/showcase/narasiri-dark.webp', alt: 'พื้นลายก้างปลาโทนเข้มริมหน้าต่างในบ้านเดี่ยว Narasiri', caption: 'ลายก้างปลาโทนเข้ม' },
-            { image: '/website/showcase/narasiri-stairs.webp', alt: 'รายละเอียดขั้นบันไดลายไม้และราวบันไดในบ้านเดี่ยว Narasiri', caption: 'รายละเอียดบันได' },
-        ],
-    },
 ];
 const INSTALLATION_PHOTOS: FeaturedPhoto[] = [
-    { image: '/website/showcase/installation-prep.webp', alt: 'ช่าง COOLPLAN กำลังเตรียมและติดตั้งพื้นในหน้างานจริง', caption: 'เตรียมหน้างาน' },
-    { image: '/website/showcase/installation-team.webp', alt: 'ทีมช่างกำลังทำงานติดตั้งพื้นลายไม้', caption: 'ลงมือด้วยทีมช่าง' },
-    { image: '/website/showcase/installation-room.webp', alt: 'ภาพงานติดตั้งพื้นภายในห้องโดยทีมช่าง COOLPLAN', caption: 'ใส่ใจในทุกพื้นที่' },
+    { image: '/website/showcase/installation-room.webp', alt: 'ทีมช่าง COOLPLAN ติดตั้งพื้นภายในห้อง', caption: 'ดูแลงานตั้งแต่เตรียมพื้นที่' },
+    { image: '/website/showcase/preparation-primer.webp', alt: 'ช่างกำลังเตรียมผิวพื้นก่อนติดตั้งบริเวณริมหน้าต่าง', caption: 'เตรียมผิวก่อนติดตั้ง' },
+    { image: '/website/showcase/preparation-leveling.webp', alt: 'ทีมช่างกำลังเก็บรายละเอียดผิวพื้นหน้างานจริง', caption: 'ทีมช่างเก็บรายละเอียดหน้างาน' },
 ];
 export interface FeaturedDiagnostics {
     id: string;
@@ -331,12 +321,14 @@ class FeaturedStoryMotion {
 }
 export class Experience {
     readonly intro: ExperienceIntro | null;
+    readonly orbit: ExperienceOrbit | null;
     private readonly abort = new AbortController();
     private readonly motion = motionPreference;
     private readonly featured: FeaturedStoryMotion[] = [];
     private disposed = false;
     constructor(private readonly root: ParentNode) {
         const intro = root.querySelector<HTMLElement>('#experience-intro');
+        this.orbit = intro ? new ExperienceOrbit(intro) : null;
         this.intro = intro ? new ExperienceIntro(intro) : null;
         this.buildFeatured();
         // One preference event updates every story together, including offscreen stories.
@@ -348,9 +340,10 @@ export class Experience {
     };
     get diagnostics(): {
         intro: IntroDiagnostics | null;
+        orbit: ExperienceOrbit['diagnostics'] | null;
         featured: FeaturedDiagnostics[];
     } {
-        return { intro: this.intro?.diagnostics ?? null, featured: this.featured.map(story => story.diagnostics) };
+        return { intro: this.intro?.diagnostics ?? null, orbit: this.orbit?.diagnostics ?? null, featured: this.featured.map(story => story.diagnostics) };
     }
     private buildFeatured(): void {
         const host = this.root.querySelector<HTMLElement>('#featured .featured-list');
@@ -370,9 +363,16 @@ export class Experience {
         warranty.className = 'featured-warranty';
         warranty.id = 'installation-warranty';
         warranty.setAttribute('aria-labelledby', 'installation-warranty-title');
-        warranty.innerHTML = `<div class="featured-stage"><div class="featured-copy"><span class="featured-eyebrow">OUR CRAFT / OUR PROMISE</span><div class="warranty-years" aria-hidden="true"><strong>10</strong><span>ปี<br><small>INSTALLATION WARRANTY</small></span></div><h3 id="installation-warranty-title">รับประกันการติดตั้ง 10 ปี</h3><p class="warranty-promise">เปลี่ยนให้ฟรี<span aria-hidden="true">↗</span></p><p class="featured-description">เบื้องหลังพื้นที่สวย คือทีมช่างที่ลงมือทำจริง<br>และความตั้งใจดูแลงานที่ส่งมอบ</p><p class="warranty-detail">สอบถามรายละเอียดการรับประกันกับทีมงาน</p></div><div class="featured-media featured-media-3" aria-label="ภาพทีมช่างติดตั้งพื้น COOLPLAN">${this.photoMarkup(INSTALLATION_PHOTOS)}<div class="featured-photo-count" aria-hidden="true"><span>CPW</span><span>คลิกค้างเพื่อลากรูป</span></div></div><div class="featured-story-progress" aria-hidden="true"><span></span></div></div>`;
+        warranty.innerHTML = `<div class="featured-stage"><div class="featured-copy"><span class="featured-eyebrow">03 / PROFESSIONAL INSTALLATION</span><div class="warranty-years" aria-hidden="true"><strong>10</strong><span>ปี<br><small>INSTALLATION WARRANTY</small></span></div><h3 id="installation-warranty-title">ช่างมืออาชีพ
+รับประกันติดตั้ง 10 ปี</h3><p class="warranty-promise">เปลี่ยนให้ฟรี<span aria-hidden="true">↗</span></p><p class="featured-description">ใส่ใจตั้งแต่เตรียมพื้น จนถึงเก็บงาน<br>ด้วยทีมช่างที่ดูแลพื้นที่ของคุณ</p><p class="warranty-detail">สอบถามรายละเอียดการรับประกันกับทีมงาน</p></div><div class="featured-media featured-media-3" aria-label="ภาพทีมช่างติดตั้งพื้น COOLPLAN">${this.photoMarkup(INSTALLATION_PHOTOS)}<div class="featured-photo-count" aria-hidden="true"><span>CPW</span><span>คลิกค้างเพื่อลากรูป</span></div></div><div class="featured-story-progress" aria-hidden="true"><span></span></div></div>`;
         host.append(warranty);
         this.featured.push(new FeaturedStoryMotion(warranty, 'warranty', this.motion.matches));
+        const preparation=document.createElement('section');preparation.className='installation-preparation';preparation.setAttribute('aria-labelledby','installation-preparation-title');
+        preparation.innerHTML=`<header><span class="featured-eyebrow">BEFORE EVERY FLOOR</span><h3 id="installation-preparation-title">พื้นสวย เริ่มจากฐานที่เรียบ</h3><p>เลือกวิธีเตรียมพื้นให้เหมาะกับสภาพหน้างาน ก่อนเริ่มติดตั้งจริง</p></header><ol>${[
+            ['ปรับ Self-leveling','ปรับระดับพื้นให้ได้ระนาบ พร้อมสำหรับงานติดตั้ง'],
+            ['ปรับสกิมพื้น','เก็บรอยและผิวพื้น ให้พร้อมรับวัสดุปูพื้น'],
+            ['ปรับไล้พื้น','ไล้เก็บรายละเอียดผิวพื้นให้เรียบ ก่อนปูจริง'],
+        ].map(([title,text],i)=>`<li><span>0${i+1}</span><h4>${title}</h4><p>${text}</p></li>`).join('')}</ol>`;host.append(preparation);
     }
     private photoMarkup(photos: FeaturedPhoto[]): string {
         return photos.map((photo, index) => { const size = projectPhotoSize(photo.image); return `<figure class="featured-photo featured-photo-${index + 1}${size.portrait ? ' is-portrait' : ''}" style="--photo-ratio:${size.ratio}" tabindex="0" role="button" aria-pressed="false" aria-label="${photo.caption} · คลิกค้างเพื่อลากรูป ใช้ปุ่มลูกศรเพื่อขยับ และ Home เพื่อคืนตำแหน่ง"><div class="featured-photo-image"><img src="${sitePath(photo.image)}" alt="${photo.alt}" loading="lazy" decoding="async" draggable="false" width="${size.width}" height="${size.height}" /></div><figcaption><span>${String(index + 1).padStart(2, '0')}</span>${photo.caption}</figcaption></figure>`; }).join('');
@@ -382,6 +382,7 @@ export class Experience {
             return;
         this.disposed = true;
         this.intro?.dispose();
+        this.orbit?.dispose();
         this.featured.forEach(story => story.dispose());
         this.abort.abort();
     }
