@@ -602,3 +602,50 @@
   -webkit-line-clamp: unset;
   overflow: visible;
 }
+
+/* Give each full photo pile and completed gauge time to be seen before docking. */
+.experience-scroll { height: 900svh; }
+#experience-intro .experience-counter {
+  left: 0;
+  top: 0;
+  right: auto;
+  width: max-content;
+  max-width: 90%;
+  z-index: 8!important;
+  opacity: var(--counter-reveal,0)!important;
+  text-align: center;
+  will-change: transform;
+}
+#experience-intro .experience-counter > span {
+  display: block;
+  font-size: calc(12px + var(--gather,0) * 6px);
+  line-height: 1.6;
+  color: color-mix(in srgb,#8d719b calc((1 - var(--gather,0)) * 100%),#e4caeb);
+}
+#experience-intro .experience-counter > div { display: flex; align-items: baseline; justify-content: center; gap: 8px; }
+#experience-intro .experience-counter strong {
+  font: 500 var(--counter-size,32px)/1.08 Arial,sans-serif;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.045em;
+  color: color-mix(in srgb,#684276 calc((1 - var(--gather,0)) * 100%),#fff)!important;
+  -webkit-text-stroke: 0;
+}
+#experience-intro .experience-counter small {
+  font-size: calc(10px + var(--gather,0) * 4px);
+  color: color-mix(in srgb,#8d719b calc((1 - var(--gather,0)) * 100%),#f0d4c0);
+  white-space: nowrap;
+}
+#experience-intro.is-reduced .experience-counter {
+  position: relative;
+  grid-row: 1;
+  justify-self: center;
+  transform: none!important;
+  z-index: 8!important;
+  opacity: 1!important;
+}
+#experience-intro.is-reduced .experience-dashboard-heading { display: none; }
+@media(max-width:850px) {
+  #experience-intro .experience-counter > span { font-size: calc(9px + var(--gather,0) * 5px); }
+  #experience-intro .experience-counter > div { gap: 5px; }
+  #experience-intro .experience-counter small { font-size: calc(8px + var(--gather,0) * 4px); }
+}

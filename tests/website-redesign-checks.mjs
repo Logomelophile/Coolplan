@@ -13,6 +13,7 @@ export async function verifyRedesign(page, { initialize, state, check, outputPat
     const originalYear = await page.locator('.experience-era strong').elementHandle();
     const originalRing = await page.locator('.experience-ring').first().elementHandle();
     const originalPhoto = await page.locator('.experience-pile-photo').first().elementHandle();
+    const originalCounter = await page.locator('.experience-counter strong').elementHandle();
     await seek(.22);
     assert.equal(await originalYear.innerText(), '2005');
     assert.equal(await page.locator('.experience-era').evaluate(el => getComputedStyle(el).opacity), '1');
@@ -22,12 +23,24 @@ export async function verifyRedesign(page, { initialize, state, check, outputPat
     const pile = await page.locator('.experience-pile-photo[data-story="0"]').evaluateAll(photos => { const r = photos.map(p => p.getBoundingClientRect()); return { large: r.every(p => p.width > 220), overlap: r.every((p, i) => r.some((q, j) => i !== j && Math.min(p.right, q.right) > Math.max(p.left, q.left) + 35)) }; });
     assert.ok(pile.large && pile.overlap, 'Large photographs pile together on the right');
     await page.screenshot({ path: outputPath('redesign-large-experience.png') });
+    const smallCounterSize = await originalCounter.evaluate(el => parseFloat(getComputedStyle(el).fontSize));
+    for (const [index, position] of [.46, .68, .9].entries()) {
+        await seek(position);
+        const frame = (await state()).experience.intro;
+        assert.equal(frame.rings[index], 1, 'Each ring finishes while it is still large');
+        assert.equal(frame.archived[index], 0, 'Completed circles and photos have a resting interval');
+        assert.deepEqual(frame.photos.slice(index * 3, index * 3 + 3), [1, 1, 1]);
+        assert.equal(Number(await page.locator('.experience-ring-arc').nth(index).evaluate(el => el.style.strokeDashoffset)), 0);
+    }
     await seek(.64);
     assert.deepEqual((await state()).experience.intro.archived, [1, 0, 0]);
     assert.equal(await page.locator('.experience-pile-photo[data-story="0"]').evaluateAll(items => items.every(el => getComputedStyle(el).opacity === '1')), true);
     await page.locator('.experience-scene-footer a[href="#experience-evidence"]').click();
     await page.waitForFunction(() => { const d = window.websiteDemo.diagnostics.experience.intro; return d.gather === 1 && d.proof === 1 && !d.animating; });
-    assert.deepEqual((await state()).experience.intro.counters, [21, 175900, 10]);
+    assert.deepEqual((await state()).experience.intro.counters, [21, 175000, 10]);
+    assert.equal(await originalCounter.innerText(), '175,000');
+    assert.ok(await originalCounter.evaluate(el => parseFloat(getComputedStyle(el).fontSize)) > smallCounterSize * 2);
+    assert.equal(await page.locator('.experience-dashboard-heading').evaluate(el => getComputedStyle(el).opacity), '0');
     assert.equal((await state()).experience.intro.gather, 1);
     assert.equal(await originalRing.evaluate(el => el.isConnected && el === document.querySelector('.experience-ring')), true);
     assert.equal(await originalPhoto.evaluate(el => el.isConnected && el === document.querySelector('.experience-pile-photo')), true);
@@ -44,6 +57,7 @@ export async function verifyRedesign(page, { initialize, state, check, outputPat
     assert.equal((await state()).experience.intro.archived[0], 0);
     assert.ok(await originalRing.evaluate(el => el.getBoundingClientRect().width) > 145);
     check('Entry types from zero before the year appears; large gauges and three-photo piles archive and collect as the same DOM nodes into a framed dashboard, with reversible scroll and working project names.');
+    check('All three gauges and photo piles finish before docking; the same area counter grows into the final 175,000 headline.');
     await page.setViewportSize({ width: 1920, height: 900 });
     await page.locator('#collections').evaluate(e => e.scrollIntoView({ behavior: 'instant' }));
     assert.equal(await page.locator('.collections-grid').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length), 5, 'Desktop catalogue has five compact product cards per row');
@@ -152,6 +166,16 @@ export async function verifyRedesign(page, { initialize, state, check, outputPat
     assert.equal((await state()).preview.finish, mainPreview.finish);
     assert.equal((await state()).preview.pattern, mainPreview.pattern, 'Estimator room selection stays separate from the main visualizer');
     await page.screenshot({ path: outputPath('compact-spec-room-preview.png') });
+    await page.locator('#package-specs').evaluate(el => scrollTo({ top: el.getBoundingClientRect().top + scrollY + 260, behavior: 'instant' }));
+    const columnTops = () => page.evaluate(() => ['.package-preview-stack', '.package-spec-controls', '.package-estimate-slot'].map(selector => document.querySelector(selector).getBoundingClientRect().top));
+    const beforeScroll = await columnTops();
+    await page.mouse.move(1100, 450);
+    await page.mouse.wheel(0, 180);
+    await page.waitForTimeout(250);
+    const afterScroll = await columnTops();
+    const deltas = afterScroll.map((top, index) => top - beforeScroll[index]);
+    assert.ok(deltas.every(delta => delta < -100 && Math.abs(delta - deltas[0]) < 2), 'All estimator columns move together');
+    check('Material/room preview, specification controls and price move together without a pinned left column.');
     check('Estimator rooms follow actual catalogue shades and lay-up, retain the room above the floor, and do not change prices or the independent main visualizer.');
     check('The horizontal multi-filter covers all catalogue sizes and every price row; a complete visual spec picker and draggable 3D sample share the live estimator, preserve fee arithmetic and carry selections into quote/package enquiries.');
     for (const viewport of [{ width: 622, height: 532 }, { width: 844, height: 390 }]) {
@@ -171,7 +195,7 @@ export async function verifyRedesign(page, { initialize, state, check, outputPat
         assert.equal((await state()).experience.intro.archived[0], 1);
         await page.mouse.wheel(0, travel * .37);
         await page.waitForFunction(() => { const d = window.websiteDemo.diagnostics.experience.intro; return d.gather === 1 && !d.animating; });
-        assert.equal((await state()).experience.intro.counter, 175900);
+        assert.equal((await state()).experience.intro.counter, 175000);
         assert.equal(await page.locator('.experience-checks li.is-checked').count(), 4);
         await page.screenshot({ path: outputPath(`redesign-summary-${viewport.width}x${viewport.height}.png`) });
         await page.mouse.wheel(0, -travel * .58);

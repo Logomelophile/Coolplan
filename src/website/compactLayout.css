@@ -34,7 +34,7 @@
 #package-specs .package-specs-heading h2 { font-size: clamp(28px, 2.8vw, 43px); line-height: 1.45; }
 #package-specs .package-specs-heading p { font-size: 12px; }
 #package-specs .package-specs-grid { grid-template-columns: minmax(0, .95fr) minmax(0, 1.1fr); gap: 18px 24px; }
-.package-preview-stack { grid-column: 1; grid-row: 1/3; display: grid; gap: 14px; position: sticky; top: 82px; min-width: 0; align-self: start; }
+.package-preview-stack { grid-column: 1; grid-row: 1/3; display: grid; gap: 14px; position: relative; min-width: 0; align-self: start; }
 #package-specs .package-model { position: relative; top: auto; grid-column: auto; grid-row: auto; padding: 17px 19px; border-radius: 18px; }
 #package-specs .package-model-view { height: clamp(135px, 18svh, 195px); }
 #package-specs .package-model-view:has(.package-model-canvas[data-rendered-texture]) .package-model-fallback { visibility: hidden; }

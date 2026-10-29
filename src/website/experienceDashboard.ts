@@ -1,16 +1,16 @@
 import { COMPANY, PACKAGES } from './catalog';
 import { motionPreference } from './motionPreference';
-import { experienceFrame, EXPERIENCE_END_YEAR } from './experienceTimeline';
+import { experienceFrame, EXPERIENCE_END_YEAR, EXPERIENCE_TOTAL_SQM, EXPERIENCE_GATHER_START, EXPERIENCE_STAGES } from './experienceTimeline';
 import { sitePath } from '../sitePath';
 const METRICS = [
     { value: COMPANY.years, unit: 'ปี', suffix: '', label: 'ประสบการณ์งานพื้น', detail: `ดูแลงานพื้นมาตั้งแต่ปี ${COMPANY.since}`, code: '01 / EXPERIENCE' },
-    { value: COMPANY.totalSqm, unit: 'ตร.ม.', suffix: '+', label: 'พื้นที่ที่ส่งมอบ', detail: 'บ้านจัดสรร คอนโด และพื้นที่ของคุณ', code: '02 / PROJECTS' },
+    { value: EXPERIENCE_TOTAL_SQM, unit: 'ตร.ม.', suffix: '', label: 'พื้นที่ที่ส่งมอบ', detail: 'บ้านจัดสรร คอนโด และพื้นที่ของคุณ', code: '02 / PROJECTS' },
     { value: PACKAGES[0].warrantyYears, unit: 'ปี', suffix: '', label: 'รับประกันการติดตั้ง', detail: 'ติดตั้งและดูแลด้วยทีมช่างของเรา', code: '03 / CARE' },
 ];
 const MILESTONES = [
-    { position: 14, seek: .43, label: 'ประสบการณ์', title: 'จากประสบการณ์ สู่ทุกหน้างาน', text: 'ตั้งแต่ปี 2005 เราดูแลงานพื้นทั้งการเลือกวัสดุ เตรียมพื้นที่ และติดตั้งด้วยทีมช่างของเราเอง เก็บรายละเอียดจากหน้างานจริงในทุกขั้นตอน' },
-    { position: 48, seek: .64, label: 'บ้านจัดสรรและคอนโด', title: 'เบื้องหลังพื้นที่อยู่อาศัย', text: 'จากบ้านเดี่ยว Narasiri สู่โครงการคอนโดอย่าง Origin และ Regent Home ประสบการณ์ที่ต่อเนื่องทั้งงานโครงการและรายละเอียดภายในบ้าน' },
-    { position: 82, seek: .82, label: 'ลูกค้ารายย่อย', title: 'ใส่ใจในพื้นที่ของคุณ', text: 'บ้านพัก คาเฟ่ และออฟฟิศ ทุกพื้นที่เริ่มจากการพูดคุย เลือกลายที่เหมาะกับการใช้งาน และดูแลตั้งแต่ติดตั้งจนส่งมอบ' },
+    { position: 14, label: 'ประสบการณ์', title: 'จากประสบการณ์ สู่ทุกหน้างาน', text: 'ตั้งแต่ปี 2005 เราดูแลงานพื้นทั้งการเลือกวัสดุ เตรียมพื้นที่ และติดตั้งด้วยทีมช่างของเราเอง เก็บรายละเอียดจากหน้างานจริงในทุกขั้นตอน' },
+    { position: 48, label: 'บ้านจัดสรรและคอนโด', title: 'เบื้องหลังพื้นที่อยู่อาศัย', text: 'จากบ้านเดี่ยว Narasiri สู่โครงการคอนโดอย่าง Origin และ Regent Home ประสบการณ์ที่ต่อเนื่องทั้งงานโครงการและรายละเอียดภายในบ้าน' },
+    { position: 82, label: 'ลูกค้ารายย่อย', title: 'ใส่ใจในพื้นที่ของคุณ', text: 'บ้านพัก คาเฟ่ และออฟฟิศ ทุกพื้นที่เริ่มจากการพูดคุย เลือกลายที่เหมาะกับการใช้งาน และดูแลตั้งแต่ติดตั้งจนส่งมอบ' },
 ];
 const PHOTOS = [
     { file: 'installation-team', caption: 'ทีมช่างระหว่างติดตั้ง', x: .04, y: .05, angle: -6 },
@@ -61,6 +61,8 @@ export class ExperienceIntro {
     private readonly scroll: HTMLElement;
     private readonly evidence: HTMLElement;
     private readonly counter: HTMLElement;
+    private readonly counterWrap: HTMLElement;
+    private counterPose = { x: 24, y: 180, endX: 0, endY: 30, baseSize: 32, finalSize: 112 };
     private readonly panels: HTMLElement[];
     private readonly arcs: SVGCircleElement[];
     private readonly values: HTMLElement[];
@@ -107,6 +109,7 @@ export class ExperienceIntro {
         this.scroll = section.querySelector<HTMLElement>('.experience-scroll')!;
         this.evidence = section.querySelector<HTMLElement>('.experience-evidence')!;
         this.counter = section.querySelector<HTMLElement>('.experience-counter strong')!;
+        this.counterWrap = section.querySelector<HTMLElement>('.experience-counter')!;
         this.heading = section.querySelector<HTMLElement>('.experience-dashboard-heading')!;
         this.typed = Array.from(section.querySelectorAll<HTMLElement>('.experience-typed'));
         const segmenter = new Intl.Segmenter('th', { granularity: 'grapheme' });
@@ -245,6 +248,7 @@ export class ExperienceIntro {
         // The line has its own entrance translate; docking targets use its final layout position.
         const lineEntranceY = parseFloat(getComputedStyle(this.section.querySelector('.experience-years')!).translate.split(' ')[1]) || 0;
         const anchor = this.section.querySelector('.experience-era-anchor')!.getBoundingClientRect();
+        this.counterPose = { x: Math.max(12, this.sticky.clientWidth * .025), y: anchor.bottom - stage.top - lineEntranceY + 22, endX: this.sticky.clientWidth * .5, endY: Math.max(18, this.sticky.clientHeight * .045), baseSize: this.sticky.clientWidth <= 850 ? 24 : 32, finalSize: Math.min(112, this.sticky.clientWidth * .13, this.sticky.clientHeight * .14) };
         const fontSize = parseFloat(getComputedStyle(this.era.querySelector('strong')!).fontSize);
         this.eraPose = { startX: this.sticky.clientWidth * .5, startY: this.sticky.clientHeight * .54, endX: anchor.left + anchor.width / 2 - stage.left, endY: anchor.top + anchor.height / 2 - stage.top - lineEntranceY, scale: 10 / fontSize };
         const scene = this.section.querySelector('.experience-scene')!.getBoundingClientRect();
@@ -301,7 +305,7 @@ export class ExperienceIntro {
         this.flow = travel <= 0;
         this.section.classList.toggle('is-flow', this.flow);
         this.target = travel > 0 ? Math.max(0, Math.min(1, -rect.top / travel)) : 1;
-        this.proofTarget = Math.max(0, Math.min(1, (this.target - .91) / .085));
+        this.proofTarget = Math.max(0, Math.min(1, (this.target - EXPERIENCE_GATHER_START) / (1 - EXPERIENCE_GATHER_START)));
     }
     private seekMilestone(index: number): void {
         if (this.reduced || this.flow) {
@@ -309,7 +313,7 @@ export class ExperienceIntro {
             return;
         }
         const travel = this.scroll.offsetHeight - this.sticky.offsetHeight;
-        window.scrollTo({ top: this.scroll.getBoundingClientRect().top + window.scrollY + travel * MILESTONES[index].seek, behavior: 'smooth' });
+        window.scrollTo({ top: this.scroll.getBoundingClientRect().top + window.scrollY + travel * EXPERIENCE_STAGES[index].seek, behavior: 'smooth' });
     }
     private stop(): void { cancelAnimationFrame(this.raf); this.raf = 0; }
     private onVisibility = (): void => {
@@ -342,8 +346,8 @@ export class ExperienceIntro {
         this.raf = 0;
         if (this.disposed || this.reduced || !this.visible || document.hidden)
             return;
-        this.progress += (this.target - this.progress) * .2;
-        this.proofProgress += (this.proofTarget - this.proofProgress) * .2;
+        this.progress += (this.target - this.progress) * .1;
+        this.proofProgress += (this.proofTarget - this.proofProgress) * .1;
         if (Math.abs(this.target - this.progress) < .0004)
             this.progress = this.target;
         if (Math.abs(this.proofTarget - this.proofProgress) < .0004)
@@ -357,19 +361,25 @@ export class ExperienceIntro {
     private render(): void {
         const frame = experienceFrame(this.progress, this.proofProgress);
         this.counter.textContent = frame.counter.toLocaleString('th-TH');
+        const gather = this.reduced ? 1 : frame.gather, counter = this.counterPose;
+        this.counterWrap.style.setProperty('--counter-reveal', String(this.reduced ? 1 : frame.counterReveal));
+        this.counterWrap.style.setProperty('--counter-size', `${counter.baseSize + (counter.finalSize - counter.baseSize) * gather}px`);
+        this.counterWrap.style.transform = `translate3d(${counter.x + (counter.endX - counter.x) * gather}px,${counter.y + (counter.endY - counter.y) * gather}px,0) translateX(${-50 * gather}%)`;
+        this.counterWrap.setAttribute('aria-hidden', String(!this.reduced && frame.counterReveal === 0));
+        this.heading.style.opacity = String(1 - gather);
         this.section.style.setProperty('--dashboard-progress', this.progress.toFixed(4));
         this.section.style.setProperty('--header-dock', frame.dock.toFixed(4));
         this.section.style.setProperty('--gather', (this.reduced ? 0 : frame.gather).toFixed(4));
         this.section.classList.toggle('is-gathered', frame.gather > .98 && !this.reduced);
         this.evidence.inert = !this.reduced && frame.gather < .95;
-        this.era.style.opacity = String(frame.era);
+        this.era.style.opacity = String(frame.era * (1 - gather));
         this.section.style.setProperty('--era-opacity', frame.era.toFixed(4));
         this.section.style.setProperty('--era-dock', frame.eraDock.toFixed(4));
         const era = this.eraPose, dock = frame.eraDock;
         this.era.style.transform = `translate3d(${era.startX + (era.endX - era.startX) * dock}px,${era.startY + (era.endY - era.startY) * dock}px,0) translate(-50%,-50%) scale(${1 + (era.scale - 1) * dock})`;
         this.section.style.setProperty('--timeline-reveal', frame.timelineReveal.toFixed(4));
         this.section.style.setProperty('--marquee-reveal', frame.marquee.toFixed(4));
-        this.section.classList.toggle('is-counted', frame.counter === COMPANY.totalSqm);
+        this.section.classList.toggle('is-counted', frame.counter === EXPERIENCE_TOTAL_SQM);
         this.typedFractions = [Math.max(frame.head, Math.min(1, this.entryTyping / .7)), Math.max(frame.sub, Math.max(0, (this.entryTyping - .25) / .75))];
         this.typedFractions.forEach((fraction, index) => {
             const minimum = 0;
