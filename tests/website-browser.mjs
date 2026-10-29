@@ -247,7 +247,7 @@ try {
 
   // The short headline is always readable; native scroll drives the dashboard and background count.
   const introTop = await page.evaluate(() => document.getElementById('experience-intro').getBoundingClientRect().top + scrollY);
-  const introHeight = await page.evaluate(() => document.getElementById('experience-intro').offsetHeight);
+  const introHeight = await page.evaluate(() => document.querySelector('.experience-scroll').offsetHeight);
   await page.evaluate(({ top, height }) => scrollTo({ top: top + (height - innerHeight) * .12, behavior: 'instant' }), { top: introTop, height: introHeight });
   await page.waitForFunction(() => { const i = window.websiteDemo.diagnostics.experience?.intro; return i && !i.animating && Math.abs(i.progress - .12) < .01; });
   const introEarly = await page.evaluate(() => window.websiteDemo.diagnostics.experience.intro);
@@ -262,12 +262,34 @@ try {
   assert.equal(await page.locator('.experience-counter strong').innerText(), '175,900');
   assert.deepEqual(await page.locator('.experience-typed').allInnerTexts(), ['เบื้องหลังความสมบูรณ์แบบ', 'ของโครงการชั้นนำ']);
   assert.notEqual(earlyTitle.join(''), (await page.locator('.experience-typed').allInnerTexts()).join(''), 'Actual text grows with scroll');
-  assert.equal(await page.locator('.experience-years-point b').innerText(), '2026');
+  assert.equal(await page.locator('.experience-year-end span').innerText(), '2026');
+  assert.equal((await state()).experience.intro.year, 2026);
   assert.equal((await state()).experience.intro.timeline, 1);
   assert.match(await page.locator('.experience-stat.is-active .experience-stat-label').innerText(), /รับประกันการติดตั้ง/);
   const fullArcs = await page.locator('.experience-ring-arc').evaluateAll(arcs => arcs.map(arc => parseFloat(getComputedStyle(arc).strokeDashoffset)));
   assert.ok(fullArcs.every((offset, index) => offset <= earlyArcs[index]) && fullArcs[2] < earlyArcs[2] - 80, 'Circular gauges visibly fill as the page advances');
-  assert.deepEqual(await page.locator('.experience-ring-value strong').allInnerTexts(), ['175,900+', '21', '10']);
+  assert.deepEqual(await page.locator('.experience-ring-value strong').allInnerTexts(), ['21', '175,900+', '10']);
+  assert.equal(await page.locator('.experience-milestone-node').count(), 3);
+  const timelinePresentation = await page.evaluate(() => {
+    const line = document.querySelector('.experience-years-track').getBoundingClientRect();
+    return { left: line.left, right: line.right, width: innerWidth, stroke: parseFloat(getComputedStyle(document.querySelector('.experience-ring-arc')).strokeWidth) };
+  });
+  assert.ok(timelinePresentation.left <= 28 && timelinePresentation.right >= timelinePresentation.width - 28 && timelinePresentation.stroke >= 12, 'The timeline spans the screen and dashboard tubes are thicker');
+  const pileLayout = await page.evaluate(() => {
+    const dashboard = document.querySelector('.experience-dashboard').getBoundingClientRect();
+    const pile = document.querySelector('.experience-photo-pile').getBoundingClientRect();
+    const photos = [...document.querySelectorAll('.experience-pile-photo')].map(photo => photo.getBoundingClientRect());
+    return { leftDashboard: dashboard.right < pile.left, bounded: photos.every(r => r.left >= pile.left - 1 && r.right <= pile.right + 1 && r.top >= pile.top - 1 && r.bottom <= pile.bottom + 1), overlapping: photos.some((r,i) => photos.slice(i+1).some(s => Math.min(r.right,s.right)>Math.max(r.left,s.left)+20 && Math.min(r.bottom,s.bottom)>Math.max(r.top,s.top)+20)) };
+  });
+  assert.ok(pileLayout.leftDashboard && pileLayout.bounded && pileLayout.overlapping, 'The photo pile stays inside its frame beside the left dashboard');
+  assert.equal(await page.locator('.experience-pile-photo img').count(), 6);
+  await page.waitForFunction(() => [...document.querySelectorAll('.experience-pile-photo img')].every(img => img.complete && img.naturalWidth > 0));
+  await page.screenshot({ path: outputPath('experience-dashboard-desktop.png') });
+  await page.locator('.experience-milestone-node').nth(1).click();
+  await page.waitForFunction(() => { const d=window.websiteDemo.diagnostics.experience.intro;return d.active===1&&Math.abs(d.progress-.54)<.01&&!d.animating; });
+  assert.match(await page.locator('.experience-milestone-copy[aria-hidden="false"]').innerText(), /บ้านเดี่ยว Narasiri.*Origin.*Regent Home/s);
+  await page.locator('#experience-evidence').evaluate(el => el.scrollIntoView({block:'center',behavior:'instant'}));
+  await page.waitForFunction(() => {const d=window.websiteDemo.diagnostics.experience.intro;return d.proof>.99&&!d.animating;});
   assert.equal(await page.locator('.experience-checks li.is-checked').count(), 4);
   await page.mouse.move(0, 0);
   await page.waitForFunction(() => window.websiteDemo.diagnostics.experience.intro.marqueeRunning);
@@ -280,7 +302,7 @@ try {
   await page.waitForTimeout(180);
   assert.equal(await projectTrack.evaluate(el => getComputedStyle(el).transform), pausedProjects, 'Project marquee can be paused');
   await page.locator('.experience-projects-toggle').click();
-  await page.screenshot({ path: outputPath('experience-dashboard-desktop.png') });
+  await page.screenshot({ path: outputPath('experience-evidence-desktop.png') });
   await page.evaluate(({ top, height }) => scrollTo({ top: top + (height - innerHeight) * .25, behavior: 'instant' }), { top: introTop, height: introHeight });
   await page.waitForFunction(() => { const i = window.websiteDemo.diagnostics.experience?.intro; return i && !i.animating && i.active === 0 && i.counter < 175900; });
   assert.ok(await page.locator('.experience-ring-arc').last().evaluate(arc => parseFloat(getComputedStyle(arc).strokeDashoffset)) > fullArcs[2] + 80, 'Circular gauges rewind with scroll');
@@ -314,7 +336,7 @@ try {
   });
   assert.ok(pricingOrder.specsFirst && pricingOrder.packagesFirst && pricingOrder.columns === 4, 'The visual spec selector comes before the restored three-package table, followed by the calculator');
   await page.screenshot({ path: outputPath('pricing-desktop.png'), fullPage: false });
-  check('White experience story types staggered centred copy, connects 2005–2026 to the area counter, reveals circular gauges, a pausable project marquee and four proof boxes; scrolling back reverses the story.');
+  check('The full-width purple/orange timeline reveals three project stories, thick orange gauges on the left and six real photos that pile up on the right; milestone controls, pausable project names and proof boxes work reversibly.');
 
   await page.locator('[data-spec-thickness="4"]').click();
   await page.waitForFunction(() => window.websiteDemo.diagnostics.pricing.rowIndex === 0);
@@ -416,7 +438,7 @@ try {
   assert.equal(await logoGroups.last().isVisible(), false);
   assert.equal(await page.locator('.client-logos-toggle').isVisible(), false);
   assert.equal(await page.locator('#installation-warranty .featured-photo').count(), 3);
-  assert.deepEqual(await page.locator('.experience-ring-value strong').allInnerTexts(), ['175,900+', '21', '10']);
+  assert.deepEqual(await page.locator('.experience-ring-value strong').allInnerTexts(), ['21', '175,900+', '10']);
   await page.screenshot({ path: outputPath('warranty-reduced-motion-mobile.png') });
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
