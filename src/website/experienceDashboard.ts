@@ -9,16 +9,19 @@ const METRICS = [
   { value: PACKAGES[0].warrantyYears, unit: 'ปี', suffix: '', label: 'รับประกันการติดตั้ง', detail: 'ติดตั้งและดูแลด้วยทีมช่างของเรา', code: '03 / CARE' },
 ];
 const MILESTONES = [
-  { position: 12, seek: .32, label: 'ประสบการณ์', title: 'จากประสบการณ์ สู่ทุกหน้างาน', text: 'ตั้งแต่ปี 2005 เราดูแลงานพื้นทั้งการเลือกวัสดุ เตรียมพื้นที่ และติดตั้งด้วยทีมช่างของเราเอง เก็บรายละเอียดจากหน้างานจริงในทุกขั้นตอน' },
-  { position: 48, seek: .54, label: 'บ้านจัดสรรและคอนโด', title: 'เบื้องหลังพื้นที่อยู่อาศัย', text: 'จากบ้านเดี่ยว Narasiri สู่โครงการคอนโดอย่าง Origin และ Regent Home ประสบการณ์ที่ต่อเนื่องทั้งงานโครงการและรายละเอียดภายในบ้าน' },
-  { position: 80, seek: .78, label: 'ลูกค้ารายย่อย', title: 'ใส่ใจในพื้นที่ของคุณ', text: 'บ้านพัก คาเฟ่ และออฟฟิศ ทุกพื้นที่เริ่มจากการพูดคุย เลือกลายที่เหมาะกับการใช้งาน และดูแลตั้งแต่ติดตั้งจนส่งมอบ' },
+  { position: 14, seek: .48, label: 'ประสบการณ์', title: 'จากประสบการณ์ สู่ทุกหน้างาน', text: 'ตั้งแต่ปี 2005 เราดูแลงานพื้นทั้งการเลือกวัสดุ เตรียมพื้นที่ และติดตั้งด้วยทีมช่างของเราเอง เก็บรายละเอียดจากหน้างานจริงในทุกขั้นตอน' },
+  { position: 48, seek: .7, label: 'บ้านจัดสรรและคอนโด', title: 'เบื้องหลังพื้นที่อยู่อาศัย', text: 'จากบ้านเดี่ยว Narasiri สู่โครงการคอนโดอย่าง Origin และ Regent Home ประสบการณ์ที่ต่อเนื่องทั้งงานโครงการและรายละเอียดภายในบ้าน' },
+  { position: 82, seek: .94, label: 'ลูกค้ารายย่อย', title: 'ใส่ใจในพื้นที่ของคุณ', text: 'บ้านพัก คาเฟ่ และออฟฟิศ ทุกพื้นที่เริ่มจากการพูดคุย เลือกลายที่เหมาะกับการใช้งาน และดูแลตั้งแต่ติดตั้งจนส่งมอบ' },
 ];
 const PHOTOS = [
   { file: 'installation-team', caption: 'ทีมช่างระหว่างติดตั้ง', x: .04, y: .05, angle: -6 },
   { file: 'installation-prep', caption: 'เตรียมพื้นจากหน้างานจริง', x: .65, y: .24, angle: 5 },
+  { file: 'installation-room', caption: 'ติดตั้งพื้นภายในห้อง', x: .36, y: .58, angle: -3 },
   { file: 'narasiri-light', caption: 'บ้านเดี่ยว @ Narasiri', x: .12, y: .6, angle: -5 },
   { file: 'narasiri-dark', caption: 'อีกมุมของบ้าน Narasiri', x: .9, y: .04, angle: 6 },
+  { file: 'narasiri-stairs', caption: 'บันไดบ้าน @ Narasiri', x: .4, y: .4, angle: -2 },
   { file: 'cafe-herringbone', caption: 'คาเฟ่ลายก้างปลา', x: .25, y: .16, angle: -4 },
+  { file: 'cafe-herringbone-top', caption: 'อีกมุมของคาเฟ่เดียวกัน', x: .8, y: .08, angle: 5 },
   { file: 'office-meeting', caption: 'Office · ห้องประชุม', x: .68, y: .65, angle: 3 },
 ];
 
@@ -26,6 +29,7 @@ export interface IntroDiagnostics {
   progress: number; counter: number; active: number; panels: number; animating: boolean;
   rings: number[]; counters: number[]; typed: number[]; year: number; timeline: number; checks: number[]; marqueeRunning: boolean;
   milestones: number[]; photos: number[]; proof: number;
+  mode: 'scroll' | 'flow'; reduced: boolean;
 }
 
 /** Typing, years and dashboard share a reversible native-scroll timeline. */
@@ -42,6 +46,9 @@ export class ExperienceIntro {
   private readonly typed: HTMLElement[];
   private readonly characters: string[][];
   private readonly openingHeadLength: number;
+  private readonly glyphs: HTMLSpanElement[];
+  private readonly typedPrefixes: Text[];
+  private readonly typedCounts = [-1, -1];
   private readonly yearPoint: HTMLElement;
   private readonly yearFill: HTMLElement;
   private readonly checks: HTMLElement[];
@@ -73,6 +80,13 @@ export class ExperienceIntro {
     const segmenter = new Intl.Segmenter('th', { granularity: 'grapheme' });
     this.openingHeadLength = Array.from(segmenter.segment('เบื้องหลัง')).length;
     this.characters = Array.from(section.querySelectorAll<HTMLElement>('.experience-title-placeholder'), line => Array.from(segmenter.segment(line.textContent ?? ''), part => part.segment));
+    this.typedPrefixes = this.typed.map(() => document.createTextNode(''));
+    this.glyphs = this.typed.map((line, index) => {
+      const glyph = document.createElement('span');
+      glyph.className = 'experience-typing-glyph';
+      line.replaceChildren(this.typedPrefixes[index], glyph);
+      return glyph;
+    });
     this.yearFill = section.querySelector<HTMLElement>('.experience-years-fill')!;
     this.yearPoint = section.querySelector<HTMLElement>('.experience-years-point')!;
     section.querySelector('.experience-year-start span')!.textContent = String(COMPANY.since);
@@ -93,7 +107,7 @@ export class ExperienceIntro {
     story.innerHTML = MILESTONES.map((milestone, index) => `<article class="experience-milestone-copy"><span>0${index + 1} / ${milestone.label}</span><h3>${milestone.title}</h3><p>${milestone.text}</p></article>`).join('');
     this.stories = Array.from(story.children) as HTMLElement[];
     this.pile = section.querySelector<HTMLElement>('.experience-photo-pile')!;
-    this.pile.innerHTML = PHOTOS.map(photo => `<figure class="experience-pile-photo"><img src="${sitePath(`/website/showcase/${photo.file}.webp`)}" alt="${photo.caption}" loading="lazy" decoding="async" width="960" height="720"/><figcaption>${photo.caption}</figcaption></figure>`).join('');
+    this.pile.innerHTML = PHOTOS.map((photo, index) => `<figure class="experience-pile-photo" data-story="${Math.floor(index / 3)}"><img src="${sitePath(`/website/showcase/${photo.file}.webp`)}" alt="${photo.caption}" loading="lazy" decoding="async" width="960" height="720"/><figcaption>${photo.caption}</figcaption></figure>`).join('');
     this.photos = Array.from(this.pile.children) as HTMLElement[];
     this.checks = Array.from(section.querySelectorAll<HTMLElement>('.experience-checks li'));
     this.projectButton = section.querySelector<HTMLButtonElement>('.experience-projects-toggle')!;
@@ -121,6 +135,7 @@ export class ExperienceIntro {
     document.addEventListener('visibilitychange', this.onVisibility, { signal });
     motionPreference.addEventListener('change', this.onPreference, { signal });
     this.projectButton.addEventListener('click', () => { this.projectsPaused = !this.projectsPaused; this.syncProjects(); }, { signal });
+    section.querySelector('.experience-motion-replay')?.addEventListener('click', () => this.scroll.scrollIntoView({ behavior: this.reduced ? 'auto' : 'smooth', block: 'start' }), { signal });
     this.observer = typeof IntersectionObserver === 'undefined' ? null : new IntersectionObserver(entries => {
       this.visible = entries.some(entry => entry.isIntersecting);
       if (this.visible) { this.pile.querySelectorAll<HTMLImageElement>('img').forEach(image => { image.loading = 'eager'; }); this.onScroll(); }
@@ -143,7 +158,7 @@ export class ExperienceIntro {
 
   get diagnostics(): IntroDiagnostics {
     const frame = experienceFrame(this.progress, this.proofProgress);
-    return { progress: this.progress, counter: frame.counter, active: frame.active, panels: this.panels.length, animating: this.raf !== 0, rings: frame.rings, counters: METRICS.map((metric, index) => Math.round(metric.value * frame.rings[index])), typed: [frame.head, frame.sub], year: frame.year, timeline: frame.timeline, checks: frame.checks, marqueeRunning: this.projectsRunning, milestones: frame.milestones, photos: frame.photos, proof: this.proofProgress };
+    return { progress: this.progress, counter: frame.counter, active: frame.active, panels: this.panels.length, animating: this.raf !== 0, rings: frame.rings, counters: METRICS.map((metric, index) => Math.round(metric.value * frame.rings[index])), typed: [frame.head, frame.sub], year: frame.year, timeline: frame.timeline, checks: frame.checks, marqueeRunning: this.projectsRunning, milestones: frame.milestones, photos: frame.photos, proof: this.proofProgress, mode: this.flow ? 'flow' : 'scroll', reduced: this.reduced };
   }
 
   private get projectsRunning(): boolean { return this.visible && !document.hidden && !this.reduced && !this.projectsPaused && experienceFrame(this.progress, this.proofProgress).marquee > .05; }
@@ -220,12 +235,24 @@ export class ExperienceIntro {
     this.counter.textContent = frame.counter.toLocaleString('th-TH');
     this.section.style.setProperty('--dashboard-progress', this.progress.toFixed(4));
     this.section.style.setProperty('--header-dock', frame.dock.toFixed(4));
+    this.section.style.setProperty('--era-opacity', frame.era.toFixed(4));
+    this.section.style.setProperty('--era-dock', frame.eraDock.toFixed(4));
     this.section.style.setProperty('--timeline-reveal', frame.timelineReveal.toFixed(4));
     this.section.style.setProperty('--marquee-reveal', frame.marquee.toFixed(4));
     this.section.classList.toggle('is-counted', frame.counter === COMPANY.totalSqm);
     [frame.head, frame.sub].forEach((fraction, index) => {
-      const count = Math.max(index === 0 ? this.openingHeadLength : 0, Math.round(this.characters[index].length * fraction));
-      this.typed[index].textContent = this.characters[index].slice(0, count).join('');
+      const minimum = index === 0 ? this.openingHeadLength : 0;
+      const reveal = this.characters[index].length * fraction;
+      const count = Math.max(minimum, Math.ceil(reveal));
+      if (count !== this.typedCounts[index]) {
+        this.typedPrefixes[index].nodeValue = this.characters[index].slice(0, Math.max(0, count - 1)).join('');
+        this.glyphs[index].textContent = this.characters[index][count - 1] ?? '';
+        this.typedCounts[index] = count;
+      }
+      const letter = count <= minimum ? 1 : Math.max(0, Math.min(1, reveal - count + 1));
+      this.glyphs[index].style.opacity = String(letter);
+      this.glyphs[index].style.transform = `translateY(${(1 - letter) * 9}px)`;
+      this.glyphs[index].style.filter = `blur(${(1 - letter) * 2}px)`;
       this.typed[index].classList.toggle('is-typing', fraction > 0 && fraction < 1);
     });
     this.yearFill.style.transform = `scaleX(${frame.timeline.toFixed(5)})`;
@@ -261,10 +288,15 @@ export class ExperienceIntro {
       const bound = (value: number, min: number, max: number): number => max >= min ? Math.max(min, Math.min(max, value)) : (min + max) / 2;
       const restX = bound((pileWidth - width) * pose.x, extraX, pileWidth - width - extraX);
       const restY = bound((pileHeight - height) * pose.y, extraY, pileHeight - height - extraY);
-      const x = restX + (pileWidth + 50 - restX) * (1 - amount);
-      const y = restY + (index % 2 ? 35 : -25) * (1 - amount);
-      photo.style.transform = `translate3d(${x.toFixed(2)}px,${y.toFixed(2)}px,0) rotate(${(pose.angle + 12 * (1 - amount)).toFixed(2)}deg)`;
-      photo.style.opacity = String(Math.min(1, amount * 1.8));
+      const local = index % 3, group = Math.floor(index / 3);
+      const depth = Math.max(0, frame.active - group);
+      const finalX = bound(restX - depth * 12, extraX, pileWidth - width - extraX);
+      const fromX = local === 2 ? -width - 45 : pileWidth + 70;
+      const fromY = local === 1 ? pileHeight + 30 : restY - (local === 2 ? 65 : 35);
+      const x = finalX + (fromX - finalX) * (1 - amount);
+      const y = restY + (fromY - restY) * (1 - amount);
+      photo.style.transform = `translate3d(${x.toFixed(2)}px,${y.toFixed(2)}px,0) rotate(${(pose.angle + (local === 1 ? -18 : 18) * (1 - amount)).toFixed(2)}deg) scale(${1 - depth * .04})`;
+      photo.style.opacity = String(Math.min(1, amount * 1.8) * (depth ? .48 : 1));
       photo.style.zIndex = String(index + 1);
     });
     this.checks.forEach((check, index) => {

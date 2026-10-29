@@ -29,7 +29,7 @@ test('the year marker and delivered area follow the same clock and reverse exact
 });
 
 test('milestones reveal their photo groups before the separate project proof enters', () => {
-  const early = experienceFrame(.02), typed = experienceFrame(.3), middle = experienceFrame(.58, 0), late = experienceFrame(1, .5);
+  const early = experienceFrame(.02), typed = experienceFrame(.34), middle = experienceFrame(.74, 0), late = experienceFrame(1, .5);
   assert.ok(early.head > experienceFrame(0).head);
   assert.equal(early.sub, 0);
   assert.equal(typed.head, 1);
@@ -40,14 +40,19 @@ test('milestones reveal their photo groups before the separate project proof ent
   assert.equal(middle.milestones[0], 1);
   assert.equal(middle.milestones[1], 1);
   assert.equal(middle.milestones[2], 0);
-  assert.deepEqual(middle.photos.slice(0, 2), [1, 1]);
-  assert.deepEqual(middle.photos.slice(4), [0, 0]);
+  assert.deepEqual(middle.photos.slice(0, 3), [1, 1, 1]);
+  assert.deepEqual(middle.photos.slice(6), [0, 0, 0]);
+  assert.equal(middle.photos.length, 9);
+  assert.deepEqual(experienceFrame(.54).photos.slice(0, 3), [1, 1, 1]);
+  assert.ok(experienceFrame(.54).photos.slice(3).every(value => value === 0));
+  assert.deepEqual(experienceFrame(.76).photos.slice(3, 6), [1, 1, 1]);
+  assert.ok(experienceFrame(.76).photos.slice(6).every(value => value === 0));
   assert.equal(middle.marquee, 0);
   assert.deepEqual(middle.checks, [0, 0, 0, 0]);
   assert.equal(late.marquee, 1);
   assert.ok(late.checks[0] > late.checks[1] && late.checks[1] > late.checks[2]);
   for (const value of [-2, NaN, Infinity, ...Array.from({ length: 501 }, (_, i) => i / 500), 2]) {
     const frame = experienceFrame(value);
-    for (const fraction of [frame.head, frame.sub, frame.dock, frame.timeline, frame.timelineReveal, frame.marquee, ...frame.rings, ...frame.panels, ...frame.checks, ...frame.milestones, ...frame.photos, ...frame.story]) assert.ok(Number.isFinite(fraction) && fraction >= 0 && fraction <= 1);
+    for (const fraction of [frame.head, frame.sub, frame.dock, frame.era, frame.eraDock, frame.timeline, frame.timelineReveal, frame.marquee, ...frame.rings, ...frame.panels, ...frame.checks, ...frame.milestones, ...frame.photos, ...frame.story]) assert.ok(Number.isFinite(fraction) && fraction >= 0 && fraction <= 1);
   }
 });

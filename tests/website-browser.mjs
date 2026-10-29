@@ -27,8 +27,8 @@ const previewHash = () => page.locator('#room-preview canvas').evaluate(canvas =
   for (let i = 0; i < pixels.length; i += stride) hash = Math.imul(hash ^ pixels[i] ^ (pixels[i + 1] << 8) ^ (pixels[i + 2] << 16), 16777619);
   return hash >>> 0;
 });
-async function initialize() {
-  await page.goto(url, { waitUntil: 'networkidle' });
+async function initialize(targetUrl = url) {
+  await page.goto(targetUrl, { waitUntil: 'networkidle' });
   await page.waitForFunction(() => Boolean(window.websiteDemo?.ready));
   await page.evaluate(() => window.websiteDemo.ready);
   await page.evaluate(() => document.fonts.ready);
@@ -254,6 +254,8 @@ try {
   assert.equal(introEarly.panels, 3);
   assert.ok(introEarly.typed[0] > introEarly.typed[1] && introEarly.typed[0] < 1, 'Head and sub type at staggered rates');
   const earlyTitle = await page.locator('.experience-typed').allInnerTexts();
+  assert.equal(await page.locator('.experience-era strong').innerText(), '2005');
+  assert.ok(await page.locator('.experience-era strong').evaluate(el => parseFloat(getComputedStyle(el).fontSize)) >= 88, 'The opening 2005 is a large visual element');
   const earlyArcs = await page.locator('.experience-ring-arc').evaluateAll(arcs => arcs.map(arc => parseFloat(getComputedStyle(arc).strokeDashoffset)));
   assert.equal(earlyArcs.length, 3);
   assert.equal(await page.locator('.experience-title-line').count(), 2);
@@ -282,11 +284,12 @@ try {
     return { leftDashboard: dashboard.right < pile.left, bounded: photos.every(r => r.left >= pile.left - 1 && r.right <= pile.right + 1 && r.top >= pile.top - 1 && r.bottom <= pile.bottom + 1), overlapping: photos.some((r,i) => photos.slice(i+1).some(s => Math.min(r.right,s.right)>Math.max(r.left,s.left)+20 && Math.min(r.bottom,s.bottom)>Math.max(r.top,s.top)+20)) };
   });
   assert.ok(pileLayout.leftDashboard && pileLayout.bounded && pileLayout.overlapping, 'The photo pile stays inside its frame beside the left dashboard');
-  assert.equal(await page.locator('.experience-pile-photo img').count(), 6);
+  assert.equal(await page.locator('.experience-pile-photo img').count(), 9);
+  assert.deepEqual(await page.locator('.experience-pile-photo').evaluateAll(photos => ['0','1','2'].map(group => photos.filter(photo => photo.dataset.story === group).length)), [3,3,3]);
   await page.waitForFunction(() => [...document.querySelectorAll('.experience-pile-photo img')].every(img => img.complete && img.naturalWidth > 0));
   await page.screenshot({ path: outputPath('experience-dashboard-desktop.png') });
   await page.locator('.experience-milestone-node').nth(1).click();
-  await page.waitForFunction(() => { const d=window.websiteDemo.diagnostics.experience.intro;return d.active===1&&Math.abs(d.progress-.54)<.01&&!d.animating; });
+  await page.waitForFunction(() => { const d=window.websiteDemo.diagnostics.experience.intro;return d.active===1&&Math.abs(d.progress-.7)<.01&&!d.animating; });
   assert.match(await page.locator('.experience-milestone-copy[aria-hidden="false"]').innerText(), /บ้านเดี่ยว Narasiri.*Origin.*Regent Home/s);
   await page.locator('#experience-evidence').evaluate(el => el.scrollIntoView({block:'center',behavior:'instant'}));
   await page.waitForFunction(() => {const d=window.websiteDemo.diagnostics.experience.intro;return d.proof>.99&&!d.animating;});
@@ -336,7 +339,7 @@ try {
   });
   assert.ok(pricingOrder.specsFirst && pricingOrder.packagesFirst && pricingOrder.columns === 4, 'The visual spec selector comes before the restored three-package table, followed by the calculator');
   await page.screenshot({ path: outputPath('pricing-desktop.png'), fullPage: false });
-  check('The full-width purple/orange timeline reveals three project stories, thick orange gauges on the left and six real photos that pile up on the right; milestone controls, pausable project names and proof boxes work reversibly.');
+  check('The full-width purple/orange timeline types the head/sub, introduces a large 2005, counts orange gauges and piles three real photos per milestone; controls, project names and proof boxes work reversibly.');
 
   await page.locator('[data-spec-thickness="4"]').click();
   await page.waitForFunction(() => window.websiteDemo.diagnostics.pricing.rowIndex === 0);
@@ -413,6 +416,52 @@ try {
   await page.keyboard.press('Escape');
   check('Contact dialog displays the named contact and correct phone/email link destinations; no external call or email is opened.');
 
+  // Regression: a small in-app browser used to collapse the entire story to its final static state.
+  for (const viewport of [{width:622,height:532},{width:844,height:390}]) {
+    await page.setViewportSize(viewport);
+    await page.emulateMedia({ reducedMotion:'no-preference' });
+    const anchored = new URL(url); anchored.hash = 'experience-intro';
+    // A new document avoids a pending same-document hash jump racing the wheel fixture.
+    anchored.searchParams.set('motion-viewport', `${viewport.width}x${viewport.height}`);
+    await initialize(anchored.href);
+    const short = await page.evaluate(() => {
+      const scroll = document.querySelector('.experience-scroll'), stage = document.querySelector('.experience-sticky');
+      const top = scroll.getBoundingClientRect().top + scrollY;
+      scrollTo({top,behavior:'instant'});
+      return {travel:scroll.offsetHeight-stage.offsetHeight,position:getComputedStyle(stage).position};
+    });
+    assert.equal(short.position, 'sticky');
+    assert.ok(short.travel > viewport.height * 4, 'Short windows retain an actual scroll timeline');
+    await page.waitForFunction(() => {const d=window.websiteDemo.diagnostics.experience.intro;return d.mode==='scroll'&&d.progress<.005&&!d.animating;});
+    const opening = await page.locator('.experience-typed').allInnerTexts();
+    await page.mouse.move(viewport.width * .5,viewport.height * .5);
+    await page.mouse.wheel(0,short.travel*.16);
+    await page.waitForFunction(() => {const d=window.websiteDemo.diagnostics.experience.intro;return d.progress>.14&&d.progress<.18&&!d.animating;});
+    assert.notDeepEqual(await page.locator('.experience-typed').allInnerTexts(),opening,'Real wheel input types the headline and subline');
+    await page.screenshot({path:outputPath(`typing-short-${viewport.width}x${viewport.height}.png`)});
+    await page.mouse.wheel(0,short.travel*.32);
+    await page.waitForFunction(() => {const d=window.websiteDemo.diagnostics.experience.intro;return d.progress>.46&&d.progress<.50&&!d.animating;});
+    const firstStop=(await state()).experience.intro;
+    assert.ok(firstStop.photos.slice(0,3).every(p=>p>0)&&firstStop.photos.slice(3).every(p=>p===0));
+    assert.ok(firstStop.counters[0]>0&&firstStop.counters[0]<21,'The active dashboard number counts up');
+    const drawnLine=await page.locator('.experience-years-fill').evaluate(el=>getComputedStyle(el).transform);
+    await page.mouse.wheel(0,short.travel*.22);
+    await page.waitForFunction(() => {const d=window.websiteDemo.diagnostics.experience.intro;return d.active===1&&Math.abs(d.progress-.7)<.02&&!d.animating;});
+    assert.ok((await state()).experience.intro.photos.slice(3,6).every(p=>p>0),'The second milestone adds three photos');
+    assert.equal(await page.locator('.experience-stat').evaluateAll(items=>items.filter(el=>getComputedStyle(el).visibility==='visible').length),1,'The short layout gives the active gauge its own space');
+    assert.notEqual(await page.locator('.experience-years-fill').evaluate(el=>getComputedStyle(el).transform),drawnLine,'The line draws progressively with wheel input');
+    await page.screenshot({path:outputPath(`motion-short-${viewport.width}x${viewport.height}.png`)});
+    await page.mouse.wheel(0,short.travel*.29);
+    await page.waitForFunction(() => {const d=window.websiteDemo.diagnostics.experience.intro;return d.progress>.97&&!d.animating;});
+    assert.ok((await state()).experience.intro.photos.slice(6).every(p=>p>.99),'The third milestone completes its three-photo stack');
+    assert.equal((await state()).experience.intro.counter,175900);
+    await page.mouse.wheel(0,-short.travel*.5);
+    await page.waitForFunction(() => {const d=window.websiteDemo.diagnostics.experience.intro;return d.active===0&&d.progress<.52&&!d.animating;});
+    assert.ok((await state()).experience.intro.counter<175900,'Reverse wheel input rewinds the story in the short window');
+    await noOverflow();
+  }
+  check('Real mouse-wheel input animates typing, line drawing, rising numbers and three photos per milestone in 622×532 and 844×390 windows; short screens no longer disable Motion.');
+
   await page.setViewportSize({ width: 390, height: 844 });
   await initialize();
   report.mobile = await noOverflow();
@@ -463,7 +512,7 @@ try {
   check('Repeated homepage disposal removes the 3D scene, hero room and preview canvases without errors.');
   assert.deepEqual(report.errors, []);
 } catch (error) {
-  report.failed = { message: error.message, stack: error.stack, motion: await page.evaluate(() => ({ reduced: matchMedia('(prefers-reduced-motion: reduce)').matches, logos: window.websiteDemo?.diagnostics.clientLogos, featured: window.websiteDemo?.diagnostics.experience?.featured })).catch(() => null) };
+  report.failed = { message: error.message, stack: error.stack, motion: await page.evaluate(() => ({ reduced: matchMedia('(prefers-reduced-motion: reduce)').matches, logos: window.websiteDemo?.diagnostics.clientLogos, intro: window.websiteDemo?.diagnostics.experience?.intro, viewport: {width:innerWidth,height:innerHeight,y:scrollY}, scrollTop:document.querySelector('.experience-scroll')?.getBoundingClientRect().top, featured: window.websiteDemo?.diagnostics.experience?.featured })).catch(() => null) };
   await page.screenshot({ path: outputPath('failure.png'), fullPage: true }).catch(() => {});
   throw error;
 } finally {

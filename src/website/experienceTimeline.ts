@@ -10,22 +10,24 @@ export const EXPERIENCE_END_YEAR = COMPANY.since + COMPANY.years;
 export function experienceFrame(value: number, proofValue = value) {
   const progress = clamp(Number.isFinite(value) ? value : 0);
   const proof = clamp(Number.isFinite(proofValue) ? proofValue : 0);
-  const timeline = phase(progress, .16, .86);
-  const active = progress < .43 ? 0 : progress < .65 ? 1 : 2;
+  const timeline = phase(progress, .3, .96);
+  const active = progress < .56 ? 0 : progress < .78 ? 1 : 2;
   return {
     progress,
-    head: .32 + .68 * phase(progress, 0, .16),
-    sub: phase(progress, .04, .2),
-    dock: ease(phase(progress, .08, .25)),
-    timelineReveal: phase(progress, .08, .18),
+    head: .32 + .68 * phase(progress, 0, .25),
+    sub: phase(progress, .08, .32),
+    dock: ease(phase(progress, .18, .36)),
+    era: (.6 + .4 * phase(progress, 0, .14)) * (1 - phase(progress, .28, .4)),
+    eraDock: ease(phase(progress, .24, .4)),
+    timelineReveal: phase(progress, .25, .35),
     timeline,
     year: COMPANY.since + Math.round(COMPANY.years * timeline),
     counter: Math.round(COMPANY.totalSqm * timeline),
-    rings: [ease(phase(progress, .2, .43)), timeline, ease(phase(progress, .63, .87))],
-    panels: [0, 1, 2].map(index => phase(progress, .18 + index * .22, .29 + index * .22)),
-    milestones: [.12, .48, .8].map(point => phase(timeline, point - .1, point + .01)),
-    story: [0, 1, 2].map(index => index === active ? phase(progress, .18 + index * .22, .29 + index * .22) : 0),
-    photos: [.2, .245, .42, .465, .64, .685].map(start => ease(phase(progress, start, start + .16))),
+    rings: [phase(progress, .34, .55), timeline, phase(progress, .78, .96)],
+    panels: [0, 1, 2].map(index => phase(progress, .33 + index * .22, .41 + index * .22)),
+    milestones: [.14, .48, .82].map(point => phase(timeline, point - .12, point + .01)),
+    story: [0, 1, 2].map(index => index === active ? phase(progress, .33 + index * .22, .41 + index * .22) : 0),
+    photos: [.36, .395, .43, .58, .615, .65, .8, .835, .87].map(start => ease(phase(progress, start, start + .1))),
     marquee: phase(proof, 0, .35),
     checks: [0, 1, 2, 3].map(index => phase(proof, .1 + index * .08, .5 + index * .08)),
     active,
