@@ -227,6 +227,12 @@ try {
   const showcaseTop = await page.evaluate(() => document.getElementById('showcase').getBoundingClientRect().top + scrollY);
   const showcaseHeight = await page.evaluate(() => document.getElementById('showcase').offsetHeight);
   await page.evaluate(y => scrollTo({ top: y, behavior: 'instant' }), showcaseTop);
+  const galleryHeading = await page.locator('#showcase').evaluate(section => {
+    const stage = section.querySelector('.showcase-sticky').getBoundingClientRect();
+    const heading = section.querySelector('.showcase-heading h2').getBoundingClientRect();
+    return { top: heading.top - stage.top, bottom: heading.bottom - stage.top, height: stage.height };
+  });
+  assert.ok(galleryHeading.top >= 0 && galleryHeading.bottom < galleryHeading.height, 'The portfolio heading is fully inside its frame after the warranty section');
   await page.waitForTimeout(400);
   const showcaseStart = await page.evaluate(() => window.websiteDemo.diagnostics.showcase);
   assert.equal(showcaseStart.frames, 4);

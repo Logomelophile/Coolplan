@@ -27,6 +27,7 @@ export class SpecimenModel {
         this.renderer.domElement.setAttribute('role', 'img');
         host.append(this.renderer.domElement);
         this.camera.position.set(34, 31, 40);
+        this.camera.zoom = 1.5;
         this.camera.lookAt(0, 0, 0);
         this.scene.add(new AmbientLight(0xffffff, 2.8));
         const light = new DirectionalLight(0xfff1e4, 4);

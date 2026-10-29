@@ -44,7 +44,10 @@ export async function verifyRedesign(page, { initialize, state, check, outputPat
     assert.equal((await state()).experience.intro.archived[0], 0);
     assert.ok(await originalRing.evaluate(el => el.getBoundingClientRect().width) > 145);
     check('Entry types from zero before the year appears; large gauges and three-photo piles archive and collect as the same DOM nodes into a framed dashboard, with reversible scroll and working project names.');
+    await page.setViewportSize({ width: 1920, height: 900 });
     await page.locator('#collections').evaluate(e => e.scrollIntoView({ behavior: 'instant' }));
+    assert.equal(await page.locator('.collections-grid').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length), 5, 'Desktop catalogue has five compact product cards per row');
+    await page.setViewportSize({ width: 1122, height: 900 });
     await page.locator('[data-family="all"]').click();
     assert.equal((await state()).collections.visible, 14);
     await page.locator('[data-family="spc"]').click();
@@ -113,6 +116,43 @@ export async function verifyRedesign(page, { initialize, state, check, outputPat
     await page.mouse.up();
     assert.notDeepEqual(await model.screenshot(), before, 'The real 3D material sample rotates with a mouse drag');
     await page.screenshot({ path: outputPath('redesign-estimate-3d.png') });
+    await page.waitForFunction(() => {
+        const room = document.querySelector('.package-room');
+        const spec = window.websiteDemo.diagnostics.pricing.spec;
+        return room?.dataset.renderedTexture === spec.image && room.dataset.renderedRoom === '0';
+    });
+    assert.equal(await page.locator('[data-spec-room]').count(), 7);
+    const mainPreview = (await state()).preview;
+    const roomPixels = () => page.locator('.package-room-view canvas').evaluate(canvas => {
+        const ctx = canvas.getContext('2d'), pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        let upper = 2166136261, whole = 2166136261;
+        const limit = Math.floor(canvas.height * .24) * canvas.width * 4;
+        for (let i = 0; i < pixels.length; i += 32) {
+            whole = Math.imul(whole ^ pixels[i] ^ pixels[i + 1] ^ pixels[i + 2], 16777619);
+            if (i < limit) upper = Math.imul(upper ^ pixels[i] ^ pixels[i + 1] ^ pixels[i + 2], 16777619);
+        }
+        return { upper: upper >>> 0, whole: whole >>> 0 };
+    });
+    await page.locator('[data-spec-room="1"]').click();
+    await page.waitForFunction(() => document.querySelector('.package-room').dataset.renderedRoom === '1');
+    const bedroom = await roomPixels();
+    const unchangedPrice = (await state()).pricing.total;
+    await page.locator('[data-spec-shade="2"]').click();
+    await page.waitForFunction(() => document.querySelector('.package-room').dataset.renderedTexture === window.websiteDemo.diagnostics.pricing.spec.image);
+    const darkBedroom = await roomPixels();
+    assert.notEqual(darkBedroom.whole, bedroom.whole, 'The selected catalogue shade changes real room pixels');
+    assert.equal(darkBedroom.upper, bedroom.upper, 'The room ceiling and furniture above the floor stay intact');
+    assert.equal((await state()).pricing.total, unchangedPrice, 'Room and shade selection do not invent a new price');
+    await page.locator('[data-spec-pattern="herringbone"]').click();
+    await page.waitForFunction(() => document.querySelector('.package-room').dataset.cataloguePattern === 'herringbone' && document.querySelector('.package-room').dataset.renderedTexture === window.websiteDemo.diagnostics.pricing.spec.image);
+    assert.notEqual((await roomPixels()).whole, darkBedroom.whole, 'The sample room also follows the selected lay-up');
+    await page.locator('[data-spec-room="2"]').click();
+    await page.waitForFunction(() => document.querySelector('.package-room').dataset.renderedRoom === '2');
+    assert.equal((await state()).preview.room, mainPreview.room);
+    assert.equal((await state()).preview.finish, mainPreview.finish);
+    assert.equal((await state()).preview.pattern, mainPreview.pattern, 'Estimator room selection stays separate from the main visualizer');
+    await page.screenshot({ path: outputPath('compact-spec-room-preview.png') });
+    check('Estimator rooms follow actual catalogue shades and lay-up, retain the room above the floor, and do not change prices or the independent main visualizer.');
     check('The horizontal multi-filter covers all catalogue sizes and every price row; a complete visual spec picker and draggable 3D sample share the live estimator, preserve fee arithmetic and carry selections into quote/package enquiries.');
     for (const viewport of [{ width: 622, height: 532 }, { width: 844, height: 390 }]) {
         await page.setViewportSize(viewport);

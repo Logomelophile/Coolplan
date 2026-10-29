@@ -30,6 +30,7 @@ export type DepthStatus = 'idle' | 'running' | 'done' | 'failed';
 export type SamStatus = 'idle' | 'embedding' | 'ready' | 'failed';
 
 export interface FloorVisualizerDiagnostics {
+  catalogueCode: string | null;
   pattern: FloorPattern;
   sourceWidth: number;
   sourceHeight: number;
@@ -71,6 +72,9 @@ export interface FloorVisualizerDiagnostics {
 }
 
 export interface FloorVisualizerOptions {
+  /** Secondary sample previews load only the room being viewed and retain shared atlases on disposal. */
+  preloadRooms?: boolean;
+  disposeSharedAtlases?: boolean;
   imageUrl?: string;
   /** Product ids (from products.json) in the order of the colour picker. */
   productIds?: string[];
@@ -99,6 +103,7 @@ interface Scene {
 interface Upload { canvas: HTMLCanvasElement; token: number; lum: Float32Array | null }
 
 const DEFAULT_PRODUCTS = ['light-natural-oak', 'warm-taupe-oak', 'golden-honey-oak', 'whitewashed-ash-oak', 'greige-oak', 'dark-walnut-brown'];
+let cataloguePreviewId = 0;
 /** Physical extent assumed for a user-picked floor quad: 3 m wide, 2 m deep. */
 const QUAD_METRES: [number, number] = [3, 2];
 const VIEWS = [[1, .5, .5], [1.14, .18, .54], [1.14, .83, .54], [1.30, .50, .62], [1.8, .32, .57], [2.1, .78, .98]];
@@ -246,6 +251,10 @@ export class FloorVisualizer {
   private display: Crop = { x: 0, y: 0, width: 1, height: 1 };
   private atlasMs = 0;
   private renderMs = 0;
+  private catalogueAtlas: PlankAtlas | null = null;
+  private catalogueCode: string | null = null;
+  private catalogueRevision = 0;
+  private readonly catalogueId = ++cataloguePreviewId;
 
   constructor(private readonly host: HTMLElement, options: FloorVisualizerOptions = {}) {
     this.options = options;
@@ -307,7 +316,7 @@ export class FloorVisualizer {
         this.rebuild();
         this.hint('เลือกสีและลายปู แล้วลองหมุนลายหรือเปรียบเทียบกับภาพเดิมได้');
         this.warmAtlases();
-        const preload = (): void => SAMPLE_ROOMS.forEach((_, index) => { if (index) { void this.roomImage(index); void this.alphaImage(index); } });
+        const preload = (): void => { if (this.options.preloadRooms !== false) SAMPLE_ROOMS.forEach((_, index) => { if (index) { void this.roomImage(index); void this.alphaImage(index); } }); };
         if (typeof requestIdleCallback === 'function') requestIdleCallback(preload, { timeout: 4000 }); else setTimeout(preload, 1500);
       } else this.hint('โหลดภาพห้องไม่สำเร็จ กรุณาลองใหม่หรืออัปโหลดภาพของคุณ');
       this.emit();
@@ -316,6 +325,7 @@ export class FloorVisualizer {
 
   get diagnostics(): FloorVisualizerDiagnostics {
     return {
+      catalogueCode: this.catalogueCode,
       pattern: this.pattern, sourceWidth: this.original.width, sourceHeight: this.original.height,
       canUndo: this.maskHistory.length > 0, canRedo: this.maskFuture.length > 0,
       frame: { ...this.frame }, display: { ...this.display },
@@ -352,6 +362,10 @@ export class FloorVisualizer {
 
   setFinish(index: number): void {
     if (this.disposed) return;
+    this.catalogueRevision++;
+    this.catalogueAtlas?.dispose();
+    this.catalogueAtlas = null;
+    this.catalogueCode = null;
     this.finish = clampIndex(index, this.productList.length - 1);
     this.rebuild();
     if (this.stage === 'manual' && !this.quad) this.cornerHint();
@@ -365,6 +379,28 @@ export class FloorVisualizer {
     this.renderScene();
     this.draw();
     this.emit();
+  }
+
+  /** Apply the actual catalogue swatch to sample-room mattes, preserving furniture and photo shading. */
+  async setCatalogueSurface(selection: { code: string; image: string; lengthMm: number; widthMm: number; pattern: FloorPattern }): Promise<boolean> {
+    if (this.disposed) return false;
+    const revision = ++this.catalogueRevision;
+    const photo = await loadImage(selection.image);
+    if (!photo || this.disposed || revision !== this.catalogueRevision) return false;
+    const source = this.productList[0];
+    const product: ProductConfig = {
+      ...source, id: `catalogue-${this.catalogueId}-${revision}`, name: selection.code,
+      dimensions: { ...source.dimensions, lengthMm: Math.max(100, selection.lengthMm), widthMm: Math.max(50, selection.widthMm) },
+    };
+    const atlas = buildPlankAtlas(product, { photo });
+    this.catalogueAtlas?.dispose();
+    this.catalogueAtlas = atlas;
+    this.catalogueCode = selection.code;
+    this.pattern = selection.pattern;
+    this.inputsKey = '';
+    this.rebuild();
+    this.emit();
+    return true;
   }
 
   private maskSnapshot(): Uint8Array {
@@ -700,7 +736,10 @@ export class FloorVisualizer {
     this.canvas.removeEventListener('pointercancel', this.onPointerUp);
     this.canvas.remove();
     this.renderer.dispose();
-    disposePlankAtlases();
+    this.catalogueRevision++;
+    this.catalogueAtlas?.dispose();
+    this.catalogueAtlas = null;
+    if (this.options.disposeSharedAtlases !== false) disposePlankAtlases();
     this.roomLoaded.clear(); this.roomImages.clear(); this.materialPhotos.clear();
     this.alphaLoaded.clear(); this.alphaImages.clear();
     this.scene = null;
@@ -1319,6 +1358,7 @@ export class FloorVisualizer {
   }
 
   private atlas(): PlankAtlas {
+    if (this.catalogueAtlas) return this.catalogueAtlas;
     const started = performance.now();
     const product = this.productList[this.finish];
     const atlas = buildPlankAtlas(product, { photo: this.materialPhotos.get(product.id) });
@@ -1339,7 +1379,7 @@ export class FloorVisualizer {
     }
     const params = defaultRenderParams(scene.Hinv, atlas.plankSize);
     params.pattern = this.pattern;
-    if (this.pattern === 'herringbone') params.plankSize = [.72, .12];
+    if (this.pattern === 'herringbone' && !this.catalogueAtlas) params.plankSize = [.72, .12];
     params.rotation = scene.rotation;
     params.meanRGB = scene.meanRGB;
     const rendered = this.renderer.render(params);
