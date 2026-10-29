@@ -25,7 +25,8 @@ export async function verifyRedesign(page, { initialize, state, check, outputPat
     await seek(.64);
     assert.deepEqual((await state()).experience.intro.archived, [1, 0, 0]);
     assert.equal(await page.locator('.experience-pile-photo[data-story="0"]').evaluateAll(items => items.every(el => getComputedStyle(el).opacity === '1')), true);
-    await seek(1);
+    await page.locator('.experience-scene-footer a[href="#experience-evidence"]').click();
+    await page.waitForFunction(() => { const d = window.websiteDemo.diagnostics.experience.intro; return d.gather === 1 && d.proof === 1 && !d.animating; });
     assert.deepEqual((await state()).experience.intro.counters, [21, 175900, 10]);
     assert.equal((await state()).experience.intro.gather, 1);
     assert.equal(await originalRing.evaluate(el => el.isConnected && el === document.querySelector('.experience-ring')), true);

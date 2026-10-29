@@ -193,6 +193,15 @@ export class ExperienceIntro {
         motionPreference.addEventListener('change', this.onPreference, { signal });
         this.projectButton.addEventListener('click', () => { this.projectsPaused = !this.projectsPaused; this.syncProjects(); }, { signal });
         section.querySelector('.experience-motion-replay')?.addEventListener('click', () => { this.enteredAt = performance.now(); this.entryTyping = 0; this.scroll.scrollIntoView({ behavior: this.reduced ? 'auto' : 'smooth', block: 'start' }); }, { signal });
+        section.querySelector('.experience-scene-footer a[href="#experience-evidence"]')?.addEventListener('click', event => {
+            event.preventDefault();
+            if (this.reduced || this.flow) {
+                this.evidence.scrollIntoView({ behavior: 'auto', block: 'center' });
+                return;
+            }
+            const travel = this.scroll.offsetHeight - this.sticky.offsetHeight;
+            window.scrollTo({ top: this.scroll.getBoundingClientRect().top + window.scrollY + travel, behavior: 'smooth' });
+        }, { signal });
         this.observer = typeof IntersectionObserver === 'undefined' ? null : new IntersectionObserver(entries => {
             this.visible = entries.some(entry => entry.isIntersecting);
             if (this.visible) {
