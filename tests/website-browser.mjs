@@ -255,6 +255,8 @@ try {
   assert.ok(introEarly.typed[0] > introEarly.typed[1] && introEarly.typed[0] < 1, 'Head and sub type at staggered rates');
   const earlyTitle = await page.locator('.experience-typed').allInnerTexts();
   assert.equal(await page.locator('.experience-era strong').innerText(), '2005');
+  const originalEra = await page.locator('.experience-era strong').elementHandle();
+  const originalFirstPhoto = await page.locator('.experience-pile-photo').first().elementHandle();
   assert.ok(await page.locator('.experience-era strong').evaluate(el => parseFloat(getComputedStyle(el).fontSize)) >= 88, 'The opening 2005 is a large visual element');
   const earlyArcs = await page.locator('.experience-ring-arc').evaluateAll(arcs => arcs.map(arc => parseFloat(getComputedStyle(arc).strokeDashoffset)));
   assert.equal(earlyArcs.length, 3);
@@ -267,6 +269,13 @@ try {
   assert.equal(await page.locator('.experience-year-end span').innerText(), '2026');
   assert.equal((await state()).experience.intro.year, 2026);
   assert.equal((await state()).experience.intro.timeline, 1);
+  assert.equal(await originalEra.evaluate(el => el === document.querySelector('.experience-era strong')), true, 'The opening year keeps the same DOM node');
+  const yearDock = await page.evaluate(() => {
+    const year = document.querySelector('.experience-era strong').getBoundingClientRect();
+    const anchor = document.querySelector('.experience-era-anchor').getBoundingClientRect();
+    return {distance:Math.hypot(year.x + year.width / 2 - anchor.x - anchor.width / 2,year.y + year.height / 2 - anchor.y - anchor.height / 2),opacity:getComputedStyle(document.querySelector('.experience-era')).opacity,start:document.querySelector('.experience-era-anchor').textContent};
+  });
+  assert.ok(yearDock.distance < 1 && yearDock.opacity === '1' && yearDock.start === '', 'The original 2005 docks at the line start without a duplicate or fade');
   assert.match(await page.locator('.experience-stat.is-active .experience-stat-label').innerText(), /รับประกันการติดตั้ง/);
   const fullArcs = await page.locator('.experience-ring-arc').evaluateAll(arcs => arcs.map(arc => parseFloat(getComputedStyle(arc).strokeDashoffset)));
   assert.ok(fullArcs.every((offset, index) => offset <= earlyArcs[index]) && fullArcs[2] < earlyArcs[2] - 80, 'Circular gauges visibly fill as the page advances');
@@ -280,10 +289,15 @@ try {
   const pileLayout = await page.evaluate(() => {
     const dashboard = document.querySelector('.experience-dashboard').getBoundingClientRect();
     const pile = document.querySelector('.experience-photo-pile').getBoundingClientRect();
-    const photos = [...document.querySelectorAll('.experience-pile-photo')].map(photo => photo.getBoundingClientRect());
-    return { leftDashboard: dashboard.right < pile.left, bounded: photos.every(r => r.left >= pile.left - 1 && r.right <= pile.right + 1 && r.top >= pile.top - 1 && r.bottom <= pile.bottom + 1), overlapping: photos.some((r,i) => photos.slice(i+1).some(s => Math.min(r.right,s.right)>Math.max(r.left,s.left)+20 && Math.min(r.bottom,s.bottom)>Math.max(r.top,s.top)+20)) };
+    const photos = [...document.querySelectorAll('.experience-pile-photo[data-story="2"]')].map(photo => photo.getBoundingClientRect());
+    const retained = [...document.querySelectorAll('.experience-pile-photo')].every(photo => getComputedStyle(photo).opacity === '1');
+    return { leftDashboard: dashboard.right < pile.left, bounded: photos.every(r => r.left >= pile.left - 1 && r.right <= pile.right + 1 && r.top >= pile.top - 1 && r.bottom <= pile.bottom + 1), overlapping: photos.some((r,i) => photos.slice(i+1).some(s => Math.min(r.right,s.right)>Math.max(r.left,s.left)+20 && Math.min(r.bottom,s.bottom)>Math.max(r.top,s.top)+20)), retained };
   });
   assert.ok(pileLayout.leftDashboard && pileLayout.bounded && pileLayout.overlapping, 'The photo pile stays inside its frame beside the left dashboard');
+  assert.ok(pileLayout.retained, 'Earlier photos remain fully visible after their miniatures dock');
+  assert.equal(await originalFirstPhoto.evaluate(el => el.isConnected && el === document.querySelector('.experience-pile-photo')), true, 'The original photographs move continuously instead of being replaced by snapshots');
+  assert.deepEqual((await state()).experience.intro.archived.slice(0,2), [1,1]);
+  assert.ok((await state()).experience.intro.archived[2] < .02);
   assert.equal(await page.locator('.experience-pile-photo img').count(), 9);
   assert.deepEqual(await page.locator('.experience-pile-photo').evaluateAll(photos => ['0','1','2'].map(group => photos.filter(photo => photo.dataset.story === group).length)), [3,3,3]);
   await page.waitForFunction(() => [...document.querySelectorAll('.experience-pile-photo img')].every(img => img.complete && img.naturalWidth > 0));
@@ -448,7 +462,11 @@ try {
     await page.mouse.wheel(0,short.travel*.22);
     await page.waitForFunction(() => {const d=window.websiteDemo.diagnostics.experience.intro;return d.active===1&&Math.abs(d.progress-.7)<.02&&!d.animating;});
     assert.ok((await state()).experience.intro.photos.slice(3,6).every(p=>p>0),'The second milestone adds three photos');
-    assert.equal(await page.locator('.experience-stat').evaluateAll(items=>items.filter(el=>getComputedStyle(el).visibility==='visible').length),1,'The short layout gives the active gauge its own space');
+    assert.equal(await page.locator('.experience-stat.is-active:not(.is-docked)').count(),1,'The active gauge keeps the large stage');
+    assert.equal(await page.locator('.experience-stat.is-docked').count(),1,'The previous gauge remains as a miniature');
+    assert.equal(await page.locator('.experience-pile-photo[data-story="0"]').evaluateAll(items=>items.every(el=>getComputedStyle(el).opacity==='1')),true,'All three previous photos remain visible');
+    const miniature = await page.locator('.experience-stat.is-docked .experience-ring').evaluate(el=>el.getBoundingClientRect().width);
+    assert.ok(miniature > 28 && miniature < 36,'The completed ring shrinks into a readable timeline miniature');
     assert.notEqual(await page.locator('.experience-years-fill').evaluate(el=>getComputedStyle(el).transform),drawnLine,'The line draws progressively with wheel input');
     await page.screenshot({path:outputPath(`motion-short-${viewport.width}x${viewport.height}.png`)});
     await page.mouse.wheel(0,short.travel*.29);
@@ -460,7 +478,7 @@ try {
     assert.ok((await state()).experience.intro.counter<175900,'Reverse wheel input rewinds the story in the short window');
     await noOverflow();
   }
-  check('Real mouse-wheel input animates typing, line drawing, rising numbers and three photos per milestone in 622×532 and 844×390 windows; short screens no longer disable Motion.');
+  check('Real mouse-wheel input animates typing, the original 2005, rising numbers and three photos per milestone in 622×532 and 844×390 windows; previous gauges and photos shrink into persistent timeline miniatures and reverse.');
 
   await page.setViewportSize({ width: 390, height: 844 });
   await initialize();

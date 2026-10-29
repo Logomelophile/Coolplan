@@ -28,7 +28,7 @@ const PHOTOS = [
 export interface IntroDiagnostics {
   progress: number; counter: number; active: number; panels: number; animating: boolean;
   rings: number[]; counters: number[]; typed: number[]; year: number; timeline: number; checks: number[]; marqueeRunning: boolean;
-  milestones: number[]; photos: number[]; proof: number;
+  milestones: number[]; photos: number[]; archived: number[]; proof: number;
   mode: 'scroll' | 'flow'; reduced: boolean;
 }
 
@@ -57,6 +57,12 @@ export class ExperienceIntro {
   private readonly stories: HTMLElement[];
   private readonly pile: HTMLElement;
   private readonly photos: HTMLElement[];
+  private readonly era: HTMLElement;
+  private readonly tokens: HTMLElement;
+  private readonly panelHosts: HTMLElement[];
+  private readonly photoHosts: HTMLElement[];
+  private eraPose = { startX: 0, startY: 0, endX: 0, endY: 0, scale: 1 };
+  private tokenPoses: { panel: { x: number; y: number; endX: number; endY: number; scale: number }; photo: { x: number; y: number; endX: number; endY: number; scale: number } }[] = [];
   private readonly observer: IntersectionObserver | null;
   private readonly resizeObserver: ResizeObserver | null;
   private progress = 0;
@@ -89,7 +95,8 @@ export class ExperienceIntro {
     });
     this.yearFill = section.querySelector<HTMLElement>('.experience-years-fill')!;
     this.yearPoint = section.querySelector<HTMLElement>('.experience-years-point')!;
-    section.querySelector('.experience-year-start span')!.textContent = String(COMPANY.since);
+    this.era = section.querySelector<HTMLElement>('.experience-era')!;
+    this.era.querySelector('strong')!.textContent = String(COMPANY.since);
     section.querySelector('.experience-year-end span')!.textContent = String(EXPERIENCE_END_YEAR);
     const yearsTrack = section.querySelector<HTMLElement>('.experience-years-track')!;
     this.milestones = MILESTONES.map((milestone, index) => {
@@ -129,6 +136,24 @@ export class ExperienceIntro {
     this.panels = Array.from(dashboard.querySelectorAll<HTMLElement>('.experience-stat'));
     this.arcs = Array.from(dashboard.querySelectorAll<SVGCircleElement>('.experience-ring-arc'));
     this.values = Array.from(dashboard.querySelectorAll<HTMLElement>('.experience-ring-value strong'));
+    this.tokens = document.createElement('div');
+    this.tokens.className = 'experience-story-tokens';
+    this.panelHosts = [];
+    this.photoHosts = [];
+    METRICS.forEach((_, index) => {
+      const token = document.createElement('div');
+      token.className = 'experience-story-token';
+      token.dataset.storyToken = String(index);
+      const panel = document.createElement('div'), photo = document.createElement('div');
+      panel.className = 'experience-token-dashboard';
+      photo.className = 'experience-token-photos';
+      token.append(panel, photo);
+      this.tokens.append(token);
+      this.panelHosts.push(panel);
+      this.photoHosts.push(photo);
+    });
+    section.querySelector('.experience-scene')!.append(this.tokens);
+    this.syncTokenLayout();
     const signal = this.abort.signal;
     window.addEventListener('scroll', this.onScroll, { passive: true, signal });
     window.addEventListener('resize', this.onResize, { signal });
@@ -158,7 +183,7 @@ export class ExperienceIntro {
 
   get diagnostics(): IntroDiagnostics {
     const frame = experienceFrame(this.progress, this.proofProgress);
-    return { progress: this.progress, counter: frame.counter, active: frame.active, panels: this.panels.length, animating: this.raf !== 0, rings: frame.rings, counters: METRICS.map((metric, index) => Math.round(metric.value * frame.rings[index])), typed: [frame.head, frame.sub], year: frame.year, timeline: frame.timeline, checks: frame.checks, marqueeRunning: this.projectsRunning, milestones: frame.milestones, photos: frame.photos, proof: this.proofProgress, mode: this.flow ? 'flow' : 'scroll', reduced: this.reduced };
+    return { progress: this.progress, counter: frame.counter, active: frame.active, panels: this.panels.length, animating: this.raf !== 0, rings: frame.rings, counters: METRICS.map((metric, index) => Math.round(metric.value * frame.rings[index])), typed: [frame.head, frame.sub], year: frame.year, timeline: frame.timeline, checks: frame.checks, marqueeRunning: this.projectsRunning, milestones: frame.milestones, photos: frame.photos, archived: frame.archived, proof: this.proofProgress, mode: this.flow ? 'flow' : 'scroll', reduced: this.reduced };
   }
 
   private get projectsRunning(): boolean { return this.visible && !document.hidden && !this.reduced && !this.projectsPaused && experienceFrame(this.progress, this.proofProgress).marquee > .05; }
@@ -173,7 +198,41 @@ export class ExperienceIntro {
   private measureLayout(): void {
     const top = parseFloat(getComputedStyle(this.sticky).paddingTop) || 0;
     this.section.style.setProperty('--heading-center-shift', `${Math.max(0, this.sticky.clientHeight * .32 - this.heading.offsetHeight / 2 - top)}px`);
-    this.pile.style.setProperty('--pile-height', `${this.pile.clientHeight}px`);
+    this.section.style.setProperty('--pile-height', `${this.pile.clientHeight}px`);
+    const stage = this.sticky.getBoundingClientRect();
+    // The line has its own entrance translate; docking targets use its final layout position.
+    const lineEntranceY = parseFloat(getComputedStyle(this.section.querySelector('.experience-years')!).translate.split(' ')[1]) || 0;
+    const anchor = this.section.querySelector('.experience-era-anchor')!.getBoundingClientRect();
+    const fontSize = parseFloat(getComputedStyle(this.era.querySelector('strong')!).fontSize);
+    this.eraPose = { startX: this.sticky.clientWidth * .5, startY: this.sticky.clientHeight * .54, endX: anchor.left + anchor.width / 2 - stage.left, endY: anchor.top + anchor.height / 2 - stage.top - lineEntranceY, scale: 10 / fontSize };
+    const scene = this.section.querySelector('.experience-scene')!.getBoundingClientRect();
+    const dashboard = this.section.querySelector('.experience-dashboard')!.getBoundingClientRect();
+    const pile = this.pile.getBoundingClientRect();
+    const line = this.yearFill.getBoundingClientRect();
+    const compact = this.sticky.clientWidth <= 850 || this.sticky.clientHeight <= 620;
+    const dockRing = compact ? 32 : 44, dockPhoto = compact ? 38 : 60;
+    this.tokenPoses = this.panelHosts.map((host, index) => {
+      const node = index < 2 ? this.milestones[index + 1].getBoundingClientRect() : this.section.querySelector('.experience-year-end')!.getBoundingClientRect();
+      const center = Math.max(34, Math.min(this.sticky.clientWidth - 34, node.left + node.width / 2 - stage.left)) + stage.left - scene.left;
+      const top = line.top - scene.top - lineEntranceY;
+      host.style.width = `${dashboard.width}px`; host.style.height = `${dashboard.height}px`;
+      this.photoHosts[index].style.width = `${pile.width}px`; this.photoHosts[index].style.height = `${pile.height}px`;
+      const panel = this.panels[index], ring = panel.querySelector<HTMLElement>('.experience-ring')!;
+      const metricScale = dockRing / ring.clientWidth;
+      const photoScale = dockPhoto / Math.max(1, this.photos[index * 3].offsetWidth);
+      return {
+        panel: { x: dashboard.left - scene.left, y: dashboard.top - scene.top, endX: center - dockRing / 2 - (panel.offsetLeft + ring.offsetLeft) * metricScale, endY: top + (compact ? 34 : 37) - (panel.offsetTop + ring.offsetTop) * metricScale, scale: metricScale },
+        photo: { x: pile.left - scene.left, y: pile.top - scene.top, endX: center - dockPhoto / 2 - 5, endY: top + (compact ? 70 : 86), scale: photoScale },
+      };
+    });
+  }
+
+  /** The original nodes move into the timeline; reduced motion keeps the readable flow layout. */
+  private syncTokenLayout(): void {
+    const dashboard = this.section.querySelector('.experience-dashboard')!;
+    this.tokens.hidden = this.reduced;
+    this.panels.forEach((panel, index) => (this.reduced ? dashboard : this.panelHosts[index]).append(panel));
+    this.photos.forEach((photo, index) => (this.reduced ? this.pile : this.photoHosts[Math.floor(index / 3)]).append(photo));
   }
 
   private onResize = (): void => { if (!this.disposed) { this.measureLayout(); this.onScroll(); } };
@@ -204,6 +263,7 @@ export class ExperienceIntro {
   private onPreference = (): void => {
     this.reduced = motionPreference.matches;
     this.section.classList.toggle('is-reduced', this.reduced);
+    this.syncTokenLayout();
     this.stop();
     this.measureLayout();
     this.measure();
@@ -237,6 +297,8 @@ export class ExperienceIntro {
     this.section.style.setProperty('--header-dock', frame.dock.toFixed(4));
     this.section.style.setProperty('--era-opacity', frame.era.toFixed(4));
     this.section.style.setProperty('--era-dock', frame.eraDock.toFixed(4));
+    const era = this.eraPose, dock = frame.eraDock;
+    this.era.style.transform = `translate3d(${era.startX + (era.endX - era.startX) * dock}px,${era.startY + (era.endY - era.startY) * dock}px,0) translate(-50%,-50%) scale(${1 + (era.scale - 1) * dock})`;
     this.section.style.setProperty('--timeline-reveal', frame.timelineReveal.toFixed(4));
     this.section.style.setProperty('--marquee-reveal', frame.marquee.toFixed(4));
     this.section.classList.toggle('is-counted', frame.counter === COMPANY.totalSqm);
@@ -277,6 +339,18 @@ export class ExperienceIntro {
       this.arcs[index].style.strokeDashoffset = String((1 - filled) * 100);
       this.values[index].textContent = `${Math.round(METRICS[index].value * filled).toLocaleString('th-TH')}${METRICS[index].suffix}`;
       panel.style.setProperty('--gauge-turn', `${filled}turn`);
+      panel.classList.toggle('is-docked', frame.archived[index] > .999);
+      const pose = this.tokenPoses[index], amount = frame.archived[index];
+      panel.querySelector<HTMLElement>('.experience-stat-copy')!.style.opacity = String(this.reduced ? 1 : 1 - amount);
+      panel.querySelector<HTMLElement>('.experience-stat-code')!.style.opacity = String(this.reduced ? 1 : 1 - amount);
+      this.photoHosts[index].classList.toggle('is-docking', amount > 0);
+      if (pose) {
+        ([['panel', this.panelHosts[index]], ['photo', this.photoHosts[index]]] as const).forEach(([key, host]) => {
+          const point = pose[key];
+          host.style.transform = `translate3d(${point.x + (point.endX - point.x) * amount}px,${point.y + (point.endY - point.y) * amount}px,0) scale(${1 + (point.scale - 1) * amount})`;
+          host.dataset.docked = amount.toFixed(4);
+        });
+      }
     });
     const pileWidth = this.pile.clientWidth, pileHeight = this.pile.clientHeight;
     this.photos.forEach((photo, index) => {
@@ -289,14 +363,16 @@ export class ExperienceIntro {
       const restX = bound((pileWidth - width) * pose.x, extraX, pileWidth - width - extraX);
       const restY = bound((pileHeight - height) * pose.y, extraY, pileHeight - height - extraY);
       const local = index % 3, group = Math.floor(index / 3);
-      const depth = Math.max(0, frame.active - group);
-      const finalX = bound(restX - depth * 12, extraX, pileWidth - width - extraX);
+      const archived = this.reduced ? 0 : frame.archived[group];
+      const dockScale = this.tokenPoses[group]?.photo.scale ?? 1;
+      const finalX = restX + ((4 + local * 4) / dockScale - restX) * archived;
+      const finalY = restY + ((4 + local * 2) / dockScale - restY) * archived;
       const fromX = local === 2 ? -width - 45 : pileWidth + 70;
       const fromY = local === 1 ? pileHeight + 30 : restY - (local === 2 ? 65 : 35);
       const x = finalX + (fromX - finalX) * (1 - amount);
-      const y = restY + (fromY - restY) * (1 - amount);
-      photo.style.transform = `translate3d(${x.toFixed(2)}px,${y.toFixed(2)}px,0) rotate(${(pose.angle + (local === 1 ? -18 : 18) * (1 - amount)).toFixed(2)}deg) scale(${1 - depth * .04})`;
-      photo.style.opacity = String(Math.min(1, amount * 1.8) * (depth ? .48 : 1));
+      const y = finalY + (fromY - finalY) * (1 - amount);
+      photo.style.transform = `translate3d(${x.toFixed(2)}px,${y.toFixed(2)}px,0) rotate(${(pose.angle + (local === 1 ? -18 : 18) * (1 - amount)).toFixed(2)}deg)`;
+      photo.style.opacity = String(Math.min(1, amount * 1.8));
       photo.style.zIndex = String(index + 1);
     });
     this.checks.forEach((check, index) => {

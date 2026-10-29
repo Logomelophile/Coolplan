@@ -16,6 +16,9 @@ test('experience opens with readable head copy and ends with a complete year lin
   assert.equal(last.counter, COMPANY.totalSqm);
   assert.deepEqual([...last.rings, ...last.panels, ...last.checks], Array(10).fill(1));
   assert.equal(last.marquee, 1);
+  assert.equal(last.era, 1, 'The original 2005 remains visible after docking');
+  assert.equal(last.eraDock, 1);
+  assert.deepEqual(last.archived, [1, 1, 1]);
 });
 
 test('the year marker and delivered area follow the same clock and reverse exactly', () => {
@@ -53,6 +56,19 @@ test('milestones reveal their photo groups before the separate project proof ent
   assert.ok(late.checks[0] > late.checks[1] && late.checks[1] > late.checks[2]);
   for (const value of [-2, NaN, Infinity, ...Array.from({ length: 501 }, (_, i) => i / 500), 2]) {
     const frame = experienceFrame(value);
-    for (const fraction of [frame.head, frame.sub, frame.dock, frame.era, frame.eraDock, frame.timeline, frame.timelineReveal, frame.marquee, ...frame.rings, ...frame.panels, ...frame.checks, ...frame.milestones, ...frame.photos, ...frame.story]) assert.ok(Number.isFinite(fraction) && fraction >= 0 && fraction <= 1);
+    for (const fraction of [frame.head, frame.sub, frame.dock, frame.era, frame.eraDock, frame.timeline, frame.timelineReveal, frame.marquee, ...frame.rings, ...frame.panels, ...frame.checks, ...frame.milestones, ...frame.photos, ...frame.story, ...frame.archived]) assert.ok(Number.isFinite(fraction) && fraction >= 0 && fraction <= 1);
   }
+});
+
+test('each completed dashboard and photo group docks continuously and reverses with scroll', () => {
+  const before = experienceFrame(.54), first = experienceFrame(.64), second = experienceFrame(.86);
+  assert.deepEqual(before.archived, [0, 0, 0]);
+  assert.deepEqual(first.archived, [1, 0, 0]);
+  assert.deepEqual(second.archived, [1, 1, 0]);
+  for (const point of [.56, .78]) {
+    const a = experienceFrame(point - .0001), b = experienceFrame(point + .0001);
+    a.archived.forEach((amount, i) => assert.ok(Math.abs(amount - b.archived[i]) < .01, 'Changing the active story never cuts its geometry'));
+  }
+  assert.equal(experienceFrame(.29).era, 1);
+  assert.equal(experienceFrame(.4).eraDock, 1);
 });

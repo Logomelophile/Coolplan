@@ -1,4 +1,4 @@
-.client-logos{position:relative;padding:32px 0 22px;background:linear-gradient(180deg,#f7f3f0,#fcfaf8 54%,#f7f3f0);overflow:hidden}
+.client-logos{position:relative;padding:32px 0 22px;background:#fff;overflow:hidden}
 .client-logos-heading{position:relative;display:flex;align-items:center;justify-content:center;min-height:30px;margin:0 6.7% 18px}
 .client-logos h2{font:500 20px/1.5 Arial,sans-serif;letter-spacing:.15px;color:#5f5362;text-align:center}
 .client-logos-window{padding:12px 0;overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}

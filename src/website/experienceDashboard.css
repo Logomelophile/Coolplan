@@ -13,14 +13,15 @@
 .experience-title-placeholder{visibility:hidden}
 .experience-typed{position:absolute;inset:0;text-align:center}
 .experience-typing-glyph{display:inline-block;will-change:transform,opacity;transform-origin:center bottom}
-.experience-era{position:absolute;z-index:1;left:50%;top:54%;text-align:center;pointer-events:none;opacity:var(--era-opacity,.6);transform:translate(calc(-50% - var(--era-dock,0) * 37vw),calc(var(--era-dock,0) * -12svh)) scale(calc(1 - var(--era-dock,0) * .35))}
-.experience-era>span{display:block;margin-bottom:8px;font:500 9px/1.4 Arial,sans-serif;letter-spacing:4px;color:#b18cbb}
+.experience-era{position:absolute;z-index:7;left:0;top:0;width:max-content;text-align:center;pointer-events:none;transform-origin:center;will-change:transform}
+.experience-era>span{position:absolute;bottom:calc(100% + 8px);left:0;width:100%;font:500 9px/1.4 Arial,sans-serif;letter-spacing:4px;color:#b18cbb;opacity:calc(1 - var(--era-dock,0))}
 .experience-era strong{display:block;font:450 clamp(88px,15vw,220px)/.95 Arial,sans-serif;letter-spacing:-.07em;color:#7b548e}
 .experience-typed.is-typing::after{content:'';display:inline-block;height:.9em;width:2px;background:#e58b51;margin-left:4px;vertical-align:-.04em;animation:experience-caret .9s steps(1) infinite}
 @keyframes experience-caret{50%{opacity:0}}
 .experience-years{position:relative;z-index:5;display:grid;grid-template-columns:48px 1fr 48px;width:100vw;margin:0 0 0 -6.7vw;opacity:var(--timeline-reveal,0);translate:0 calc((1 - var(--timeline-reveal,0)) * 14px)}
 .experience-year-start,.experience-year-end{display:flex;flex-direction:column;align-items:center;gap:10px;color:#785186;font:600 10px/1 Arial,sans-serif;letter-spacing:.7px}
 .experience-year-start i,.experience-year-end i{display:block;width:10px;height:10px;border:2px solid #64406f;border-radius:50%;background:#fff}
+.experience-era-anchor{display:block;width:40px;height:10px}
 .experience-year-start i,.is-counted .experience-year-end i{background:#ed8d52;border-color:#ed8d52}
 .experience-years-track{position:relative;height:3px;background:#ede4f1;margin:4px -24px 0}
 .experience-years-fill{display:block;width:100%;height:100%;background:linear-gradient(90deg,#50305f 0%,#69407e 72%,#ed8d52 100%);transform:scaleX(0);transform-origin:left}
@@ -157,7 +158,6 @@
 #experience-intro.is-reduced .experience-scroll{height:auto}
 #experience-intro.is-reduced .experience-sticky{position:relative;height:auto;min-height:0;gap:25px;padding-block:38px}
 #experience-intro.is-reduced .experience-dashboard-heading{transform:none}
-#experience-intro.is-reduced .experience-era{display:none}
 #experience-intro.is-reduced .experience-stat{position:relative;inset:auto;visibility:visible;pointer-events:auto}
 #experience-intro.is-reduced .experience-dashboard{display:grid;gap:22px;align-content:center}
 #experience-intro.is-flow .experience-milestone-story{grid-template-rows:auto 360px}
@@ -172,5 +172,46 @@
   .experience-projects-track{animation:none;transform:none}
   .experience-projects-group[aria-hidden=true],.experience-projects-toggle{display:none}
   .experience-typed::after{display:none}
-  .experience-era{display:none}
 }
+
+/* A completed dashboard and its original photos travel to the next timeline node. */
+#experience-intro .experience-sticky{grid-template-rows:auto 144px minmax(0,1fr) 22px}
+.experience-story-tokens{position:absolute;inset:0;z-index:4;pointer-events:none}
+.experience-story-tokens[hidden]{display:none}
+.experience-story-token{position:absolute;inset:0;pointer-events:none}
+.experience-token-dashboard,.experience-token-photos{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+.experience-token-dashboard{display:grid;place-items:center}
+.experience-token-photos{overflow:clip}
+.experience-token-photos.is-docking{overflow:visible}
+.experience-token-dashboard .experience-stat{position:relative;inset:auto;display:flex;flex-direction:column;align-items:center;gap:9px;visibility:visible;translate:0 calc((1 - var(--panel-reveal,0)) * 14px);pointer-events:none}
+.experience-token-dashboard .experience-stat-code{align-self:center;font-size:9px}
+.experience-token-dashboard .experience-ring{width:clamp(108px,13vw,180px)}
+.experience-token-dashboard .experience-ring-value strong{font-size:48px}
+.experience-token-dashboard .experience-stat:nth-child(1) .experience-ring-value strong{font-size:48px}
+.experience-token-dashboard .experience-stat[aria-label^="พื้นที่"] .experience-ring-value strong{font-size:30px}
+.experience-token-dashboard .experience-stat-copy{text-align:center;padding-top:0}
+.experience-token-dashboard .experience-stat p{font-size:11px}
+.experience-token-dashboard .experience-stat-label{font-size:15px}
+@media(max-width:850px){
+  #experience-intro .experience-sticky{grid-template-rows:auto 118px minmax(0,1fr) 22px}
+  .experience-token-dashboard .experience-ring{width:94px}
+  .experience-token-dashboard .experience-ring-value strong,.experience-token-dashboard .experience-stat:nth-child(1) .experience-ring-value strong{font-size:29px}
+  .experience-token-dashboard .experience-stat[aria-label^="พื้นที่"] .experience-ring-value strong{font-size:17px}
+  .experience-token-dashboard .experience-stat-label{font-size:10px}
+  .experience-token-dashboard .experience-stat-code{font-size:6px}
+  .experience-token-dashboard .experience-stat p{display:none}
+}
+@media(max-height:620px){
+  #experience-intro .experience-sticky{grid-template-rows:auto 118px minmax(0,1fr) 18px}
+  .experience-token-dashboard .experience-ring{width:112px}
+  .experience-token-dashboard .experience-ring-value strong,.experience-token-dashboard .experience-stat:nth-child(1) .experience-ring-value strong{font-size:34px}
+  .experience-token-dashboard .experience-stat[aria-label^="พื้นที่"] .experience-ring-value strong{font-size:23px}
+  .experience-token-dashboard .experience-stat p{display:none}
+}
+@media(max-height:420px){
+  #experience-intro .experience-sticky{grid-template-rows:auto 108px minmax(0,1fr) 16px}
+  .experience-token-dashboard .experience-ring{width:84px}
+  .experience-token-dashboard .experience-ring-value strong,.experience-token-dashboard .experience-stat:nth-child(1) .experience-ring-value strong{font-size:27px}
+  .experience-token-dashboard .experience-stat[aria-label^="พื้นที่"] .experience-ring-value strong{font-size:17px}
+}
+#experience-intro.is-reduced .experience-sticky{grid-template-rows:auto 76px minmax(0,1fr) 22px}
