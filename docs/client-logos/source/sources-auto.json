@@ -1,0 +1,66 @@
+[
+  {
+    "brand": "Mercedes-Benz",
+    "file": "mercedes-benz.png",
+    "sourceURLs": [
+      "https://group.mercedes-benz.com/company/tradition/mercedes-benz/",
+      "https://group.mercedes-benz.com/company/tradition/mercedes-benz/birth.html"
+    ],
+    "prompt": "Use case: background-extraction. Asset type: crisp transparent PNG client logo for a website marquee. Edit target: supplied catalog crop of the Mercedes-Benz emblem. Reconstruct the exact classic silver metallic three-pointed star enclosed by a thin circular silver ring, matching reference geometry and subtle chrome gradients. Remove every trace of the catalog white/gray paper and texture, compression, rectangular border, and noise. Transparent alpha outside the ring AND in the three interior negative spaces. Emblem only, no words, no laurel wreath. Perfect circular frontal proportions, sharp antialiased edges. Center with modest transparent padding. Preserve the established Mercedes-Benz identity as verified by official brand history; no redesign, no drop shadow, no extra text, no checkerboard baked into image. High resolution clean production logo.\n\nTargeted correction:\nUse case: background-extraction cleanup. Edit target: the provided silver Mercedes-Benz star emblem PNG. Keep the exact emblem, proportions, circular ring, three spokes and existing subtle silver chrome shading unchanged. Make only an alpha-edge cleanup: remove all stray white/gray/cyan pixel flecks, halos and remnants outside the exact silhouette and inside the three transparent negative spaces. Keep only a clean smooth sharp antialiased contour, with genuine alpha transparency everywhere outside the emblem. Remove tiny detached artifacts; no additional glow or shadow. The ring must be one perfect clean circle. Do not add any text or wreath, do not change the mark, no checkerboard.",
+    "generationMode": "built-in imagegen edit with transparent_background=true"
+  },
+  {
+    "brand": "Maserati",
+    "file": "maserati.png",
+    "sourceURLs": [
+      "https://www.maserati.com/gb/en/brand/stories-of-audacity/100-years-maserati-trident-logo"
+    ],
+    "prompt": "Use case: background-extraction. Asset type: high resolution transparent PNG logo for website client ribbon. Edit target: supplied Maserati catalog logo crop. Reconstruct the identical classic upright silver/gray Maserati trident above the exact serif uppercase wordmark \"MASERATI\" (M A S E R A T I), matching the reference proportions. Established historical identity, not the newer script wordmark. Smooth crisp chrome-gray details, sharp curves and exact balanced geometry, all seven letters immaculate. Remove all paper, gray rectangle, diagonal catalog texture, border and compression. Genuine transparent alpha background and transparent negative spaces, modest clear padding. No additional icon, car, red/blue oval, slogan, shadow or watermark; no checkerboard pattern baked into pixels. Preserve identity and layout.",
+    "generationMode": "built-in imagegen edit with transparent_background=true"
+  },
+  {
+    "brand": "MINI",
+    "file": "mini.png",
+    "sourceURLs": [
+      "https://www.press.bmwgroup.com/global/article/detail/T0276950EN/tradition-conscious-authentic-clear%3A-the-new-mini-logo"
+    ],
+    "prompt": "Use case: background-extraction. Asset type: high resolution transparent PNG logo for website client ribbon. Edit target: supplied MINI catalog logo. Faithfully regenerate the historical 2001-style MINI silver chrome winged wheel emblem: black circular center with precise white uppercase \"MINI\", thin concentric silver rings, symmetrical streamlined horizontal silver wings with three separated feathers on each side matching reference. Maintain exact wide proportions, frontal symmetry and controlled silver metallic gradients. This is the historical shaded badge, do not modernize to current flat black line art. Remove catalog paper, gray rectangle, diagonal texture, noise and border. True transparent alpha around the complete emblem and between wing elements, smooth clean antialiased outlines, modest transparent padding. No rectangle, shadow, extra text, extra wings, car, watermarks or baked checkerboard.\n\nTargeted correction:\nUse case: precise-object-edit and background-extraction. Image 1 is the original historical MINI logo reference and determines the exact identity. Image 2 is the generated cleanup target. Make one correction to Image 2: each silver wing must have EXACTLY THREE horizontal silver feather bands, as in Image 1, not four; remove the extra lowest wing band and use the three tier silhouette and proportions from Image 1. Keep the black central circle, crisp exact white MINI wordmark and thin chrome ring. Clean all outer alpha edges: remove every stray gray or white pixel fleck and all halos around the contour. Smooth sharp antialiasing; no paper or background color anywhere. Genuine transparent background. No new features, no perspective, no shadow or additional text. Keep wide complete balanced historic MINI emblem with modest transparent padding.",
+    "generationMode": "built-in imagegen edit with transparent_background=true"
+  },
+  {
+    "brand": "BMW",
+    "file": "bmw.png",
+    "sourceURLs": [
+      "https://www.bmw.com/content/dam/bmw/marketAU/bmw_com/all-models/specification_guide_2021/August/BMW_Z4_Specification_Guide-G29.pdf.asset.1629454608956.pdf"
+    ],
+    "prompt": "Use case: background-extraction. Asset type: high resolution transparent PNG client emblem for website. Edit target: supplied BMW catalog emblem crop. Reconstruct the same historical glossy round BMW badge precisely: perfectly circular silver chrome outer rim, broad black ring carrying exact white uppercase letters B M W along the upper arc, central circle divided into four equal alternating blue and silver-white quadrants with top-left blue, top-right white, bottom-left white, bottom-right blue. Preserve reference chrome gradients and roundel geometry; centered flat front-on, not perspective. Remove background paper, gray rectangle, diagonal texture, border, noise and compression. True transparent alpha outside badge only; preserve white inside badge. Clean crisp antialiased outlines with modest transparent padding. No extra words, car, decoration, shadow or checkerboard background.",
+    "generationMode": "built-in imagegen edit with transparent_background=true"
+  },
+  {
+    "brand": "ISUZU",
+    "file": "isuzu.png",
+    "sourceURLs": [
+      "https://www.isuzu.co.jp/faq/company/"
+    ],
+    "prompt": "Use case: background-extraction. Asset type: clean high resolution transparent PNG wordmark for website. Edit target: supplied red ISUZU catalog crop. Reconstruct exact official ISUZU corporate wordmark as shown, uppercase \"ISUZU\" with the distinctive custom squared geometric typography. Preserve the precise I S U Z U letter shapes, spacing, wide horizontal proportions and vivid Isuzu red. Smooth solid color with crisp antialiased edges; no new bevel, shine, texture or gradients. Remove all catalog paper, white rectangle, shadow, noise, diagonal background and compression artifacts. Genuine transparent alpha around and within letter counters; modest transparent padding. Do not add symbol, truck, slogan, frame, shadow, watermark, or checkerboard.\n\nTargeted correction:\nUse case: background-extraction cleanup. Edit target: the supplied generated red ISUZU logo PNG. Keep the exact red wordmark geometry, typography, spacing, proportions and letters I S U Z U unchanged. Make only an alpha-edge cleanup: remove every stray red speck, fleck or detached pixel between letters and outside contours. Render the five letters as smooth solid uniform official vivid red with clean mathematically smooth sharp antialiased outlines; no gradients or noise. Genuine transparent alpha everywhere outside the five exact letter silhouettes. No paper, rectangle, shadow, glow, bevel, textures, additional text, symbols or checkerboard. Center complete mark with small transparent padding.",
+    "generationMode": "built-in imagegen edit with transparent_background=true"
+  },
+  {
+    "brand": "Mazda",
+    "file": "mazda.png",
+    "sourceURLs": [
+      "https://www.mazda.com/en/about/history/mark/"
+    ],
+    "prompt": "Use case: background-extraction. Asset type: clean high resolution transparent PNG brand logo for website. Edit target: supplied Mazda catalog crop. Reconstruct same historical Mazda logo accurately: silver chrome elliptical ring enclosing the stylized upward winged M, with the exact custom lowercase \"mazda\" wordmark below in bright Mazda blue. Preserve 1997-era mark and traditional lowercase lettering, oval proportions and chrome shading from reference; do NOT replace with 2025 flat redesign or all-uppercase MAZDA. Whole symbol and complete wordmark centered, balanced, crisp antialiased edges, polished graphic reproduction. Remove catalog paper, gray rectangle, border, diagonal texture, compression and noise. Genuine transparent alpha around mark AND within the ellipse negative spaces; letters remain blue. Modest clear padding. No extra text, slogans, car, shadow, baked checkerboard or redesign.",
+    "generationMode": "built-in imagegen edit with transparent_background=true"
+  },
+  {
+    "brand": "Krungthai Bank",
+    "file": "krungthai.png",
+    "sourceURLs": [
+      "https://krungthai.com/Download/CSR/CSRDownload_51CSR_report57.pdf"
+    ],
+    "prompt": "Use case: background-extraction. Asset type: clean high resolution transparent PNG bank emblem for website. Edit target: supplied Krungthai Bank catalog logo. Faithfully reconstruct the same exact traditional Krungthai emblem in cyan blue: circular cyan blue disk containing the intricate WHITE Vayupak mythical bird motif from reference, including the outstretched wings and ornamented central body. Preserve the historical circle badge identity and all bird silhouette details, frontal symmetry, color cyan blue, no changes to design. Keep the white bird shape genuinely white within the intentional cyan circular brand badge; only outside circle should be transparent alpha. Very crisp smooth vector-like silhouette edges, no blur or texture. Remove every trace of catalog paper/diagonal pattern, gray rectangle, border, shadow, noise and compression. Center complete circle with modest transparent padding. No bank text, no different bird, no coin rendering, no 3D bevel, no watermark or checkerboard.",
+    "generationMode": "built-in imagegen edit with transparent_background=true"
+  }
+]

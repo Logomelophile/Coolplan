@@ -15,15 +15,15 @@ export interface ShowcaseItem {
 }
 
 export const SHOWCASE_ITEMS: ShowcaseItem[] = [
-  { image: '/website/showcase/chevron-hall.webp', title: 'ทางเดินลายเชฟรอน', detail: 'โถงทางเดินโทนโอ๊คอ่อน · ลายเชฟรอนรับแสงธรรมชาติ', orientation: 'portrait' },
+  { image: '/website/showcase/cafe-herringbone.webp', title: 'คาเฟ่ลายก้างปลา', detail: 'มุมนั่งริมกระจก · ลายก้างปลากับแสงธรรมชาติ', orientation: 'portrait' },
+  { image: '/website/showcase/office-meeting.webp', title: 'Office · ห้องประชุม', detail: 'พื้นที่ทำงานและห้องประชุม · พื้นลายก้างปลา', orientation: 'landscape' },
   { image: '/website/showcase/narasiri-light.webp', title: 'บ้านเดี่ยว @ Narasiri', detail: 'ห้องนั่งเล่น · SPC ลายก้างปลาโทนอ่อน', orientation: 'landscape' },
-  { image: '/website/showcase/cafe-herringbone.webp', title: 'คาเฟ่ลายก้างปลา', detail: 'พื้นที่นั่งริมกระจก · ก้างปลาโทนวอลนัท', orientation: 'portrait' },
+  { image: '/website/showcase/cafe-herringbone-top.webp', title: 'คาเฟ่เดียวกัน · อีกมุม', detail: 'มุมสูงเห็นแนวปูพื้นและพื้นที่นั่ง', orientation: 'portrait' },
+  { image: '/website/showcase/office-lounge.webp', title: 'Office · มุมพักผ่อน', detail: 'อีกมุมของพื้นที่ทำงานเดียวกัน', orientation: 'landscape' },
   { image: '/website/showcase/narasiri-dark.webp', title: 'บ้านเดี่ยว @ Narasiri', detail: 'มุมรับแขก · ลายก้างปลาโทนเข้ม', orientation: 'landscape' },
-  { image: '/website/showcase/stair-teak.webp', title: 'บันไดบ้านพัก', detail: 'ขั้นบันไดและชานพัก · โทนไม้สักอบอุ่น', orientation: 'portrait' },
+  { image: '/website/showcase/chevron-hall.webp', title: 'ทางเดินลายเชฟรอน', detail: 'โถงทางเดินโทนโอ๊คอ่อน · ลายเชฟรอนรับแสงธรรมชาติ', orientation: 'portrait' },
   { image: '/website/showcase/pethotel-herringbone.webp', title: 'Pet Hotel @ พัฒนาการ', detail: 'ห้องพักสัตว์เลี้ยง · ก้างปลาโทนโอ๊ค ทำความสะอาดง่าย', orientation: 'landscape' },
-  { image: '/website/showcase/cafe-herringbone-top.webp', title: 'คาเฟ่ มุมสูง', detail: 'โต๊ะไม้ตัดกับก้างปลาโทนเข้ม', orientation: 'portrait' },
   { image: '/website/showcase/stair-railing.webp', title: 'Staircase Flooring', detail: 'หุ้มขั้นบันไดพร้อมจมูกบันไดเข้าชุด', orientation: 'landscape' },
-  { image: '/website/showcase/stair-oak.webp', title: 'บันไดโทนโอ๊ค', detail: 'ลูกตั้ง ลูกนอน และจมูกบันไดสีเดียวกัน', orientation: 'portrait' },
   { image: '/website/showcase/narasiri-stairs.webp', title: 'บันไดโค้ง @ Narasiri', detail: 'ขั้นบันไดโค้งตามราวเหล็กดัด', orientation: 'landscape' },
 ];
 

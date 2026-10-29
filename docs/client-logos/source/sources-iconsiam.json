@@ -1,0 +1,13 @@
+{
+  "brand": "ICONSIAM",
+  "file": "iconsiam-transparent.png",
+  "sourceURLs": [
+    "https://www.iconsiam.com/th"
+  ],
+  "sourceRole": "Official identity verification; regenerated black positive wordmark variant for customer ribbon readability.",
+  "generationMode": "built-in image_gen__imagegen edit",
+  "prompt": "Use case: precise-object-edit / background-extraction. Edit target: attached faithful ICONSIAM wordmark logo. Official brand identity verified at https://www.iconsiam.com/th. Create a clean high-resolution BLACK-on-transparent variant of EXACTLY this same ICONSIAM wordmark. Preserve every letter's elegant high contrast serif shape, ligature/spacing, and proportions. Change only: remove the entire black square background, recolor the existing white letters to opaque black. True alpha transparency outside and inside counters, no white rectangle, no gray checkerboard pixels, no shadow/glow or texture. Wide horizontal canvas about 4:1; wordmark fills 85% of width with modest even transparent clearspace. Text exact uppercase ICONSIAM. Do not add any extra text, icon, lines or decoration. Crisp edges, logo reproduction, no redesign.",
+  "width": 2172,
+  "height": 724,
+  "transparent": true
+}

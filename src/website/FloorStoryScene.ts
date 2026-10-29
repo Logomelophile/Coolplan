@@ -4,7 +4,7 @@ import {
   Vector3, WebGLRenderer, type Texture,
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { getProduct } from '../data/products';
+import { createFloorStoryProduct, FLOOR_STORY_LAYER_IDS, FLOOR_STORY_THICKNESS_MM, type FloorStoryLayerId } from './floorStoryProduct';
 import { createPlank, type PlankModel } from '../geometry/plankGeometry';
 import { createMaterials, type MaterialBundle } from '../materials/materialFactory';
 import { backingTilePlan, textureSetFromBitmaps, type TextureSet } from '../textures';
@@ -13,13 +13,13 @@ import { createStudio } from '../lighting';
 import type { ProductConfig } from '../types';
 import { sitePath } from '../sitePath';
 
-export type FloorStoryLayerId = 'wear' | 'decor' | 'core' | 'backing';
+export type { FloorStoryLayerId } from './floorStoryProduct';
 export interface FloorStoryFrame {
   from: number;
   to: number;
   mix: number;
   explode: number;
-  /** -1 for an overview; 0–3 follow the physical top-to-bottom order. */
+  /** -1 for an overview; 0–4 follow the physical top-to-bottom order. */
   focus: number;
   zoom: number;
   /** Scrub the assembled sample toward a shallow side view. Omission preserves the original overview API. */
@@ -47,13 +47,15 @@ type ModelState = {
   bundle: MaterialBundle;
   product: ProductConfig;
   photo: CanvasTexture;
-  wearOutline: LineSegments<EdgesGeometry, LineBasicMaterial>;
+  outlines: LineSegments<EdgesGeometry, LineBasicMaterial>[];
   blend: {map: {value: Texture}; mix: {value: number}};
 };
 const clamp = (value: number, min = 0, max = 1) => Math.max(min, Math.min(max, value));
 const ids = ['light-natural-oak', 'warm-taupe-oak', 'golden-honey-oak', 'whitewashed-ash-oak', 'greige-oak', 'dark-walnut-brown'];
-const layerIds: FloorStoryLayerId[] = ['wear', 'decor', 'core', 'backing'];
-const thicknesses: Record<FloorStoryLayerId, number> = {wear: .5, decor: .1, core: 3.4, backing: 1};
+const layerIds = FLOOR_STORY_LAYER_IDS;
+const thicknesses = FLOOR_STORY_THICKNESS_MM;
+const layerGap = 5.2;
+const explodedCentre = (layerIds.length - 1) * layerGap / 2;
 const overviewDirection = new Vector3(76, 67, 95);
 const profileElevationDelta = 1.40 - new Spherical().setFromVector3(overviewDirection).phi;
 const patches: [number, [number, number, number, number]][] = [
@@ -242,15 +244,7 @@ export class FloorStoryScene {
       reference.src = sitePath(`/website/assets/plank-${sheet}.webp`);
       const referenceReady = reference.decode();
       const anisotropy = this.renderer.capabilities.getMaxAnisotropy();
-      const product = structuredClone(getProduct(ids[index]));
-      // Website cutaway sample: these dimensions do not alter the original sales catalog.
-      product.dimensions = {lengthMm: 600, widthMm: 300, thicknessMm: 5};
-      for (const layer of product.layers) {
-        layer.thicknessMm = thicknesses[layer.id as FloorStoryLayerId];
-        if (layer.material.kind === 'wear') layer.material.opacity = .16;
-        if (layer.material.kind === 'core') layer.material.color = '#e4e3df';
-      }
-      product.maps = undefined;
+      const product = createFloorStoryProduct(ids[index]);
       // 1024 x 256 is indistinguishable from 2048 x 512 on a 600 x 300 mm sample and five times cheaper to make.
       const pool = getTextureWorkerPool();
       let prebuilt: {surface: TextureSet; backing: TextureSet} | undefined;
@@ -300,15 +294,22 @@ export class FloorStoryScene {
       };
       decor.customProgramCacheKey = () => 'floor-story-photo-blend-v1';
       const model = createPlank(product, bundle.materials);
-      const wear = model.layers.get('wear')!;
-      const outline = new LineSegments(new EdgesGeometry(wear.mesh.geometry, 30), new LineBasicMaterial({
-        color: '#d7e0df', transparent: true, opacity: .42, depthWrite: false,
-      }));
-      outline.name = 'wear-layer-outline';
-      wear.mesh.add(outline);
+      const outlines = (['uv', 'wear'] as const).map(id => {
+        const layer = model.layers.get(id)!;
+        layer.mesh.receiveShadow = false;
+        layer.mesh.renderOrder = id === 'uv' ? 11 : 10;
+        const outline = new LineSegments(new EdgesGeometry(layer.mesh.geometry, 30), new LineBasicMaterial({
+          color: id === 'uv' ? '#9b80b4' : '#c7d7d7', transparent: true,
+          opacity: id === 'uv' ? .58 : .42, depthWrite: false,
+        }));
+        outline.name = `${id}-layer-outline`;
+        outline.renderOrder = id === 'uv' ? 13 : 12;
+        layer.mesh.add(outline);
+        return outline;
+      });
       model.group.visible = false;
       this.scene.add(model.group);
-      this.models[index] = {model, bundle, product, photo, wearOutline: outline, blend};
+      this.models[index] = {model, bundle, product, photo, outlines, blend};
       // Upload this finish's textures now so its first appearance does not stall the scroll frame.
       this.renderer.initTexture(photo);
       for (const material of bundle.materials.values()) {
@@ -324,7 +325,7 @@ export class FloorStoryScene {
     for (const value of Object.values(frame)) if (value !== undefined && !Number.isFinite(value)) throw new Error('Floor story values must be finite.');
     this._frame = {
       from: Math.round(clamp(frame.from, 0, 5)), to: Math.round(clamp(frame.to, 0, 5)),
-      mix: clamp(frame.mix), explode: clamp(frame.explode), focus: Math.round(clamp(frame.focus, -1, 3)), zoom: clamp(frame.zoom),
+      mix: clamp(frame.mix), explode: clamp(frame.explode), focus: Math.round(clamp(frame.focus, -1, layerIds.length - 1)), zoom: clamp(frame.zoom),
       profile: clamp(frame.profile ?? 0),
     };
     // The shell grows with the same scroll frame; resizing now keeps the canvas and camera in step instead of one observer tick apart.
@@ -349,13 +350,13 @@ export class FloorStoryScene {
     for (const [id, entry] of state.model.layers) {
       const order = layerIds.indexOf(id as FloorStoryLayerId);
       // Separation is a visual explanation of construction, never a dimensioned factory specification.
-      entry.mesh.position.y = entry.baseY + (3 - order) * 5.2 * explode;
+      entry.mesh.position.y = entry.baseY + (layerIds.length - 1 - order) * layerGap * explode;
       entry.mesh.material.emissive = new Color(focus === order ? '#806841' : '#000000');
       entry.mesh.material.emissiveIntensity = focus === order ? .055 : 0;
     }
-    state.wearOutline.material.opacity = .25 + explode * .27;
+    state.outlines.forEach((outline, index) => { outline.material.opacity = index === 0 ? .26 + explode * .4 : .25 + explode * .27; });
     if (explode !== this.lastAppliedExplode) {
-      const target = new Vector3(0, .25 + 7.8 * explode, 0);
+      const target = new Vector3(0, .25 + explodedCentre * explode, 0);
       const translation = target.clone().sub(this.lastTarget);
       this.camera.position.add(translation);
       this.controls?.target.copy(target);
@@ -384,7 +385,7 @@ export class FloorStoryScene {
 
   resetView(): void {
     if (this.disposed) return;
-    const target = new Vector3(0, .25 + 7.8 * this._frame.explode, 0);
+    const target = new Vector3(0, .25 + explodedCentre * this._frame.explode, 0);
     const profile = this._frame.profile ?? 0;
     const direction = overviewDirection.clone();
     const spherical = new Spherical().setFromVector3(direction);
@@ -474,6 +475,10 @@ export class FloorStoryScene {
       cachedModels: this.models.filter(Boolean).length, loadedFinishes: this.models.map((state, index) => state ? ids[index] : null).filter(Boolean),
       visibleModels: this.models.filter(state => state?.model.group.visible).length,
       layerCount: this.models[this.displayed]?.model.layers.size ?? 0,
+      layers: layerIds.map(id => {
+        const entry = this.models[this.displayed]?.model.layers.get(id);
+        return { id, y: entry?.mesh.position.y, thicknessMm: entry?.config.thicknessMm, transparent: entry?.mesh.material.transparent };
+      }),
       dimensions: {lengthMm: 600, widthMm: 300, thicknessMm: 5},
       layerThicknessMm: {...thicknesses}, layerThicknessSumMm: Object.values(thicknesses).reduce((sum, value) => sum + value, 0),
       cameraPosition: this.camera.position.toArray(), target: this.controls?.target.toArray(),
@@ -494,8 +499,7 @@ export class FloorStoryScene {
     this.controls?.dispose();
     for (const state of this.models) {
       if (!state) continue;
-      state.wearOutline.geometry.dispose();
-      state.wearOutline.material.dispose();
+      state.outlines.forEach(outline => { outline.geometry.dispose(); outline.material.dispose(); });
       state.photo.dispose();
       state.model.dispose();
       state.bundle.dispose();

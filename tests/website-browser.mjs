@@ -32,7 +32,7 @@ async function initialize() {
   await page.waitForFunction(() => Boolean(window.websiteDemo?.ready));
   await page.evaluate(() => window.websiteDemo.ready);
   await page.evaluate(() => document.fonts.ready);
-  await page.waitForFunction(() => window.websiteDemo.diagnostics.viewer?.layerCount === 4 && window.websiteDemo.diagnostics.viewer.calls > 0);
+  await page.waitForFunction(() => window.websiteDemo.diagnostics.viewer?.layerCount === 5 && window.websiteDemo.diagnostics.viewer.calls > 0);
   const value = await state();
   assert.equal(value.viewer.webgl, true);
   assert.equal(value.preview.ready, true);
@@ -111,7 +111,7 @@ try {
   await initialize();
   report.desktop = await noOverflow();
   await page.screenshot({ path: outputPath('homepage-desktop.png') });
-  check('Desktop 1122px: built homepage renders with WebGL, four material layers, ready room photo and no horizontal overflow.');
+  check('Desktop 1122px: built homepage renders with WebGL, five material layers, ready room photo and no horizontal overflow.');
 
   const heroCanvas = page.locator('#hero-viewer canvas');
   const heroRect = await heroCanvas.boundingBox();
@@ -134,6 +134,55 @@ try {
   await page.locator('#layers-toggle').click(); assert.equal((await state()).progress, 1);
   await escapeExpanded('hero-expand', 'hero-3d-shell', 'hero-fullscreen-close');
   check('Hero: wheel scrolls the page and advances the story; actual drag changes camera; slider, layer toggle and fullscreen Escape work.');
+
+  await page.locator('#client-logos').scrollIntoViewIfNeeded();
+  await page.mouse.move(0, 0);
+  await page.waitForFunction(() => window.websiteDemo.diagnostics.clientLogos?.running);
+  assert.equal(await page.locator('#client-logos-title').innerText(), 'Our Customer');
+  const customerHeading = await page.locator('#client-logos-title').evaluate(el => ({ center: el.getBoundingClientRect().left + el.getBoundingClientRect().width / 2, size: parseFloat(getComputedStyle(el).fontSize), sectionHeight: el.closest('section').offsetHeight, viewport: innerWidth }));
+  assert.ok(Math.abs(customerHeading.center - customerHeading.viewport / 2) < 2 && customerHeading.size <= 22 && customerHeading.sectionHeight < 240, 'Customer heading is small, centred and compact');
+  const logoGroups = page.locator('.client-logos-group');
+  assert.equal(await logoGroups.count(), 2);
+  assert.ok(await logoGroups.first().locator('img').count() >= 10, 'Customer strip contains authentic logo images');
+  assert.equal(await logoGroups.last().getAttribute('aria-hidden'), 'true');
+  await page.waitForFunction(() => [...document.querySelectorAll('.client-logos-group img')].every(img => img.complete && img.naturalWidth > 0));
+  const logoTransform = () => page.locator('.client-logos-track').evaluate(el => getComputedStyle(el).transform);
+  const moving = await logoTransform();
+  await page.waitForTimeout(180);
+  assert.notEqual(await logoTransform(), moving, 'Customer logos move continuously');
+  await page.locator('.client-logos-toggle').click();
+  assert.equal(await page.locator('.client-logos-toggle').getAttribute('aria-pressed'), 'true');
+  await page.waitForTimeout(100);
+  const paused = await logoTransform();
+  await page.waitForTimeout(180);
+  assert.equal(await logoTransform(), paused, 'Pause control freezes the logo ribbon');
+  await page.locator('.client-logos-toggle').click();
+  assert.equal(await page.locator('.client-logos-toggle').getAttribute('aria-pressed'), 'false');
+  await page.screenshot({ path: outputPath('client-logos-desktop.png') });
+  check('Authentic customer logos load, loop before the experience intro, and can be paused and resumed.');
+
+  assert.deepEqual(await page.locator('#featured .featured-item').evaluateAll(items => items.map(item => item.id)), ['project-cafe', 'project-office', 'project-narasiri']);
+  const featureIds = ['cafe', 'office', 'narasiri', 'warranty'];
+  for (const id of featureIds) {
+    const selector = id === 'warranty' ? '#installation-warranty' : `#project-${id}`;
+    const target = await page.locator(selector).evaluate(el => ({ top: el.getBoundingClientRect().top + scrollY, travel: el.offsetHeight - innerHeight }));
+    const seekFeature = async progress => {
+      await page.evaluate(({ top, travel, progress }) => scrollTo({ top: top + travel * progress, behavior: 'instant' }), { ...target, progress });
+      await page.waitForFunction(({ id, progress }) => {
+        const value = window.websiteDemo.diagnostics.experience.featured.find(item => item.id === id);
+        return value && Math.abs(value.progress - progress) < .01 && !value.animating;
+      }, { id, progress });
+    };
+    await seekFeature(.8);
+    await page.waitForFunction(selector => [...document.querySelectorAll(`${selector} img`)].every(img => img.complete && img.naturalWidth > 0), selector);
+    const endTransform = await page.locator(`${selector} .featured-photo-2`).evaluate(el => getComputedStyle(el).transform);
+    await page.screenshot({ path: outputPath(`featured-${id}-desktop.png`) });
+    await seekFeature(.2);
+    assert.notEqual(await page.locator(`${selector} .featured-photo-2`).evaluate(el => getComputedStyle(el).transform), endTransform, `${id}: photo motion rewinds with scroll`);
+  }
+  assert.match(await page.locator('#installation-warranty').innerText(), /รับประกันการติดตั้ง 10 ปี/);
+  assert.match(await page.locator('#installation-warranty').innerText(), /เปลี่ยนให้ฟรี/);
+  check('Café, Office and Narasiri appear in order, each has multiple loaded photos and reversible scroll motion, followed by the 10-year installation warranty and team photos.');
 
   // Showcase gallery: pinned scroll moves the track and the counter; herringbone section lays its pattern and the CTA switches the simulator.
   const showcaseTop = await page.evaluate(() => document.getElementById('showcase').getBoundingClientRect().top + scrollY);
@@ -171,7 +220,7 @@ try {
   await page.waitForFunction(() => { const i = window.websiteDemo.diagnostics.experience?.intro; return i && i.cards === 0 && i.typed < i.total && i.counter < 175900; }, null, { timeout: 15000 });
   assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('.story-rail')).display), 'none');
   await page.evaluate(() => document.getElementById('trust').scrollIntoView({ block: 'center', behavior: 'instant' }));
-  await page.waitForFunction(() => { const t = window.websiteDemo.diagnostics.experience?.trust; return t && t.revealed && t.counters[0] >= 175899; }, null, { timeout: 15000 });
+  await page.waitForFunction(() => { const t = window.websiteDemo.diagnostics.experience?.trust; return t && t.revealed && t.counters[0] >= 175900; }, null, { timeout: 15000 });
   assert.match(await page.locator('.trust-ring strong').first().innerText(), /175,900/);
   await page.evaluate(() => document.getElementById('collections').scrollIntoView({ block: 'start', behavior: 'instant' }));
   assert.equal((await state()).collections.visible, 8);
@@ -239,6 +288,27 @@ try {
   await initialize();
   report.mobile = await noOverflow();
   await page.screenshot({ path: outputPath('homepage-mobile.png') });
+  for (const selector of ['#client-logos', '#project-cafe', '#project-office', '#project-narasiri', '#installation-warranty']) {
+    await page.locator(selector).evaluate(el => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
+    await page.waitForFunction(selector => {
+      const section = document.querySelector(selector);
+      return [...section.querySelectorAll('img')].every(img => img.complete && img.naturalWidth > 0)
+        && [...section.querySelectorAll('.featured-photo')].every(photo => Number(getComputedStyle(photo).opacity) > .99);
+    }, selector);
+    const width = await page.evaluate(() => ({ viewport: innerWidth, document: document.documentElement.scrollWidth }));
+    assert.ok(width.document <= width.viewport + 1, `${selector}: mobile document overflows`);
+    await page.screenshot({ path: outputPath(`${selector.slice(1)}-mobile.png`) });
+  }
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.waitForFunction(() => getComputedStyle(document.querySelector('.client-logos-track')).animationName === 'none' && [...document.querySelectorAll('.featured-photo,.featured-photo img')].every(item => getComputedStyle(item).transform === 'none'));
+  assert.equal(await page.locator('.client-logos-track').evaluate(el => getComputedStyle(el).animationName), 'none');
+  assert.equal(await logoGroups.last().isVisible(), false);
+  assert.equal(await page.locator('.client-logos-toggle').isVisible(), false);
+  assert.equal(await page.locator('#installation-warranty .featured-photo').count(), 3);
+  await page.screenshot({ path: outputPath('warranty-reduced-motion-mobile.png') });
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
+  check('New project stories and warranty fit mobile; reduced motion stops the ribbon and presents static photo layouts.');
   await page.locator('.menu-toggle').click();
   assert.equal(await page.locator('.menu-toggle').getAttribute('aria-expanded'), 'true');
   await page.locator('#main-navigation [data-contact-open]').click();
@@ -259,7 +329,7 @@ try {
   check('Repeated homepage disposal removes the 3D scene, hero room and preview canvases without errors.');
   assert.deepEqual(report.errors, []);
 } catch (error) {
-  report.failed = { message: error.message, stack: error.stack };
+  report.failed = { message: error.message, stack: error.stack, motion: await page.evaluate(() => ({ reduced: matchMedia('(prefers-reduced-motion: reduce)').matches, logos: window.websiteDemo?.diagnostics.clientLogos, featured: window.websiteDemo?.diagnostics.experience?.featured })).catch(() => null) };
   await page.screenshot({ path: outputPath('failure.png'), fullPage: true }).catch(() => {});
   throw error;
 } finally {

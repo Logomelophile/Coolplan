@@ -1,9 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { sampleStory, DETAIL_STOP, STORY_END, STORY_FINISHES, STORY_LAST, STORY_STEPS, STORY_UNIT } from '../src/website/storyTimeline';
+import { sampleStory, DETAIL_STOP, STORY_END, STORY_FINISHES, STORY_LAST, STORY_LAYER_COUNT, STORY_STEPS, STORY_UNIT } from '../src/website/storyTimeline';
 
-test('story offers four distinct finishes, a 5 mm introduction, four layers and a complete final stop', () => {
-  assert.equal(STORY_STEPS.length, 10);
+test('story offers four distinct finishes, a 5 mm introduction, five layers and a complete final stop', () => {
+  assert.equal(STORY_STEPS.length, 11);
+  assert.equal(STORY_LAYER_COUNT, 5);
   assert.deepEqual(STORY_STEPS.slice(0, DETAIL_STOP).map(step => step.finish), [...STORY_FINISHES]);
   assert.deepEqual([...STORY_FINISHES], [0, 3, 4, 5], 'Warm Taupe Oak and Golden Honey Oak are left out of the opening scroll.');
   assert.match(STORY_STEPS[DETAIL_STOP].description, /5\s*มม\./);
@@ -19,7 +20,8 @@ test('story offers four distinct finishes, a 5 mm introduction, four layers and 
     assert.equal(frame.step, step);
     assert.equal(frame.finishIndex, STORY_STEPS[step].finish);
     const visible = frame.labelsVisible.filter(opacity => opacity > .5).length;
-    assert.equal(visible, Math.max(0, Math.min(4, step - DETAIL_STOP)), `Stop ${step} must expose the correct cumulative layer descriptions.`);
+    assert.equal(visible, Math.max(0, Math.min(STORY_LAYER_COUNT, step - DETAIL_STOP)), `Stop ${step} must expose the correct cumulative layer descriptions.`);
+    if(step>DETAIL_STOP&&step<STORY_LAST) assert.equal(frame.focus, step-DETAIL_STOP-1, 'Each layer stop highlights its physical top-to-bottom index.');
   }
 });
 
@@ -46,7 +48,7 @@ test('color, enlargement and layer progress remain bounded, finite and exactly r
   }
   for (let index = forward.length - 1; index >= 0; index--) assert.deepEqual(sampleStory(STORY_END * index / 2400), forward[index]);
   assert.equal(sampleStory(STORY_END).complete, true);
-  assert.deepEqual(sampleStory(STORY_END).labelsVisible, [1, 1, 1, 1]);
+  assert.deepEqual(sampleStory(STORY_END).labelsVisible, [1, 1, 1, 1, 1]);
   assert.equal(sampleStory(STORY_END).explode, 1);
   assert.equal(sampleStory(STORY_END).zoom, 1);
 });

@@ -8,10 +8,11 @@ type Anchor={id:string;x:number;y:number;visible?:boolean};
 const FOLLOW_SECONDS=.14;
 type Callbacks={onFinish?:(index:number)=>void;onFrame?:(frame:ReturnType<typeof sampleStory>)=>void};
 const layers=[
-  {id:'wear',title:'Wear Layer',thai:'ชั้นเคลือบป้องกันผิว',text:'ชั้นใสบนสุด ช่วยกันรอยขีดข่วนและคราบจากการใช้งานทุกวัน'},
-  {id:'decor',title:'Decor Film',thai:'ฟิล์มลวดลายไม้',text:'ฟิล์มพิมพ์ลายไม้ ให้สีและลวดลายของพื้นแต่ละรุ่น'},
-  {id:'core',title:'SPC Core',thai:'แกนกลาง SPC',text:'แกนผสมผงหิน แข็งแรงและคงรูป เป็นโครงสร้างหลักของแผ่น'},
-  {id:'backing',title:'IXPE Backing',thai:'ชั้นรองพื้น IXPE',text:'ชั้นโฟมรองใต้แผ่น ช่วยลดเสียงกระทบและให้สัมผัสนุ่มเวลาเดิน'},
+  {id:'uv',title:'UV Layer',thai:'ชั้นเคลือบป้องกันรังสี UV',text:'เคลือบผิวบนสุด ช่วยลดการซีดจางของสีพื้น'},
+  {id:'wear',title:'Wear Layer',thai:'ชั้นป้องกันรอยขีดข่วน',text:'ชั้นใสช่วยปกป้องผิวจากการใช้งานทุกวัน'},
+  {id:'decor',title:'Color Film',thai:'ชั้นฟิล์มลวดลายไม้',text:'ฟิล์มพิมพ์สี ให้ลวดลายและบรรยากาศของไม้'},
+  {id:'core',title:'SPC Core',thai:'ชั้นแกนกลาง SPC',text:'แกนกลางแข็งแรง ช่วยให้แผ่นพื้นคงรูป'},
+  {id:'backing',title:'IXPE Foam',thai:'ชั้นโฟมรองพื้น IXPE',text:'รองรับแรงกระแทก ลดเสียงกระทบ ให้สัมผัสนุ่ม'},
 ];
 export class FloorScrollStory{
   readonly ready:Promise<void>;
@@ -37,6 +38,7 @@ export class FloorScrollStory{
   private overlay:SVGSVGElement;
   private status:HTMLElement;
   constructor(private callbacks:Callbacks={}){
+    this.host.style.setProperty('--story-scroll-length',String(1+STORY_END*STORY_UNIT));
     this.hero.insertAdjacentHTML('afterbegin','<div id="hero-room-background" aria-hidden="true"></div><div class="story-detail-wash" aria-hidden="true"></div>');
     this.hero.insertAdjacentHTML('beforeend',`<div class="story-copy" id="story-copy"><span class="story-eyebrow" id="story-eyebrow"></span><h2 id="story-title"></h2><p id="story-description"></p><div class="story-thickness" id="story-thickness"><strong>5<span>MM</span></strong><small>ความหนารวมของแผ่นพื้น</small></div></div><svg class="story-leaders" id="story-leaders" aria-hidden="true">${layers.map((layer,index)=>`<polyline data-leader="${layer.id}"/><circle data-dot="${layer.id}" r="5"/><text data-num="${layer.id}">${index+1}</text>`).join('')}</svg><div class="story-labels" id="story-labels">${layers.map((layer,index)=>`<div class="story-layer" data-layer="${layer.id}" data-shown="false"><span class="story-layer-number">0${index+1}</span><div><strong>${layer.title}</strong><b>${layer.thai}</b><small>${layer.text}</small></div></div>`).join('')}</div><div class="story-rail"><div class="story-rail-top"><span id="story-step-name">เลื่อนเพื่อสำรวจสีและชั้นวัสดุ</span><a href="#rooms" id="story-skip">เลือกสีพื้นด้านล่าง <span aria-hidden="true">↘</span></a></div><div class="story-rail-controls"><button id="story-prev" type="button" aria-label="ขั้นก่อนหน้า">←</button><div class="story-steps" role="group" aria-label="ลำดับการสำรวจ">${STORY_STEPS.map((step,index)=>`<button type="button" data-story-step="${index}" aria-label="ขั้น ${index+1}: ${step.title.replace('\n',' ')}" title="${step.title.replace('\n',' ')}"><span></span></button>`).join('')}</div><button id="story-next" type="button" aria-label="ขั้นถัดไป">→</button></div></div><p class="story-caption" id="story-caption">ชิ้นตัวอย่างวัสดุ · ขยายระยะระหว่างชั้นเพื่ออธิบายโครงสร้าง</p><div class="story-loading" id="story-loading" role="status">กำลังเตรียมห้องและวัสดุ 3D…</div>`);
     this.panel=document.getElementById('story-labels')!;this.overlay=document.getElementById('story-leaders') as unknown as SVGSVGElement;this.status=document.getElementById('story-loading')!;

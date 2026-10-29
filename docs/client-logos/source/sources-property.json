@@ -1,0 +1,102 @@
+[
+  {
+    "brand": "Narai Property",
+    "file": "narai.png",
+    "width": 1536,
+    "height": 1024,
+    "sourceURLs": [
+      "https://www.naraiproperty.com/"
+    ],
+    "sourceRole": "Official identity research; artwork reconstructed from owner-provided catalog-era reference, not an official downloaded logo asset.",
+    "prompt": "Use case: background-extraction. Asset type: precise client logo for website. Edit target: attached catalog-era Narai Property logo. Regenerate as a crisp high-resolution clean logo on genuinely transparent alpha. Preserve the exact folded angular green N monogram above the spaced uppercase word NARAI, same composition and green shades. Source verified against Narai Property official website https://www.naraiproperty.com/ (Thai developer, not Narai hospitality). Remove ALL white paper, faint gray borders, catalog texture, smudges and compression pixels. Flat precise vector-like edges, no glow/shadow/extra slogans. Center with modest transparent clearspace. Text verbatim NARAI, no added PROPERTY. Keep reference identity, do not redesign.",
+    "generationMode": "built-in image_gen__imagegen, one generation per asset",
+    "transparent": true,
+    "intentionalBackground": false
+  },
+  {
+    "brand": "Origin Property",
+    "file": "origin.png",
+    "width": 2164,
+    "height": 726,
+    "sourceURLs": [
+      "https://origin.co.th/th/"
+    ],
+    "sourceRole": "Official identity research; artwork reconstructed from owner-provided catalog-era reference, not an official downloaded logo asset.",
+    "prompt": "Use case: background-extraction. Asset type: exact client brand logo for website. Edit target: attached ORIGIN Property Thailand catalog-era logo, independently identified using official https://origin.co.th/th/. Regenerate crisp high-resolution faithful logo: angular upright hexagonal/ribbon O mark with dark charcoal left segment and warm orange right segment, then slim widely spaced black uppercase ORIGIN horizontally to its right. Preserve exact reference proportions and lettering. Remove white paper and diagonal gray catalog background COMPLETELY to transparent alpha; no shadow, texture, border, glow, gradient outside artwork, no extra tagline PROPERTY. Text verbatim ORIGIN. Clean polished brand mark at small size, not a new design.",
+    "generationMode": "built-in image_gen__imagegen, one generation per asset",
+    "transparent": true,
+    "intentionalBackground": false
+  },
+  {
+    "brand": "Kasikornbank",
+    "file": "kasikornbank.png",
+    "width": 1254,
+    "height": 1254,
+    "sourceURLs": [
+      "https://www.kasikornbank.com/en/about"
+    ],
+    "sourceRole": "Official identity research; artwork reconstructed from owner-provided catalog-era reference, not an official downloaded logo asset.",
+    "prompt": "Use case: background-extraction. Edit target: attached Kasikornbank emblem, official brand identified at https://www.kasikornbank.com/en/about. Rebuild clean high-resolution exact emblem: red circular outline surrounding green stylized rice stalk/leaf mark rising from a flat light-gray soil/bowl base, as in reference. Preserve authentic shapes, red and green colors, precise circular geometry. Transparent alpha both outside circle and in the negative spaces within circle, with no catalog gray patterned paper, no white square and no shadows. Flat sharp vector-like edges. No bank name, no added text, no redesign. Center with clearspace.",
+    "generationMode": "built-in image_gen__imagegen, one generation per asset",
+    "transparent": true,
+    "intentionalBackground": false
+  },
+  {
+    "brand": "Siam Commercial Bank",
+    "file": "scb.png",
+    "width": 1266,
+    "height": 1243,
+    "sourceURLs": [
+      "https://www.scb.co.th/"
+    ],
+    "sourceRole": "Official identity research; artwork reconstructed from owner-provided catalog-era reference, not an official downloaded logo asset.",
+    "prompt": "Use case: background-extraction. Edit target: attached Siam Commercial Bank (SCB) emblem, official bank identity verified at https://www.scb.co.th/. Regenerate a clean faithful crisp high-resolution logo: circular solid deep purple disk, containing gold-yellow stylized bodhi leaf/temple pointed frame exactly like reference. Keep the purple filled circle itself (this is part of the trademark), make ONLY the area outside the circle genuinely transparent alpha. Remove all gray patterned catalog paper and outer white square/border. Flat sharp vector-like geometry, no texture, no glow, no shadow. No text or additional elements. Center with small clearspace.",
+    "generationMode": "built-in image_gen__imagegen, one generation per asset",
+    "transparent": true,
+    "intentionalBackground": true
+  },
+  {
+    "brand": "SAVVI Phahol 2",
+    "file": "savvi.png",
+    "width": 1254,
+    "height": 1254,
+    "sourceURLs": [
+      "https://www.theurbanproperty.com/index?language=en",
+      "https://www.theurbanproperty.com/upload-backend/project/brochure/00620fde8abf031ed5181cc41888688a.pdf"
+    ],
+    "sourceRole": "Official identity research; artwork reconstructed from owner-provided catalog-era reference, not an official downloaded logo asset.",
+    "prompt": "Use case: precise-object-edit/background-extraction. Edit target: attached SAVVI condominium logo from The Urban Property Thailand (not unrelated overseas Savvi companies). Official project identity confirmed at https://www.theurbanproperty.com/index?language=en and official SAVVI Phahol 2 brochure https://www.theurbanproperty.com/upload-backend/project/brochure/00620fde8abf031ed5181cc41888688a.pdf. Regenerate the same existing logo as a crisp clean website asset. Preserve the intentional square slate dark blue-gray background PANEL and white angular stylized SAVVI lettering with rose-gold accent strokes, matching exact arrangement in reference. Tiny existing upper-right label reads PHAHOL2; make that exact if retained. Remove the gray outer paper/border surrounding panel, make outside panel transparent. Flat sharp artwork with no photographic texture, no glow, no shadow, no new content, no redesign. Exact logo spelling S A V V I.",
+    "generationMode": "built-in image_gen__imagegen, one generation per asset",
+    "transparent": true,
+    "intentionalBackground": true
+  },
+  {
+    "brand": "Whizdom 101 Bangkok",
+    "file": "whizdom-101.png",
+    "width": 1536,
+    "height": 1024,
+    "sourceURLs": [
+      "https://mqdc.com/whizdom",
+      "https://mqdc.com/about/brand"
+    ],
+    "sourceRole": "Official identity research; artwork reconstructed from owner-provided catalog-era reference, not an official downloaded logo asset.",
+    "prompt": "Use case: background-extraction. Edit target: attached WHIZDOM 101 Bangkok project logo, brand verified via official MQDC https://mqdc.com/whizdom. Regenerate this SAME catalog-era black logo faithfully and crisply at high resolution on true transparent alpha. Composition: distinctive stacked stylized WHIZDOM word symbol on the left, tall serif number 101 on right, thin rules and small uppercase BANGKOK below the 101 exactly as reference. Do not replace with current WHIZDOM-only logo. Remove white square/catalog paper and all gray border/texture. Keep black artwork, precise vector-like crisp edges, no shadows, no glow, no added taglines. Text exact WHIZDOM / 101 / BANGKOK. Keep modest clearspace.",
+    "generationMode": "built-in image_gen__imagegen, one generation per asset",
+    "transparent": true,
+    "intentionalBackground": false
+  },
+  {
+    "brand": "The Urban Property",
+    "file": "the-urban-property.png",
+    "width": 1766,
+    "height": 891,
+    "sourceURLs": [
+      "https://www.theurbanproperty.com/index?language=en"
+    ],
+    "sourceRole": "Official identity research; artwork reconstructed from owner-provided catalog-era reference, not an official downloaded logo asset.",
+    "prompt": "Use case: precise-object-edit/background-extraction. Edit target: The Urban Property Thailand logo attached. Company identified via official https://www.theurbanproperty.com/index?language=en. Rebuild faithfully as a crisp clean high-resolution brand asset. Preserve intentional dark navy rectangular panel and subtle thin light-gray inner outline, pale warm silver uppercase geometric THE URBAN on first line and smaller PROPERTY beneath right side, plus angular L/corner mark at lower-left as reference. Remove ONLY catalog gray textured paper and excess pale outer border; transparent alpha outside the native navy panel. Keep exact word spelling, proportions and arrangement. No redesign, no gradients/glow/shadow, no extra marks.",
+    "generationMode": "built-in image_gen__imagegen, one generation per asset",
+    "transparent": true,
+    "intentionalBackground": true
+  }
+]

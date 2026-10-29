@@ -2,12 +2,14 @@ import './shared.css';
 import './home.css';
 import './brand-introduction.css';
 import './experience.css';
+import './clientLogos.css';
 import './showcase.css';
 import './collections.css';
 import './herringbone.css';
 import { mountShowcase } from './showcase';
 import { mountHerringbone } from './herringbone';
 import { mountExperience } from './experience';
+import { mountClientLogos } from './clientLogos';
 import { mountCollections, mountPricing } from './collections';
 import { FloorScrollStory } from './FloorScrollStory';
 import './visualizer.css';
@@ -40,6 +42,7 @@ mountHeader('home');
 mountFooter();
 mountContactDialog();
 const experience=mountExperience(document);
+const clientLogos=mountClientLogos(document.getElementById('client-logos'));
 const showcase=mountShowcase(document.getElementById('showcase'));
 const collections=mountCollections(document.getElementById('collections'));
 const herringbone=mountHerringbone(document.getElementById('herringbone'));
@@ -198,6 +201,6 @@ const ready=(async()=>{
   await preview.ready;
 })();
 
-function dispose(){if(state.disposed)return;closeExpanded();state.disposed=true;abort.abort();story?.dispose();preview.dispose();tools?.dispose();qr.dispose();showcase?.dispose();herringbone?.dispose();experience?.dispose();collections?.dispose();pricing?.dispose();}
+function dispose(){if(state.disposed)return;closeExpanded();state.disposed=true;abort.abort();story?.dispose();preview.dispose();tools?.dispose();qr.dispose();showcase?.dispose();herringbone?.dispose();experience?.dispose();clientLogos?.dispose();collections?.dispose();pricing?.dispose();}
 listen(window,'pagehide',event=>{if(!(event as PageTransitionEvent).persisted)dispose();});
-Object.assign(window,{websiteDemo:{ready,get state(){return {...state};},get diagnostics(){return {viewer:story?.diagnostics.scene,preview:preview.diagnostics,showcase:showcase?.diagnostics,herringbone:herringbone?.diagnostics,experience:experience?.diagnostics,collections:collections?.diagnostics,pricing:pricing?.diagnostics};},get story(){return story?.state;},seekStep:(index:number,smooth=false)=>story?.seekStep(index,smooth),setProgress,dispose}});
+Object.assign(window,{websiteDemo:{ready,get state(){return {...state};},get diagnostics(){return {viewer:story?.diagnostics.scene,preview:preview.diagnostics,showcase:showcase?.diagnostics,herringbone:herringbone?.diagnostics,experience:experience?.diagnostics,clientLogos:clientLogos?.diagnostics,collections:collections?.diagnostics,pricing:pricing?.diagnostics};},get story(){return story?.state;},seekStep:(index:number,smooth=false)=>story?.seekStep(index,smooth),setProgress,dispose}});

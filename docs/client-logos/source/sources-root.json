@@ -1,0 +1,66 @@
+[
+  {
+    "brand": "siamese-asset",
+    "file": "siamese-asset.png",
+    "prompt": "Use case: background-extraction / logo-brand. Asset type: one crisp high-resolution client logo for a website trust strip. Primary request: regenerate the supplied low-resolution reference as a clean, faithful logo asset with precise smooth edges and exact brand identity. SIAMESE ASSET with smaller ASSET OF LIFE beneath the exact cyan/teal folded geometric S emblem. Retain exact emblem facets, proportions and lettering as the reference. Composition: one logo centered with modest transparent clearspace, logo fills about 85% of canvas; preserve natural aspect ratio. No new text, no shadows, no mockup, no sheet or grid, no framing. The gray/tan paper/printed catalog texture is not artwork and must be removed. Output must contain real alpha transparency outside the intended mark or intentional brand panel, never a baked checkerboard. This is a fidelity restoration, not a logo redesign.",
+    "generationMode": "built-in image_gen",
+    "sourceURLs": [
+      "https://www.siameseasset.co.th/en"
+    ]
+  },
+  {
+    "brand": "centralworld",
+    "file": "centralworld.png",
+    "prompt": "Use case: background-extraction / logo-brand. Asset type: one crisp high-resolution client logo for a website trust strip. Primary request: regenerate the supplied low-resolution reference as a clean, faithful logo asset with precise smooth edges and exact brand identity. The exact centralwOrld logo, all lowercase lettering except the distinctive circular red/black concentric stylized O. Fine 'central' and heavier 'world' lettering in black; preserve original identity and spacing. Exact text centralwOrld. Composition: one logo centered with modest transparent clearspace, logo fills about 85% of canvas; preserve natural aspect ratio. No new text, no shadows, no mockup, no sheet or grid, no framing. The gray/tan paper/printed catalog texture is not artwork and must be removed. Output must contain real alpha transparency outside the intended mark or intentional brand panel, never a baked checkerboard. This is a fidelity restoration, not a logo redesign.",
+    "generationMode": "built-in image_gen",
+    "sourceURLs": [
+      "https://www.centralworld.co.th/en"
+    ]
+  },
+  {
+    "brand": "iconsiam",
+    "file": "iconsiam.png",
+    "prompt": "Use case: background-extraction / logo-brand. Asset type: one crisp high-resolution client logo for a website trust strip. Primary request: regenerate the supplied low-resolution reference as a clean, faithful logo asset with precise smooth edges and exact brand identity. The exact luxury ICONSIAM wordmark, refined thin white capitals on its intentional solid black square brand panel. Keep the BLACK SQUARE, make its edges perfect and crisp, and make space OUTSIDE the black square transparent. No bronze paper border, no photo texture. Exact text ICONSIAM. Composition: one logo centered with modest transparent clearspace, logo fills about 85% of canvas; preserve natural aspect ratio. No new text, no shadows, no mockup, no sheet or grid, no framing. The gray/tan paper/printed catalog texture is not artwork and must be removed. Output must contain real alpha transparency outside the intended mark or intentional brand panel, never a baked checkerboard. This is a fidelity restoration, not a logo redesign.",
+    "generationMode": "built-in image_gen",
+    "sourceURLs": [
+      "https://www.iconsiam.com/th"
+    ]
+  },
+  {
+    "brand": "absolute-you",
+    "file": "absolute-you.png",
+    "prompt": "Use case: background-extraction / logo-brand. Asset type: one crisp high-resolution client logo for a website trust strip. Primary request: regenerate the supplied low-resolution reference as a clean, faithful logo asset with precise smooth edges and exact brand identity. The exact ABSOLUTE YOU identity: large vivid magenta split U emblem on left, black uppercase ABSOLUTE on top right and magenta YOU on bottom right, exactly as reference. Remove the gray-blue patterned catalog background; it is not part of the mark. Preserve black text and magenta mark. Composition: one logo centered with modest transparent clearspace, logo fills about 85% of canvas; preserve natural aspect ratio. No new text, no shadows, no mockup, no sheet or grid, no framing. The gray/tan paper/printed catalog texture is not artwork and must be removed. Output must contain real alpha transparency outside the intended mark or intentional brand panel, never a baked checkerboard. This is a fidelity restoration, not a logo redesign.",
+    "generationMode": "built-in image_gen",
+    "sourceURLs": [
+      "https://www.arn-creativestudio.com/absolute.html"
+    ]
+  },
+  {
+    "brand": "fitness-first",
+    "file": "fitness-first.png",
+    "prompt": "Use case: background-extraction / logo-brand. Asset type: one crisp high-resolution client logo for a website trust strip. Primary request: regenerate the supplied low-resolution reference as a clean, faithful logo asset with precise smooth edges and exact brand identity. The exact Fitness First identity: distinctive red angular FF monogram above the exact dark charcoal Fitness First italic wordmark. Remove the catalog gray/blue diagonal background. Faithful monogram construction and exact text Fitness First, no extra slogan. Composition: one logo centered with modest transparent clearspace, logo fills about 85% of canvas; preserve natural aspect ratio. No new text, no shadows, no mockup, no sheet or grid, no framing. The gray/tan paper/printed catalog texture is not artwork and must be removed. Output must contain real alpha transparency outside the intended mark or intentional brand panel, never a baked checkerboard. This is a fidelity restoration, not a logo redesign.",
+    "generationMode": "built-in image_gen",
+    "sourceURLs": [
+      "https://www.fitnessfirst.com/th/en"
+    ]
+  },
+  {
+    "brand": "cafe-amazon",
+    "file": "cafe-amazon.png",
+    "prompt": "Use case: background-extraction / logo-brand. Asset type: one crisp high-resolution client logo for a website trust strip. Primary request: regenerate the supplied low-resolution reference as a clean, faithful logo asset with precise smooth edges and exact brand identity. The exact Café Amazon logo as in the OFFICIAL second reference image: yellow/red/black toucan, white cursive Café, yellow Amazon lettering and green oval with leaf pattern. Preserve that GREEN OVAL background INSIDE the logo as part of the brand and its white border. The space OUTSIDE the logo must be transparent. Use first blurry catalog image only for identity context; use second official image for exact shapes/colors/text. Do not keep the rectangular green catalog paper. No redesign or new mascot. Composition: one logo centered with modest transparent clearspace, logo fills about 85% of canvas; preserve natural aspect ratio. No new text, no shadows, no mockup, no sheet or grid, no framing. The gray/tan paper/printed catalog texture is not artwork and must be removed. Output must contain real alpha transparency outside the intended mark or intentional brand panel, never a baked checkerboard. This is a fidelity restoration, not a logo redesign.",
+    "generationMode": "built-in image_gen",
+    "sourceURLs": [
+      "https://www.cafe-amazon.com/",
+      "https://www.cafe-amazon.com/_next/static/media/amz-nav-logo.5520ca5d.png"
+    ]
+  },
+  {
+    "brand": "ondemand",
+    "file": "ondemand.png",
+    "prompt": "Use case: background-extraction / logo-brand. Asset type: one crisp high-resolution client logo for a website trust strip. Primary request: regenerate the supplied low-resolution reference as a clean, faithful logo asset with precise smooth edges and exact brand identity. The exact OnDemand tutoring brand identity: clean red rounded-square power-symbol emblem at left, followed by the exact OnDemand wordmark in brand red/charcoal suitable on a pale website. Reference2 is the official power emblem and controls its precise shape. Preserve exact spelling OnDemand, prominent white power glyph inside red emblem. Remove tan catalog panel and decorative paper background. Composition: one logo centered with modest transparent clearspace, logo fills about 85% of canvas; preserve natural aspect ratio. No new text, no shadows, no mockup, no sheet or grid, no framing. The gray/tan paper/printed catalog texture is not artwork and must be removed. Output must contain real alpha transparency outside the intended mark or intentional brand panel, never a baked checkerboard. This is a fidelity restoration, not a logo redesign.",
+    "generationMode": "built-in image_gen",
+    "sourceURLs": [
+      "https://www.ondemand.in.th/"
+    ]
+  }
+]

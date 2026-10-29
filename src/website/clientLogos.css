@@ -1,0 +1,28 @@
+.client-logos{position:relative;padding:32px 0 22px;background:linear-gradient(180deg,#f7f3f0,#fcfaf8 54%,#f7f3f0);overflow:hidden}
+.client-logos-heading{position:relative;display:flex;align-items:center;justify-content:center;min-height:30px;margin:0 6.7% 18px}
+.client-logos h2{font:500 20px/1.5 Arial,sans-serif;letter-spacing:.15px;color:#5f5362;text-align:center}
+.client-logos-window{padding:12px 0;overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}
+.client-logos-track{display:flex;width:max-content;animation:client-logos-drift 88s linear infinite;animation-play-state:paused}
+.client-logos.is-running .client-logos-track{animation-play-state:running}
+.client-logos-window:hover .client-logos-track,.client-logos-window:focus-within .client-logos-track{animation-play-state:paused}
+.client-logos-group{display:flex;align-items:center;gap:clamp(26px,4vw,60px);flex-shrink:0;list-style:none;margin:0;padding:0 clamp(26px,4vw,60px) 0 0}
+.client-logos-group li{display:flex;align-items:center;justify-content:center;flex:0 0 150px;height:76px}
+.client-logos-group img{display:block;width:auto;height:auto;max-width:150px;max-height:62px;object-fit:contain}
+.client-logos-toggle{position:absolute;right:0;top:0;display:grid;place-items:center;width:30px;height:30px;padding:0;border:1px solid #ded4dc;border-radius:50%;background:transparent;font:inherit;font-size:12px;color:#8b788f;cursor:pointer}
+.client-logos-toggle:hover{background:#fff9}.client-logos-toggle:focus-visible{outline:2px solid #8d6b9f;outline-offset:4px}
+.client-logos-toggle[hidden]{display:none}
+@keyframes client-logos-drift{to{transform:translateX(-50%)}}
+@media(max-width:600px){
+  .client-logos{padding:24px 0 18px}
+  .client-logos-heading{margin:0 24px 12px}
+  .client-logos h2{font-size:18px}
+  .client-logos-group li{flex-basis:120px;height:62px}
+  .client-logos-group img{max-width:120px;max-height:50px}
+  .client-logos-window{padding:8px 0}
+}
+@media(prefers-reduced-motion:reduce){
+  .client-logos-toggle{display:none}
+  .client-logos-window{overflow-x:auto;mask-image:none;padding-inline:24px}
+  .client-logos-track{animation:none;transform:none}
+  .client-logos-group[aria-hidden="true"]{display:none}
+}

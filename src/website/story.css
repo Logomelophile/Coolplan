@@ -98,3 +98,72 @@
   .story-leaders circle.active{fill:var(--orange)}
   .story-leaders text{display:block}
 }
+/* Five-layer cutaway: keep every numbered row within the sticky viewport. */
+#floor-story{height:calc(var(--stage-h)*var(--story-scroll-length,11.75))}
+.story-labels{top:41%;gap:10px;width:27%}
+.story-layer{min-height:52px;gap:11px}
+.story-layer strong{font-size:16px}
+.story-layer b{font-size:12px;line-height:1.4}
+.story-layer small{font-size:11px;line-height:1.45}
+.story-caption{bottom:24px}
+@media(min-width:1600px){
+  .story-labels{top:40%;gap:16px}
+  .story-layer{min-height:64px}
+  .story-layer strong{font-size:20px}
+  .story-layer b{font-size:15px}
+  .story-layer small{font-size:12px}
+}
+@media(min-width:521px) and (max-width:850px) and (min-height:580px){
+  .story-labels{top:36%;right:4%;width:33%;gap:10px}
+  .story-layer{min-height:50px;gap:7px}
+  .story-layer strong{font-size:14px}
+  .story-layer b{font-size:10px}
+  .story-layer small{font-size:9px}
+}
+@media(max-width:520px){
+  .story-labels{top:62%;left:6%;right:6%;width:88%;gap:10px 20px}
+  .story-layer{min-height:43px;gap:7px}
+  .story-layer strong{font-size:12px}
+  .story-layer b{font-size:10px}
+  .story-layer small{font-size:8px}
+  .story-layer:last-child{grid-column:1/-1}
+  .story-caption{left:6%;right:6%;width:88%;bottom:20px}
+}
+@media(max-width:520px) and (max-height:730px){
+  .story-labels{top:61%;gap:7px 18px}
+  .story-layer{min-height:40px}
+  .story-layer strong{font-size:11px}
+  .story-layer b{font-size:9px}
+  .story-layer small{font-size:7.5px}
+  .story-caption{display:none}
+}
+@media(min-width:521px) and (max-height:579px){
+  .story-details .story-copy{top:13%;right:3%;width:42%}
+  .story-details .story-copy h2{font-size:clamp(17px,4.5vh,23px)}
+  .story-labels{top:max(45%,190px);right:3%;left:auto;width:42%;display:flex;gap:5px}
+  .story-layer{min-height:0;gap:7px}
+  .story-layer strong{font-size:clamp(11px,min(3.1vh,1.25vw),16px)}
+  .story-layer b{font-size:clamp(9.5px,min(2.7vh,1.1vw),13px)}
+  .story-layer small{font-size:clamp(8.5px,min(2.4vh,1vw),12px)}
+  .story-caption{display:none}
+}
+@media(min-width:521px) and (max-height:430px){
+  .story-labels{top:max(47%,170px);gap:5px}
+  .story-layer small{display:none}
+  .story-layer strong{font-size:11px}
+  .story-layer b{font-size:9.5px}
+}
+/* Portrait phones: reserve a real gap for the controls above all three label rows. */
+@media(max-width:520px){
+  .story-layer b{font-size:10px}
+  .story-layer small{font-size:9px}
+  #floor-story .hero-3d-shell.is-expanded .hero-3d-tools{top:auto;bottom:25px}
+}
+@media(max-width:520px) and (min-height:580px){
+  #floor-story #hero-3d-shell:not(.is-expanded){top:calc(34% - var(--story-detail)*13%);height:calc(36% + var(--story-detail)*3%)}
+  #floor-story .story-details #hero-3d-shell:not(.is-expanded) .hero-3d-tools{top:calc(var(--stage-h)*.34);bottom:auto}
+}
+@media(max-width:520px) and (max-height:579px){
+  .story-leaders circle{r:8}
+  .story-leaders text{font-size:9px}
+}

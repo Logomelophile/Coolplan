@@ -20,7 +20,8 @@ const story = () => page.evaluate(() => window.websiteDemo.story);
 const productIds = ['light-natural-oak', 'warm-taupe-oak', 'golden-honey-oak', 'whitewashed-ash-oak', 'greige-oak', 'dark-walnut-brown'];
 // Product indices shown by the opening colour stops, in scroll order (see STORY_FINISHES).
 const storyFinishes = [0, 3, 4, 5];
-const STEPS = 10, DETAIL = storyFinishes.length, LAST = STEPS - 1;
+const STEPS = 11, DETAIL = storyFinishes.length, LAST = STEPS - 1;
+const layerIds = ['uv', 'wear', 'decor', 'core', 'backing'];
 async function initialize() {
   await page.goto(url, { waitUntil: 'networkidle' });
   await page.waitForFunction(() => Boolean(window.websiteDemo?.ready));
@@ -39,8 +40,9 @@ async function layout() {
     scrollY, viewport: { width: innerWidth, height: innerHeight },
     documentWidth: document.documentElement.scrollWidth,
     hero: document.getElementById('hero').getBoundingClientRect().toJSON(),
+    controls: document.querySelector('.hero-3d-tools').getBoundingClientRect().toJSON(),
     rooms: document.getElementById('rooms').getBoundingClientRect().toJSON(),
-    next: (document.getElementById('experience-intro') ?? document.getElementById('showcase') ?? document.getElementById('rooms')).getBoundingClientRect().toJSON(),
+    next: (document.getElementById('client-logos') ?? document.getElementById('experience-intro') ?? document.getElementById('showcase') ?? document.getElementById('rooms')).getBoundingClientRect().toJSON(),
     finishCards: [...document.querySelectorAll('.story-layer[data-shown="true"]')].map(node => ({ id: node.dataset.layer, box: node.getBoundingClientRect().toJSON() })),
   }));
 }
@@ -48,6 +50,14 @@ function assertPinned(value, label) {
   assert.ok(Math.abs(value.hero.top) <= 2, `${label}: hero is no longer pinned (${value.hero.top})`);
   assert.ok(Math.abs(value.hero.height - value.viewport.height) <= 3, `${label}: hero does not occupy one viewport`);
   assert.ok(value.documentWidth <= value.viewport.width + 1, `${label}: horizontal document overflow`);
+}
+function assertLabelsClear(value, label) {
+  for (const card of value.finishCards) {
+    assert.ok(card.box.left >= -1 && card.box.right <= value.viewport.width + 1 && card.box.top >= -1 && card.box.bottom <= value.viewport.height + 1, `${label}: ${card.id} label leaves the viewport`);
+    const overlapX = Math.min(card.box.right, value.controls.right) - Math.max(card.box.left, value.controls.left);
+    const overlapY = Math.min(card.box.bottom, value.controls.bottom) - Math.max(card.box.top, value.controls.top);
+    assert.ok(overlapX <= 0 || overlapY <= 0, `${label}: 3D controls cover the ${card.id} explanation`);
+  }
 }
 async function roomPixels() {
   return page.locator('.hero-room-floor-canvas').evaluateAll(canvases => canvases.flatMap(canvas => {
@@ -106,14 +116,18 @@ try {
     const current = await seek(step);
     const bounds = await layout();
     assertPinned(bounds, `Desktop step ${step}`);
+    assertLabelsClear(bounds, `Desktop step ${step}`);
     assert.ok(bounds.rooms.top >= bounds.viewport.height - 2, `Configurator exposed before story completes at step ${step}`);
     const visible = await page.locator('.story-layer[data-shown="true"]').count();
-    const expected = Math.max(0, Math.min(4, step - DETAIL));
+    const expected = Math.max(0, Math.min(5, step - DETAIL));
     assert.equal(visible, expected, `Step ${step}: incorrect number of revealed construction labels`);
     const pixels = await roomPixels();
     const { scene, room } = current.diagnostics;
     assert.equal(scene.webgl, true);
-    assert.equal(scene.layerCount, 4);
+    assert.equal(scene.layerCount, 5);
+    assert.deepEqual(scene.layers.map(layer => layer.id), layerIds);
+    assert.equal(scene.layers[0].transparent, true, 'The UV coating is its own clear mesh');
+    assert.equal(scene.layers[1].transparent, true, 'The wear layer remains an independent clear mesh');
     assert.equal(scene.cachedModels, 6);
     assert.equal(scene.visibleModels, 1);
     assert.equal(scene.dimensions.thicknessMm, 5);
@@ -127,6 +141,9 @@ try {
       assert.ok(Math.abs(room.mix - current.frame.mix) < 1e-9, 'Room and material blend must share the same progress.');
     }
     assert.ok(scene.anchors.every(anchor => Number.isFinite(anchor.x) && Number.isFinite(anchor.y)), 'Every projected layer anchor must be finite.');
+    assert.deepEqual(scene.anchors.map(anchor => anchor.id), layerIds);
+    for (let i = 1; i < scene.layers.length; i++) assert.ok(scene.layers[i - 1].y > scene.layers[i].y, 'Each physical layer must sit above the next');
+    if (step === LAST) assert.ok(scene.layers[0].y - scene.layers[4].y > 20, 'The UV coating and all lower meshes must actually separate in the final overview');
     forward.push({ current, pixels });
     report.samples.push({ step, frame: current.frame, diagnostics: current.diagnostics, layout: bounds, pixels });
     if ([1, DETAIL - 1, DETAIL, DETAIL + 1, LAST - 1, LAST].includes(step)) await page.screenshot({ path: outputPath(`desktop-step-${String(step).padStart(2, '0')}.png`) });
@@ -150,10 +167,10 @@ try {
   await page.waitForFunction(before => window.websiteDemo.story.diagnostics.scene.cameraPosition.some((value, index) => Math.abs(value - before[index]) > .01), beforeOrbit);
   assert.ok((await story()).diagnostics.scene.anchors.every(anchor => Number.isFinite(anchor.x) && Number.isFinite(anchor.y)));
   const paths = await page.locator('[data-leader]').evaluateAll(nodes => nodes.filter(node => node.getAttribute('d') || node.getAttribute('points')).map(node => node.getAttribute('d') || node.getAttribute('points')));
-  assert.equal(paths.length, 4);
+  assert.equal(paths.length, 5);
   assert.ok(paths.every(path => !/NaN|Infinity/.test(path)));
   await page.locator('#hero-reset').click();
-  check('Mouse drag still rotates the enlarged 3D sample and all four leader paths retain finite projected endpoints.');
+  check('Mouse drag still rotates the enlarged 3D sample and all five leader paths retain finite projected endpoints.');
 
   for (let step = DETAIL - 1; step >= 0; step--) {
     const current = await seek(step);
@@ -181,12 +198,13 @@ try {
   await page.evaluate(last => document.querySelector(`button[data-story-step="${last}"]`).click(), LAST);
   await page.waitForFunction(step => window.websiteDemo.story.step === step, LAST);
   assert.match(await page.locator('#story-thickness').innerText(), /5\s*MM/i);
-  assert.equal(await page.locator('.story-layer[data-shown="true"]').count(), 4);
-  check('Next, previous and direct step controls reach the complete four-layer, 5 MM explanation.');
+  assert.equal(await page.locator('.story-layer[data-shown="true"]').count(), 5);
+  assert.deepEqual(await page.locator('.story-layer strong').allTextContents(), ['UV Layer', 'Wear Layer', 'Color Film', 'SPC Core', 'IXPE Foam']);
+  check('Next, previous and direct step controls reach all five construction layers and the assembled 5 MM explanation.');
 
   await page.evaluate(() => scrollTo({ top: document.getElementById('floor-story').offsetTop + document.getElementById('floor-story').offsetHeight, behavior: 'instant' }));
   await page.waitForFunction(() => document.getElementById('hero').getBoundingClientRect().top < -innerHeight * .35);
-  // The section after the pinned story (the typed experience intro, else the gallery or configurator) must now be on screen.
+  // The client-logo ribbon directly after the pinned story must now be on screen.
   assert.ok((await layout()).next.top < (await layout()).viewport.height);
   await seek(2);
   await page.evaluate(() => document.getElementById('story-skip').click());
@@ -199,6 +217,7 @@ try {
     await seek(step);
     const value = await layout();
     assertPinned(value, `Mobile step ${step}`);
+    assertLabelsClear(value, `Mobile step ${step}`);
     for (const label of value.finishCards) {
       assert.ok(label.box.left >= -1 && label.box.right <= value.viewport.width + 1, `Mobile layer ${label.id} escapes the viewport horizontally`);
       assert.ok(label.box.top >= -1 && label.box.bottom <= value.viewport.height + 1, `Mobile layer ${label.id} escapes the viewport vertically`);
@@ -224,8 +243,9 @@ try {
   await seek(LAST);
   const compact = await layout();
   assertPinned(compact, 'Compact mobile');
+  assertLabelsClear(compact, 'Compact mobile');
   for (const label of compact.finishCards) assert.ok(label.box.top >= -1 && label.box.bottom <= 668, `Compact mobile layer ${label.id} leaves the viewport`);
-  await page.screenshot({ path: outputPath('mobile-compact-step-11.png') });
+  await page.screenshot({ path: outputPath('mobile-compact-five-layers.png') });
   check('Compact 375×667 mobile: all layer explanations remain visible in the pinned viewport.');
 
   for (const viewport of [{ width: 1200, height: 540 }, { width: 390, height: 540 }, { width: 844, height: 390 }]) {
@@ -235,11 +255,12 @@ try {
     await seek(LAST);
     const value = await layout();
     assertPinned(value, label);
+    assertLabelsClear(value, label);
     for (const card of value.finishCards) {
       assert.ok(card.box.left >= -1 && card.box.right <= viewport.width + 1, `${label}: layer ${card.id} leaves the viewport horizontally`);
       assert.ok(card.box.top >= 0 && card.box.bottom <= viewport.height + 1, `${label}: layer ${card.id} leaves the viewport`);
     }
-    await page.screenshot({ path: outputPath(`short-${viewport.width}x${viewport.height}-step-11.png`) });
+    await page.screenshot({ path: outputPath(`short-${viewport.width}x${viewport.height}-five-layers.png`) });
   }
   check('Short desktop, portrait, and landscape viewports keep layer details visible without disabling scrolling.');
 

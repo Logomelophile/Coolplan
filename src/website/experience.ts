@@ -1,4 +1,5 @@
 import { sitePath } from '../sitePath';
+import { motionPreference } from './motionPreference';
 import { COMPANY } from './catalog';
 import { SHOWCASE_ITEMS } from './showcase';
 
@@ -6,7 +7,7 @@ import { SHOWCASE_ITEMS } from './showcase';
  * The "experience" run that follows the pinned floor story:
  *  1. #experience-intro  – a blank, pinned panel where three storytelling lines
  *     type themselves in as the visitor scrolls (time keeps them moving when idle)
- *  2. #featured          – two spotlight projects, copy on the left, photo revealed on the right
+ *  2. #featured          – three real project photo stories and an installation warranty story
  *  3. #trust             – animated rings / counters, partner marquee and ticking check marks
  */
 const reduced = (): boolean => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -196,31 +197,165 @@ export class ExperienceIntro {
   }
 }
 
-export const FEATURED = [
+interface FeaturedPhoto { image: string; alt: string; caption: string }
+interface FeaturedProject {
+  id: string; eyebrow: string; title: string; subtitle: string; text: string; chips: string[]; photos: FeaturedPhoto[];
+}
+
+export const FEATURED: FeaturedProject[] = [
   {
-    eyebrow: 'RESIDENTIAL · 2026 EDITION',
-    title: 'บ้านเดี่ยว @ Narasiri',
-    text: 'ห้องนั่งเล่นและห้องรับแขกปูลายก้างปลา SPC สองโทน ให้พื้นเป็นงานศิลปะที่เข้ากับผนังบัวและกระจกบานสูง ทีมช่างเราวางแนวก้างปลาให้วิ่งเข้าหาแสงจากสวน พร้อมเก็บงานรอยต่อประตูและบันไดโค้งในชุดเดียวกัน',
-    chips: ['SPC Herringbone 5 มม.', 'สองโทนในบ้านเดียว', 'เก็บงานบันไดโค้ง'],
-    image: '/website/showcase/narasiri-light.webp',
-    alt: 'ห้องนั่งเล่นบ้านเดี่ยวโครงการ Narasiri ปูพื้นลายก้างปลาโทนอ่อน',
+    id: 'cafe', eyebrow: 'CAFÉ / HERRINGBONE', title: 'คาเฟ่ลายก้างปลา',
+    subtitle: 'จังหวะของไม้ ในทุกมุมของร้าน',
+    text: 'แสงริมกระจก โต๊ะไม้ และพื้นก้างปลาสีน้ำตาล สองมุมในคาเฟ่เดียวกันที่เล่าบรรยากาศของร้าน ผ่านจังหวะลายปูที่มองเห็นได้ทั้งในระดับสายตาและจากมุมสูง',
+    chips: ['พื้นที่คาเฟ่', 'ลายก้างปลา', 'ภาพผลงานจริง'],
+    photos: [
+      { image: '/website/showcase/cafe-herringbone.webp', alt: 'มุมที่นั่งริมกระจกในคาเฟ่ พื้นลายก้างปลาสีน้ำตาลและเก้าอี้ไม้', caption: 'มุมที่นั่งริมกระจก' },
+      { image: '/website/showcase/cafe-herringbone-top.webp', alt: 'ภาพจากมุมสูงของคาเฟ่เดียวกัน เห็นจังหวะพื้นก้างปลาระหว่างโต๊ะและเก้าอี้', caption: 'จังหวะลายปูจากมุมสูง' },
+    ],
   },
   {
-    eyebrow: 'STAIRCASE FLOORING',
-    title: 'บันไดที่สวยเท่าพื้นห้อง',
-    text: 'งานบันไดคือจุดที่พื้นส่วนใหญ่มักสะดุด เราหุ้มลูกตั้ง ลูกนอน และจมูกบันไดด้วยวัสดุชุดเดียวกับพื้นห้อง ทั้งบ้านพัก โครงการ และโรงแรม ให้สายตาไหลต่อเนื่องจากชั้นล่างถึงชั้นบนโดยไม่เห็นรอยต่อ',
-    chips: ['จมูกบันไดเข้าชุด', 'ลูกตั้ง–ลูกนอนชุดเดียวกัน', 'บ้าน คอนโด โรงแรม'],
-    image: '/website/showcase/stair-railing.webp',
-    alt: 'บันไดหุ้มพื้น SPC ลายไม้พร้อมจมูกบันไดเข้าชุด',
+    id: 'office', eyebrow: 'OFFICE / WORKSPACE', title: 'Office',
+    subtitle: 'พื้นเดียวกัน เชื่อมทุกมุมทำงาน',
+    text: 'จากโต๊ะประชุมถึงมุมนั่งพัก พื้นลายไม้ช่วยเชื่อมพื้นที่ทำงานเข้าด้วยกัน เก็บสองมุมของออฟฟิศเดียวกันไว้ให้เห็นทั้งภาพรวมและบรรยากาศที่ต่างออกไปในแต่ละมุม',
+    chips: ['พื้นที่ทำงาน', 'ห้องประชุม', 'มุมนั่งพัก'],
+    photos: [
+      { image: '/website/showcase/office-meeting.webp', alt: 'ห้องประชุมออฟฟิศ ตู้บิลต์อินสีน้ำเงินและพื้นลายไม้', caption: 'มุมห้องประชุม' },
+      { image: '/website/showcase/office-lounge.webp', alt: 'มุมนั่งพักอีกด้านในออฟฟิศเดียวกันกับห้องประชุม', caption: 'อีกมุมของออฟฟิศเดียวกัน' },
+    ],
+  },
+  {
+    id: 'narasiri', eyebrow: 'RESIDENTIAL / NARASIRI', title: 'บ้านเดี่ยว @ Narasiri',
+    subtitle: 'รายละเอียดที่ต่อเนื่อง จากห้องถึงบันได',
+    text: 'พื้นก้างปลาโทนอ่อน โทนเข้ม และรายละเอียดบันไดในบ้านเดี่ยว Narasiri ภาพจากหน้างานที่ชวนมองพื้นใกล้ขึ้น ทั้งลายไม้ แนวปู และความรู้สึกของแต่ละพื้นที่',
+    chips: ['บ้านพักอาศัย', 'พื้นสองโทน', 'รายละเอียดบันได'],
+    photos: [
+      { image: '/website/showcase/narasiri-light.webp', alt: 'พื้นลายก้างปลาโทนอ่อนในบ้านเดี่ยวโครงการ Narasiri', caption: 'ลายก้างปลาโทนอ่อน' },
+      { image: '/website/showcase/narasiri-dark.webp', alt: 'พื้นลายก้างปลาโทนเข้มริมหน้าต่างในบ้านเดี่ยว Narasiri', caption: 'ลายก้างปลาโทนเข้ม' },
+      { image: '/website/showcase/narasiri-stairs.webp', alt: 'รายละเอียดขั้นบันไดลายไม้และราวบันไดในบ้านเดี่ยว Narasiri', caption: 'รายละเอียดบันได' },
+    ],
   },
 ];
+
+const INSTALLATION_PHOTOS: FeaturedPhoto[] = [
+  { image: '/website/showcase/installation-prep.webp', alt: 'ช่าง COOLPLAN กำลังเตรียมและติดตั้งพื้นในหน้างานจริง', caption: 'เตรียมหน้างาน' },
+  { image: '/website/showcase/installation-team.webp', alt: 'ทีมช่างกำลังทำงานติดตั้งพื้นลายไม้', caption: 'ลงมือด้วยทีมช่าง' },
+  { image: '/website/showcase/installation-room.webp', alt: 'ภาพงานติดตั้งพื้นภายในห้องโดยทีมช่าง COOLPLAN', caption: 'ใส่ใจในทุกพื้นที่' },
+];
+
+export interface FeaturedDiagnostics {
+  id: string; progress: number; photos: number; visible: boolean; animating: boolean;
+}
+
+/** Decorative, reversible photo motion. No animation frame runs while settled or offscreen. */
+class FeaturedStoryMotion {
+  private readonly abort = new AbortController();
+  private reducedMotion = false;
+  private readonly cards: HTMLElement[];
+  private readonly observer: IntersectionObserver | null;
+  private visible = false;
+  private progress = 0;
+  private target = 0;
+  private raf = 0;
+  private dirty = true;
+  private disposed = false;
+
+  constructor(private readonly section: HTMLElement, private readonly id: string, initialReduced: boolean) {
+    this.cards = Array.from(section.querySelectorAll<HTMLElement>('.featured-photo'));
+    const signal = this.abort.signal;
+    window.addEventListener('scroll', this.onScroll, { passive: true, signal });
+    window.addEventListener('resize', this.onScroll, { signal });
+    document.addEventListener('visibilitychange', this.onVisibility, { signal });
+    this.observer = typeof IntersectionObserver === 'undefined' ? null : new IntersectionObserver(entries => {
+      this.visible = entries.some(entry => entry.isIntersecting);
+      if (this.visible) {
+        this.section.classList.add('is-visible');
+        this.onScroll();
+      } else {
+        cancelAnimationFrame(this.raf);
+        this.raf = 0;
+      }
+    }, { rootMargin: '10% 0px', threshold: 0 });
+    this.observer?.observe(section);
+    if (!this.observer) { this.visible = true; section.classList.add('is-visible'); }
+    this.setReducedMotion(initialReduced);
+  }
+
+  get diagnostics(): FeaturedDiagnostics {
+    return { id: this.id, progress: this.progress, photos: this.cards.length, visible: this.visible, animating: this.raf !== 0 };
+  }
+
+  setReducedMotion(value: boolean): void {
+    if (this.disposed) return;
+    this.reducedMotion = value;
+    this.section.classList.toggle('is-reduced', value);
+    if (value) {
+      cancelAnimationFrame(this.raf);
+      this.raf = 0;
+      this.section.classList.add('is-visible');
+      this.progress = this.target = 1;
+      this.render();
+    } else this.onScroll();
+  }
+
+  private onVisibility = (): void => {
+    if (document.hidden) { cancelAnimationFrame(this.raf); this.raf = 0; }
+    else this.onScroll();
+  };
+
+  private onScroll = (): void => {
+    this.dirty = true;
+    if (this.disposed || this.reducedMotion || !this.visible || document.hidden || this.raf) return;
+    this.raf = requestAnimationFrame(this.tick);
+  };
+
+  private tick = (): void => {
+    this.raf = 0;
+    if (this.disposed || !this.visible || document.hidden || this.reducedMotion) return;
+    if (this.dirty) {
+      const rect = this.section.getBoundingClientRect();
+      const travel = this.section.offsetHeight - window.innerHeight;
+      this.target = travel > 0 ? clamp(-rect.top / travel, 0, 1) : clamp((window.innerHeight - rect.top) / (window.innerHeight + rect.height), 0, 1);
+      this.dirty = false;
+    }
+    this.progress += (this.target - this.progress) * .18;
+    if (Math.abs(this.target - this.progress) < .0005) this.progress = this.target;
+    this.render();
+    if (this.progress !== this.target) this.raf = requestAnimationFrame(this.tick);
+  };
+
+  private render(): void {
+    const p = this.progress;
+    this.section.style.setProperty('--feature-progress', p.toFixed(4));
+    this.cards.forEach((card, index) => {
+      const t = clamp((p - index * .08) / .72, 0, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      const x = index === 0 ? -10 * p : (index % 2 ? 1 : -1) * 24 * (1 - eased);
+      const y = index === 0 ? -18 * p : 60 * (1 - eased) - index * 5 * p;
+      const rotate = index === 0 ? -1.5 + 1.5 * p : (index % 2 ? 1 : -1) * (6 - 8 * eased);
+      card.style.setProperty('--photo-x', `${x.toFixed(2)}px`);
+      card.style.setProperty('--photo-y', `${y.toFixed(2)}px`);
+      card.style.setProperty('--photo-angle', `${rotate.toFixed(2)}deg`);
+      card.style.setProperty('--photo-drift', `${((.5 - p) * (index === 0 ? 18 : 10)).toFixed(2)}px`);
+    });
+  }
+
+  dispose(): void {
+    this.disposed = true;
+    cancelAnimationFrame(this.raf);
+    this.raf = 0;
+    this.abort.abort();
+    this.observer?.disconnect();
+  }
+}
 
 export interface TrustDiagnostics { revealed: boolean; counters: number[] }
 
 export class Experience {
   readonly intro: ExperienceIntro | null;
   private readonly abort = new AbortController();
+  private readonly motion = motionPreference;
   private readonly observers: IntersectionObserver[] = [];
+  private readonly featured: FeaturedStoryMotion[] = [];
   private counters: number[] = [];
   private revealed = false;
   private disposed = false;
@@ -229,11 +364,18 @@ export class Experience {
     const intro = root.querySelector<HTMLElement>('#experience-intro');
     this.intro = intro ? new ExperienceIntro(intro) : null;
     this.buildFeatured();
+    // One preference event updates every story together, including offscreen stories.
+    this.motion.addEventListener('change', this.syncFeaturedMotion, { signal: this.abort.signal });
     this.buildTrust();
   }
 
-  get diagnostics(): { intro: IntroDiagnostics | null; trust: TrustDiagnostics } {
-    return { intro: this.intro?.diagnostics ?? null, trust: { revealed: this.revealed, counters: [...this.counters] } };
+  private syncFeaturedMotion = (): void => {
+    const value = this.motion.matches;
+    this.featured.forEach(story => story.setReducedMotion(value));
+  };
+
+  get diagnostics(): { intro: IntroDiagnostics | null; featured: FeaturedDiagnostics[]; trust: TrustDiagnostics } {
+    return { intro: this.intro?.diagnostics ?? null, featured: this.featured.map(story => story.diagnostics), trust: { revealed: this.revealed, counters: [...this.counters] } };
   }
 
   private observe(target: Element, onVisible: () => void, threshold = .3): void {
@@ -250,12 +392,25 @@ export class Experience {
     if (!host) return;
     FEATURED.forEach((item, index) => {
       const article = document.createElement('article');
-      article.className = 'featured-item';
+      article.className = `featured-item featured-${item.id}`;
+      article.id = `project-${item.id}`;
+      article.setAttribute('aria-labelledby', `featured-${item.id}-title`);
       article.style.setProperty('--i', String(index));
-      article.innerHTML = `<div class="featured-copy"><span class="featured-eyebrow">${item.eyebrow}</span><h3>${item.title}</h3><p>${item.text}</p><div class="featured-chips">${item.chips.map(chip => `<span>${chip}</span>`).join('')}</div><span class="featured-index">0${index + 1}</span></div><figure class="featured-media"><div class="featured-frame"><img src="${sitePath(item.image)}" alt="${item.alt}" loading="lazy" decoding="async" /></div></figure>`;
+      article.innerHTML = `<div class="featured-stage"><div class="featured-copy"><div class="featured-kicker"><span class="featured-index" aria-hidden="true">0${index + 1}</span><span class="featured-eyebrow">${item.eyebrow}</span></div><h3 id="featured-${item.id}-title">${item.title}</h3><p class="featured-subtitle">${item.subtitle}</p><p class="featured-description">${item.text}</p><div class="featured-chips">${item.chips.map(chip => `<span>${chip}</span>`).join('')}</div><div class="featured-scroll-note" aria-hidden="true"><span></span>เลื่อนชมเรื่องราวของพื้น</div></div><div class="featured-media featured-media-${item.photos.length}" aria-label="ภาพผลงาน ${item.title}">${this.photoMarkup(item.photos)}<div class="featured-photo-count" aria-hidden="true"><span>${String(item.photos.length).padStart(2, '0')}</span><span>มุมจากผลงานจริง</span></div></div><div class="featured-story-progress" aria-hidden="true"><span></span></div></div>`;
       host.append(article);
-      this.observe(article, () => article.classList.add('is-visible'), .25);
+      this.featured.push(new FeaturedStoryMotion(article, item.id, this.motion.matches));
     });
+    const warranty = document.createElement('section');
+    warranty.className = 'featured-warranty';
+    warranty.id = 'installation-warranty';
+    warranty.setAttribute('aria-labelledby', 'installation-warranty-title');
+    warranty.innerHTML = `<div class="featured-stage"><div class="featured-copy"><span class="featured-eyebrow">OUR CRAFT / OUR PROMISE</span><div class="warranty-years" aria-hidden="true"><strong>10</strong><span>ปี<br><small>INSTALLATION WARRANTY</small></span></div><h3 id="installation-warranty-title">รับประกันการติดตั้ง 10 ปี</h3><p class="warranty-promise">เปลี่ยนให้ฟรี<span aria-hidden="true">↗</span></p><p class="featured-description">เบื้องหลังพื้นที่สวย คือทีมช่างที่ลงมือทำจริง<br>และความตั้งใจดูแลงานที่ส่งมอบ</p><p class="warranty-detail">สอบถามรายละเอียดการรับประกันกับทีมงาน</p></div><div class="featured-media featured-media-3" aria-label="ภาพทีมช่างติดตั้งพื้น COOLPLAN">${this.photoMarkup(INSTALLATION_PHOTOS)}<div class="featured-photo-count" aria-hidden="true"><span>CPW</span><span>ทีมช่างของเรา</span></div></div><div class="featured-story-progress" aria-hidden="true"><span></span></div></div>`;
+    host.append(warranty);
+    this.featured.push(new FeaturedStoryMotion(warranty, 'warranty', this.motion.matches));
+  }
+
+  private photoMarkup(photos: FeaturedPhoto[]): string {
+    return photos.map((photo, index) => `<figure class="featured-photo featured-photo-${index + 1}"><div class="featured-photo-image"><img src="${sitePath(photo.image)}" alt="${photo.alt}" loading="lazy" decoding="async" width="960" height="960" /></div><figcaption><span>${String(index + 1).padStart(2, '0')}</span>${photo.caption}</figcaption></figure>`).join('');
   }
 
   private buildTrust(): void {
@@ -311,6 +466,7 @@ export class Experience {
     if (this.disposed) return;
     this.disposed = true;
     this.intro?.dispose();
+    this.featured.forEach(story => story.dispose());
     this.abort.abort();
     this.observers.forEach(observer => observer.disconnect());
   }
