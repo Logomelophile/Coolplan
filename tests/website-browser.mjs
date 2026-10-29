@@ -162,9 +162,9 @@ try {
   const handoff = await page.evaluate(() => {
     const logos = document.querySelector('#client-logos').getBoundingClientRect();
     const title = document.querySelector('.experience-dashboard-heading').getBoundingClientRect();
-    return { logoBottom: logos.bottom, titleTop: title.top, titleBottom: title.bottom, height: innerHeight, text: document.querySelector('.experience-dashboard-heading h2').innerText };
+    return { logoBottom: logos.bottom, titleTop: title.top, titleBottom: title.bottom, height: innerHeight, text: document.querySelector('.experience-dashboard-heading h2').getAttribute('aria-label') };
   });
-  assert.ok(handoff.titleTop - handoff.logoBottom <= 80 && handoff.titleBottom < handoff.height, 'The complete intro heading is visible directly below the customer strip');
+  assert.ok(handoff.titleBottom < handoff.height, 'The opening typed headline is readable as the customer strip passes');
   assert.equal(handoff.text.replace(/\s+/g, ''), 'เบื้องหลังความสมบูรณ์แบบของโครงการชั้นนำ');
   await page.screenshot({ path: outputPath('client-logos-desktop.png') });
   check('Authentic customer logos load, loop before the experience intro, and can be paused and resumed.');
@@ -252,20 +252,40 @@ try {
   await page.waitForFunction(() => { const i = window.websiteDemo.diagnostics.experience?.intro; return i && !i.animating && Math.abs(i.progress - .12) < .01; });
   const introEarly = await page.evaluate(() => window.websiteDemo.diagnostics.experience.intro);
   assert.equal(introEarly.panels, 3);
+  assert.ok(introEarly.typed[0] > introEarly.typed[1] && introEarly.typed[0] < 1, 'Head and sub type at staggered rates');
+  const earlyTitle = await page.locator('.experience-typed').allInnerTexts();
   const earlyArcs = await page.locator('.experience-ring-arc').evaluateAll(arcs => arcs.map(arc => parseFloat(getComputedStyle(arc).strokeDashoffset)));
   assert.equal(earlyArcs.length, 3);
-  assert.equal(await page.locator('.experience-dashboard-heading h2 span').count(), 2);
+  assert.equal(await page.locator('.experience-title-line').count(), 2);
   await page.evaluate(({ top, height }) => scrollTo({ top: top + (height - innerHeight) * .97, behavior: 'instant' }), { top: introTop, height: introHeight });
   await page.waitForFunction(() => { const i = window.websiteDemo.diagnostics.experience?.intro; return i && !i.animating && i.counter === 175900 && i.active === 2; });
   assert.equal(await page.locator('.experience-counter strong').innerText(), '175,900');
+  assert.deepEqual(await page.locator('.experience-typed').allInnerTexts(), ['เบื้องหลังความสมบูรณ์แบบ', 'ของโครงการชั้นนำ']);
+  assert.notEqual(earlyTitle.join(''), (await page.locator('.experience-typed').allInnerTexts()).join(''), 'Actual text grows with scroll');
+  assert.equal(await page.locator('.experience-years-point b').innerText(), '2026');
+  assert.equal((await state()).experience.intro.timeline, 1);
   assert.match(await page.locator('.experience-stat.is-active .experience-stat-label').innerText(), /รับประกันการติดตั้ง/);
   const fullArcs = await page.locator('.experience-ring-arc').evaluateAll(arcs => arcs.map(arc => parseFloat(getComputedStyle(arc).strokeDashoffset)));
   assert.ok(fullArcs.every((offset, index) => offset <= earlyArcs[index]) && fullArcs[2] < earlyArcs[2] - 80, 'Circular gauges visibly fill as the page advances');
   assert.deepEqual(await page.locator('.experience-ring-value strong').allInnerTexts(), ['175,900+', '21', '10']);
+  assert.equal(await page.locator('.experience-checks li.is-checked').count(), 4);
+  await page.mouse.move(0, 0);
+  await page.waitForFunction(() => window.websiteDemo.diagnostics.experience.intro.marqueeRunning);
+  const projectTrack = page.locator('.experience-projects-track');
+  const projectTransform = await projectTrack.evaluate(el => getComputedStyle(el).transform);
+  await page.waitForTimeout(180);
+  assert.notEqual(await projectTrack.evaluate(el => getComputedStyle(el).transform), projectTransform, 'Restored project names scroll continuously');
+  await page.locator('.experience-projects-toggle').click();
+  const pausedProjects = await projectTrack.evaluate(el => getComputedStyle(el).transform);
+  await page.waitForTimeout(180);
+  assert.equal(await projectTrack.evaluate(el => getComputedStyle(el).transform), pausedProjects, 'Project marquee can be paused');
+  await page.locator('.experience-projects-toggle').click();
   await page.screenshot({ path: outputPath('experience-dashboard-desktop.png') });
   await page.evaluate(({ top, height }) => scrollTo({ top: top + (height - innerHeight) * .25, behavior: 'instant' }), { top: introTop, height: introHeight });
   await page.waitForFunction(() => { const i = window.websiteDemo.diagnostics.experience?.intro; return i && !i.animating && i.active === 0 && i.counter < 175900; });
   assert.ok(await page.locator('.experience-ring-arc').last().evaluate(arc => parseFloat(getComputedStyle(arc).strokeDashoffset)) > fullArcs[2] + 80, 'Circular gauges rewind with scroll');
+  assert.ok((await state()).experience.intro.year < 2026 && (await state()).experience.intro.timeline < 1, 'Year line rewinds with the area counter');
+  assert.equal(await page.locator('.experience-checks li.is-checked').count(), 0);
   assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('.story-rail')).display), 'none');
   assert.equal(await page.locator('#trust,.trust-ring').count(), 0, 'The lower duplicate dashboard is removed');
   await page.evaluate(() => document.getElementById('collections').scrollIntoView({ block: 'start', behavior: 'instant' }));
@@ -294,7 +314,7 @@ try {
   });
   assert.ok(pricingOrder.specsFirst && pricingOrder.packagesFirst && pricingOrder.columns === 4, 'The visual spec selector comes before the restored three-package table, followed by the calculator');
   await page.screenshot({ path: outputPath('pricing-desktop.png'), fullPage: false });
-  check('The single dark dashboard shows the unchanged two-line headline, three reversible circular gauges and background counter; four-image gallery, packages before calculator and catalogue interactions work.');
+  check('White experience story types staggered centred copy, connects 2005–2026 to the area counter, reveals circular gauges, a pausable project marquee and four proof boxes; scrolling back reverses the story.');
 
   await page.locator('[data-spec-thickness="4"]').click();
   await page.waitForFunction(() => window.websiteDemo.diagnostics.pricing.rowIndex === 0);
@@ -385,7 +405,7 @@ try {
     const width = await page.evaluate(() => ({ viewport: innerWidth, document: document.documentElement.scrollWidth }));
     assert.ok(width.document <= width.viewport + 1, `${selector}: mobile document overflows`);
     if (selector === '#experience-intro') {
-      const headline = await page.locator('.experience-dashboard-heading h2 span').evaluateAll(lines => lines.map(line => ({ height: line.getBoundingClientRect().height, lineHeight: parseFloat(getComputedStyle(line).lineHeight) })));
+      const headline = await page.locator('.experience-title-line').evaluateAll(lines => lines.map(line => ({ height: line.getBoundingClientRect().height, lineHeight: parseFloat(getComputedStyle(line).lineHeight) })));
       assert.ok(headline.every(line => line.height < line.lineHeight * 1.2), 'Mobile dashboard title uses exactly two lines');
     }
     await page.screenshot({ path: outputPath(`${selector.slice(1)}-mobile.png`) });
