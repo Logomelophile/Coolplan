@@ -1,13 +1,28 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { COMPANY } from '../src/website/catalog';
-import { experienceFrame, EXPERIENCE_TOTAL_SQM, EXPERIENCE_STAGES, EXPERIENCE_GATHER_START, EXPERIENCE_GATHER_END, EXPERIENCE_PHOTO_DURATION } from '../src/website/experienceTimeline';
+import { experienceFrame, experienceScrollRange, experienceScrollProgress, experienceScrollOffset, EXPERIENCE_TOTAL_SQM, EXPERIENCE_STAGES, EXPERIENCE_GATHER_START, EXPERIENCE_GATHER_END, EXPERIENCE_PHOTO_DURATION } from '../src/website/experienceTimeline';
 
 test('the entry begins empty and types before revealing the year or area total', () => {
     const initial = experienceFrame(0);
     assert.equal(initial.head, 0); assert.equal(initial.sub, 0); assert.equal(initial.era, 0); assert.equal(initial.counterReveal, 0);
     assert.equal(experienceFrame(.14).head, 1); assert.equal(experienceFrame(.18).sub, 1);
-    assert.equal(experienceFrame(.21).era, 1); assert.equal(experienceFrame(.3).eraDock, 1);
+    assert.equal(experienceFrame(.18).era, 0); assert.equal(experienceFrame(.235).era, 1); assert.equal(experienceFrame(.3).eraDock, 1);
+});
+test('native scroll pixels advance and rewind the short title entry before the longer photo story', () => {
+    for (const height of [390, 532, 844, 900]) {
+        const range = experienceScrollRange(height, height * 10);
+        assert.equal(experienceScrollProgress(-range.leadPx, range), 0);
+        const first = experienceFrame(experienceScrollProgress(-range.leadPx + 60, range));
+        const second = experienceFrame(experienceScrollProgress(-range.leadPx + 120, range));
+        assert.ok(first.head > .1 && first.head < 1 && second.head > first.head);
+        assert.ok(experienceScrollOffset(.18, range) < 300, 'Typing completes without a long blank scrolling interval');
+        for (let i = 0; i <= 100; i++) {
+            const p = i / 100;
+            assert.ok(Math.abs(experienceScrollProgress(experienceScrollOffset(p, range), range) - p) < 1e-9);
+        }
+    }
+    assert.equal(experienceScrollProgress(0, experienceScrollRange(NaN, 0)), 1);
 });
 test('the accumulated total increases continuously and finishes at 175,000 during collection', () => {
     let previous = 0;

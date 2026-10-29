@@ -8,6 +8,7 @@ import './clientLogos.css';
 import './showcase.css';
 import './collections.css';
 import './compactLayout.css';
+import './projectPhotos.css';
 import './herringbone.css';
 import { mountShowcase } from './showcase';
 import { mountHerringbone } from './herringbone';

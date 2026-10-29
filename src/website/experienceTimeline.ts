@@ -8,12 +8,28 @@ export const EXPERIENCE_TOTAL_SQM = 175000;
 export const EXPERIENCE_GATHER_START = .96;
 export const EXPERIENCE_GATHER_END = .985;
 export const EXPERIENCE_SUMMARY_HOLD_MS = 800;
-export const EXPERIENCE_PHOTO_DURATION = .04;
+export const EXPERIENCE_PHOTO_DURATION = .035;
 export const EXPERIENCE_STAGES = [
     { start: .29, filled: .395, photos: [.29, .345, .4], archive: [.475, .52], seek: .455 },
     { start: .525, filled: .63, photos: [.525, .58, .635], archive: [.695, .74], seek: .68 },
     { start: .745, filled: .85, photos: [.745, .8, .855], archive: [.915, .96], seek: .9 },
 ];
+export interface ExperienceScrollRange { leadPx: number; introPx: number; travelPx: number; breakpoint: number }
+/** A short, responsive title/year entry followed by a longer photographic story. */
+export function experienceScrollRange(height: number, travel: number): ExperienceScrollRange {
+    const viewport = Number.isFinite(height) ? Math.max(1, height) : 800;
+    const travelPx = Number.isFinite(travel) ? Math.max(0, travel) : 0;
+    return { leadPx: Math.min(200, Math.max(100, viewport * .28)), introPx: Math.min(travelPx * .45, Math.min(520, Math.max(260, viewport * .6))), travelPx, breakpoint: EXPERIENCE_STAGES[0].start };
+}
+export function experienceScrollProgress(scrolled: number, range: ExperienceScrollRange): number {
+    if (range.travelPx <= 0) return 1;
+    const offset = Number.isFinite(scrolled) ? scrolled : -range.leadPx;
+    return offset <= range.introPx ? range.breakpoint * clamp((offset + range.leadPx) / (range.introPx + range.leadPx)) : range.breakpoint + (1 - range.breakpoint) * clamp((offset - range.introPx) / (range.travelPx - range.introPx));
+}
+export function experienceScrollOffset(progress: number, range: ExperienceScrollRange): number {
+    const p = clamp(Number.isFinite(progress) ? progress : 0);
+    return p <= range.breakpoint ? p / range.breakpoint * (range.introPx + range.leadPx) - range.leadPx : range.introPx + (p - range.breakpoint) / (1 - range.breakpoint) * (range.travelPx - range.introPx);
+}
 /** One reversible scroll clock keeps the years, distance and reveals in step. */
 export function experienceFrame(value: number, proofValue = value) {
     const progress = clamp(Number.isFinite(value) ? value : 0);
@@ -27,8 +43,8 @@ export function experienceFrame(value: number, proofValue = value) {
         head: phase(progress, 0, .14),
         sub: phase(progress, .025, .18),
         dock: ease(phase(progress, .16, .28)),
-        era: phase(progress, .15, .21),
-        eraDock: ease(phase(progress, .21, .3)),
+        era: phase(progress, .19, .235),
+        eraDock: ease(phase(progress, .235, .3)),
         timelineReveal: phase(progress, .21, .29),
         timeline,
         year: COMPANY.since + Math.round(COMPANY.years * timeline),

@@ -1,0 +1,27 @@
+/* Preserve every project photograph's original shape, including portrait frames. */
+#experience-intro .experience-pile-photo {
+  width: min(76%,640px,max(1px,calc((var(--pile-height,400px) * .9 - 38px) * var(--photo-ratio,1.3333))));
+  max-width: none;
+}
+#experience-intro .experience-pile-photo img,
+#featured .featured-photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: auto;
+  object-fit: contain;
+  transform: none;
+}
+#featured .featured-photo { max-width: min(calc(100% - 36px),max(1px,calc(min(var(--media-height,550px) - 120px,var(--media-height,550px) * .85 - 70px) * var(--photo-ratio,.75)))); }
+#showcase { --gallery-photo-height: max(95px,calc(100svh - 320px)); }
+#showcase .showcase-frame.is-portrait { width: min(clamp(220px,24vw,360px),calc(var(--gallery-photo-height) * var(--photo-ratio,.75))); }
+#showcase .showcase-frame.is-landscape { width: min(clamp(300px,34vw,520px),calc(var(--gallery-photo-height) * var(--photo-ratio,1.3333))); }
+#showcase .showcase-mat img { height: auto; max-height: none; aspect-ratio: auto; object-fit: contain; transform: none; }
+@media(max-height:620px) { #showcase { --gallery-photo-height: max(85px,calc(100svh - 340px)); } }
+#experience-intro .experience-title-head { translate: calc(-1 * clamp(10px,1.5vw,24px)) -2px; }
+#experience-intro .experience-title-sub { translate: clamp(10px,1.5vw,24px) 2px; margin-top: 8px; }
+#experience-intro.is-reduced .experience-milestone-story { grid-template-rows: auto auto; }
+#experience-intro.is-reduced .experience-photo-pile { height: auto; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; overflow: visible; }
+#experience-intro.is-reduced .experience-pile-photo { position: relative; width: 100%; max-width: none; transform: none!important; opacity: 1!important; align-self: start; }
+@media(max-width:700px) { #experience-intro.is-reduced .experience-photo-pile { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media(max-width:450px) { #experience-intro.is-reduced .experience-photo-pile { grid-template-columns: 1fr; } }

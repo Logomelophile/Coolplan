@@ -1,5 +1,6 @@
 import { sitePath } from '../sitePath';
 import { motionPreference } from './motionPreference';
+import { projectPhotoSize } from './projectPhotos';
 import { ExperienceIntro, type IntroDiagnostics } from './experienceDashboard';
 export { ExperienceIntro } from './experienceDashboard';
 export type { IntroDiagnostics } from './experienceDashboard';
@@ -374,7 +375,7 @@ export class Experience {
         this.featured.push(new FeaturedStoryMotion(warranty, 'warranty', this.motion.matches));
     }
     private photoMarkup(photos: FeaturedPhoto[]): string {
-        return photos.map((photo, index) => `<figure class="featured-photo featured-photo-${index + 1}" tabindex="0" role="button" aria-pressed="false" aria-label="${photo.caption} · คลิกค้างเพื่อลากรูป ใช้ปุ่มลูกศรเพื่อขยับ และ Home เพื่อคืนตำแหน่ง"><div class="featured-photo-image"><img src="${sitePath(photo.image)}" alt="${photo.alt}" loading="lazy" decoding="async" draggable="false" width="960" height="960" /></div><figcaption><span>${String(index + 1).padStart(2, '0')}</span>${photo.caption}</figcaption></figure>`).join('');
+        return photos.map((photo, index) => { const size = projectPhotoSize(photo.image); return `<figure class="featured-photo featured-photo-${index + 1}${size.portrait ? ' is-portrait' : ''}" style="--photo-ratio:${size.ratio}" tabindex="0" role="button" aria-pressed="false" aria-label="${photo.caption} · คลิกค้างเพื่อลากรูป ใช้ปุ่มลูกศรเพื่อขยับ และ Home เพื่อคืนตำแหน่ง"><div class="featured-photo-image"><img src="${sitePath(photo.image)}" alt="${photo.alt}" loading="lazy" decoding="async" draggable="false" width="${size.width}" height="${size.height}" /></div><figcaption><span>${String(index + 1).padStart(2, '0')}</span>${photo.caption}</figcaption></figure>`; }).join('');
     }
     dispose(): void {
         if (this.disposed)

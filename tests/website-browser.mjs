@@ -190,6 +190,7 @@ try {
     };
     await seekFeature(.8);
     await page.waitForFunction(selector => [...document.querySelectorAll(`${selector} img`)].every(img => img.complete && img.naturalWidth > 0), selector);
+    assert.ok(await page.locator(`${selector} .featured-photo img`).evaluateAll(images => images.every(img => Math.abs(img.clientWidth / img.clientHeight - img.naturalWidth / img.naturalHeight) < .015 && getComputedStyle(img).objectFit === 'contain')), `${id}: project photographs retain their full source shape`);
     const endTransform = await page.locator(`${selector} .featured-photo-2`).evaluate(el => getComputedStyle(el).transform);
     await page.screenshot({ path: outputPath(`featured-${id}-desktop.png`) });
     await seekFeature(.12);

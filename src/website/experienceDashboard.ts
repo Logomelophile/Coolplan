@@ -1,6 +1,7 @@
 import { COMPANY, PACKAGES } from './catalog';
 import { motionPreference } from './motionPreference';
-import { experienceFrame, EXPERIENCE_END_YEAR, EXPERIENCE_TOTAL_SQM, EXPERIENCE_GATHER_START, EXPERIENCE_GATHER_END, EXPERIENCE_SUMMARY_HOLD_MS, EXPERIENCE_STAGES } from './experienceTimeline';
+import { experienceFrame, experienceScrollRange, experienceScrollProgress, experienceScrollOffset, type ExperienceScrollRange, EXPERIENCE_END_YEAR, EXPERIENCE_TOTAL_SQM, EXPERIENCE_GATHER_START, EXPERIENCE_GATHER_END, EXPERIENCE_SUMMARY_HOLD_MS, EXPERIENCE_STAGES } from './experienceTimeline';
+import { projectPhotoSize } from './projectPhotos';
 import { sitePath } from '../sitePath';
 const METRICS = [
     { value: COMPANY.years, unit: 'ปี', suffix: '', label: 'ประสบการณ์งานพื้น', detail: `ดูแลงานพื้นมาตั้งแต่ปี ${COMPANY.since}`, code: '01 / EXPERIENCE' },
@@ -15,13 +16,13 @@ const MILESTONES = [
 const PHOTOS = [
     { file: 'experience-herringbone-hall', caption: 'พื้นก้างปลาในพื้นที่โถง', x: .04, y: .05, angle: -6 },
     { file: 'experience-window-room', caption: 'เก็บงานพื้นริมหน้าต่าง', x: .65, y: .24, angle: 5 },
-    { file: 'chevron-hall', caption: 'ลายพื้นต่อเนื่องตลอดโถงทางเดิน', position: '50% 70%', x: .36, y: .58, angle: -3 },
+    { file: 'chevron-hall', caption: 'ลายพื้นต่อเนื่องตลอดโถงทางเดิน', x: .36, y: .58, angle: -3 },
     { file: 'narasiri-light', caption: 'บ้านเดี่ยว @ Narasiri', x: .12, y: .6, angle: -5 },
     { file: 'narasiri-dark', caption: 'อีกมุมของบ้าน Narasiri', x: .9, y: .04, angle: 6 },
     { file: 'narasiri-stairs', caption: 'บันไดบ้าน @ Narasiri', x: .4, y: .4, angle: -2 },
     { file: 'customer-open-plan', caption: 'พื้นที่เปิดโล่งภายในบ้าน', x: .25, y: .16, angle: -4 },
     { file: 'customer-connected-room', caption: 'พื้นเชื่อมต่อระหว่างห้อง', x: .8, y: .08, angle: 5 },
-    { file: 'stair-oak', caption: 'เก็บรายละเอียดงานบันได', position: '50% 60%', x: .68, y: .65, angle: 3 },
+    { file: 'stair-oak', caption: 'เก็บรายละเอียดงานบันได', x: .68, y: .65, angle: 3 },
 ];
 export interface IntroDiagnostics {
     progress: number;
@@ -46,6 +47,7 @@ export interface IntroDiagnostics {
     summaryHoldRemainingMs: number;
     summaryVisibleAt: number | null;
     summaryHolding: boolean;
+    scroll: ExperienceScrollRange;
 }
 interface TravelPose {
     x: number;
@@ -92,8 +94,8 @@ export class ExperienceIntro {
         panel: TravelPose;
         photo: TravelPose;
     }[] = [];
-    private enteredAt: number | null = null;
-    private entryTyping = 0;
+    private typingProgress = 0;
+    private scrollRange = experienceScrollRange(0, 0);
     private typedFractions = [0, 0];
     private readonly observer: IntersectionObserver | null;
     private readonly resizeObserver: ResizeObserver | null;
@@ -148,7 +150,7 @@ export class ExperienceIntro {
         story.innerHTML = MILESTONES.map((milestone, index) => `<article class="experience-milestone-copy"><span>0${index + 1} / ${milestone.label}</span><h3>${milestone.title}</h3><p>${milestone.text}</p></article>`).join('');
         this.stories = Array.from(story.children) as HTMLElement[];
         this.pile = section.querySelector<HTMLElement>('.experience-photo-pile')!;
-        this.pile.innerHTML = PHOTOS.map((photo, index) => `<figure class="experience-pile-photo" data-story="${Math.floor(index / 3)}"><img src="${sitePath(`/website/showcase/${photo.file}.webp`)}" alt="${photo.caption}" style="object-position:${photo.position ?? '50% 50%'}" loading="lazy" decoding="async" width="960" height="720"/><figcaption>${photo.caption}</figcaption></figure>`).join('');
+        this.pile.innerHTML = PHOTOS.map((photo, index) => { const size = projectPhotoSize(photo.file); return `<figure class="experience-pile-photo${size.portrait ? ' is-portrait' : ''}" style="--photo-ratio:${size.ratio}" data-story="${Math.floor(index / 3)}"><img src="${sitePath(`/website/showcase/${photo.file}.webp`)}" alt="${photo.caption}" loading="lazy" decoding="async" width="${size.width}" height="${size.height}"/><figcaption>${photo.caption}</figcaption></figure>`; }).join('');
         this.photos = Array.from(this.pile.children) as HTMLElement[];
         this.checks = Array.from(section.querySelectorAll<HTMLElement>('.experience-checks li'));
         this.projectButton = section.querySelector<HTMLButtonElement>('.experience-projects-toggle')!;
@@ -202,7 +204,7 @@ export class ExperienceIntro {
         document.addEventListener('visibilitychange', this.onVisibility, { signal });
         motionPreference.addEventListener('change', this.onPreference, { signal });
         this.projectButton.addEventListener('click', () => { this.projectsPaused = !this.projectsPaused; this.syncProjects(); }, { signal });
-        section.querySelector('.experience-motion-replay')?.addEventListener('click', () => { this.enteredAt = performance.now(); this.entryTyping = 0; this.scroll.scrollIntoView({ behavior: this.reduced ? 'auto' : 'smooth', block: 'start' }); }, { signal });
+        section.querySelector('.experience-motion-replay')?.addEventListener('click', () => { window.scrollTo({ top: this.scroll.getBoundingClientRect().top + window.scrollY + (this.reduced ? 0 : experienceScrollOffset(0, this.scrollRange)), behavior: this.reduced ? 'auto' : 'smooth' }); }, { signal });
         section.querySelector('.experience-scene-footer a[href="#experience-evidence"]')?.addEventListener('click', event => {
             event.preventDefault();
             if (this.reduced || this.flow) {
@@ -233,12 +235,13 @@ export class ExperienceIntro {
         this.measureLayout();
         this.measure();
         this.progress = this.reduced ? 1 : this.target;
+        this.typingProgress = this.progress;
         this.proofProgress = this.reduced ? 1 : this.proofTarget;
         this.render();
     }
     get diagnostics(): IntroDiagnostics {
         const frame = experienceFrame(this.progress, this.proofProgress);
-        return { progress: this.progress, counter: frame.counter, active: frame.active, panels: this.panels.length, animating: this.raf !== 0, rings: frame.rings, counters: METRICS.map((metric, index) => Math.round(metric.value * frame.rings[index])), typed: [...this.typedFractions], year: frame.year, timeline: frame.timeline, checks: frame.checks, marqueeRunning: this.projectsRunning, milestones: frame.milestones, photos: frame.photos, archived: frame.archived, proof: this.proofProgress, mode: this.flow ? 'flow' : 'scroll', reduced: this.reduced, gather: frame.gather, summaryHoldRemainingMs: this.summaryHoldRemainingMs, summaryVisibleAt: this.summaryVisibleAt, summaryHolding: this.summaryHoldStarted !== null && !this.summaryHoldConsumed && (this.summaryVisibleAt === null || this.summaryHoldRemainingMs > 0) };
+        return { progress: this.progress, counter: frame.counter, active: frame.active, panels: this.panels.length, animating: this.raf !== 0, rings: frame.rings, counters: METRICS.map((metric, index) => Math.round(metric.value * frame.rings[index])), typed: [...this.typedFractions], year: frame.year, timeline: frame.timeline, checks: frame.checks, marqueeRunning: this.projectsRunning, milestones: frame.milestones, photos: frame.photos, archived: frame.archived, proof: this.proofProgress, mode: this.flow ? 'flow' : 'scroll', reduced: this.reduced, gather: frame.gather, summaryHoldRemainingMs: this.summaryHoldRemainingMs, summaryVisibleAt: this.summaryVisibleAt, scroll: { ...this.scrollRange }, summaryHolding: this.summaryHoldStarted !== null && !this.summaryHoldConsumed && (this.summaryVisibleAt === null || this.summaryHoldRemainingMs > 0) };
     }
     private get summaryHoldRemainingMs(): number { return this.reduced || this.summaryHoldConsumed || this.summaryVisibleAt === null ? 0 : Math.max(0, EXPERIENCE_SUMMARY_HOLD_MS - (performance.now() - this.summaryVisibleAt)); }
     private resetSummaryHold(): void { this.summaryHoldStarted = null; this.summaryVisibleAt = null; this.summaryHoldConsumed = false; }
@@ -304,16 +307,11 @@ export class ExperienceIntro {
     } };
     private measure(): void {
         const rect = this.scroll.getBoundingClientRect();
-        if (rect.top < window.innerHeight * .85 && rect.bottom > 0 && this.enteredAt === null)
-            this.enteredAt = performance.now();
-        if (rect.top > window.innerHeight * 1.1) {
-            this.enteredAt = null;
-            this.entryTyping = 0;
-        }
         const travel = this.scroll.offsetHeight - this.sticky.offsetHeight;
+        this.scrollRange = experienceScrollRange(window.innerHeight, travel);
         this.flow = travel <= 0;
         this.section.classList.toggle('is-flow', this.flow);
-        this.target = travel > 0 ? Math.max(0, Math.min(1, -rect.top / travel)) : 1;
+        this.target = experienceScrollProgress(-rect.top, this.scrollRange);
         this.proofTarget = Math.max(0, Math.min(1, (this.target - EXPERIENCE_GATHER_START) / (EXPERIENCE_GATHER_END - EXPERIENCE_GATHER_START)));
         if (this.target < EXPERIENCE_GATHER_START - .02) this.resetSummaryHold();
     }
@@ -322,8 +320,7 @@ export class ExperienceIntro {
             this.stories[index].scrollIntoView({ behavior: this.reduced ? 'auto' : 'smooth', block: 'center' });
             return;
         }
-        const travel = this.scroll.offsetHeight - this.sticky.offsetHeight;
-        window.scrollTo({ top: this.scroll.getBoundingClientRect().top + window.scrollY + travel * EXPERIENCE_STAGES[index].seek, behavior: 'smooth' });
+        window.scrollTo({ top: this.scroll.getBoundingClientRect().top + window.scrollY + experienceScrollOffset(EXPERIENCE_STAGES[index].seek, this.scrollRange), behavior: 'smooth' });
     }
     private stop(): void { cancelAnimationFrame(this.raf); this.raf = 0; }
     private onVisibility = (): void => {
@@ -342,6 +339,7 @@ export class ExperienceIntro {
         this.measureLayout();
         this.measure();
         this.progress = this.reduced ? 1 : this.target;
+        this.typingProgress = this.progress;
         this.proofProgress = this.reduced ? 1 : this.proofTarget;
         this.render();
     };
@@ -360,7 +358,7 @@ export class ExperienceIntro {
         const rect = this.scroll.getBoundingClientRect(), start = rect.top + window.scrollY;
         const travel = this.scroll.offsetHeight - this.sticky.offsetHeight;
         if (travel <= 0 || window.scrollY < start - 1 || window.scrollY > start + travel + 1) return;
-        const anchor = Math.ceil(start + travel * EXPERIENCE_GATHER_END);
+        const anchor = Math.ceil(start + experienceScrollOffset(EXPERIENCE_GATHER_END, this.scrollRange));
         const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1);
         if (window.scrollY + delta < anchor) return;
         const now = performance.now();
@@ -373,20 +371,20 @@ export class ExperienceIntro {
         window.scrollTo({ top: Math.min(start + travel, Math.max(anchor, window.scrollY)), behavior: 'instant' });
         this.onScroll();
     };
-    private tick = (time: number): void => {
+    private tick = (): void => {
         this.raf = 0;
         if (this.disposed || this.reduced || !this.visible || document.hidden)
             return;
         this.progress += (this.target - this.progress) * .1;
+        this.typingProgress += (this.target - this.typingProgress) * .3;
         this.proofProgress += (this.proofTarget - this.proofProgress) * .1;
         if (Math.abs(this.target - this.progress) < .0004)
             this.progress = this.target;
         if (Math.abs(this.proofTarget - this.proofProgress) < .0004)
             this.proofProgress = this.proofTarget;
-        if (this.enteredAt !== null)
-            this.entryTyping = Math.max(0, Math.min(1, (time - this.enteredAt) / 1900));
+        if (Math.abs(this.target - this.typingProgress) < .0004) this.typingProgress = this.target;
         this.render();
-        if (this.progress !== this.target || this.proofProgress !== this.proofTarget || (this.enteredAt !== null && this.entryTyping < 1))
+        if (this.progress !== this.target || this.proofProgress !== this.proofTarget || this.typingProgress !== this.target)
             this.raf = requestAnimationFrame(this.tick);
     };
     private render(): void {
@@ -412,7 +410,8 @@ export class ExperienceIntro {
         this.section.style.setProperty('--timeline-reveal', frame.timelineReveal.toFixed(4));
         this.section.style.setProperty('--marquee-reveal', frame.marquee.toFixed(4));
         this.section.classList.toggle('is-counted', frame.counter === EXPERIENCE_TOTAL_SQM);
-        this.typedFractions = [Math.max(frame.head, Math.min(1, this.entryTyping / .7)), Math.max(frame.sub, Math.max(0, (this.entryTyping - .25) / .75))];
+        const typing = experienceFrame(this.typingProgress);
+        this.typedFractions = [typing.head, typing.sub];
         this.typedFractions.forEach((fraction, index) => {
             const minimum = 0;
             const reveal = this.characters[index].length * fraction;

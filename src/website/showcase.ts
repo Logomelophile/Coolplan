@@ -1,5 +1,6 @@
 import { sitePath } from '../sitePath';
 import { icon } from './shared';
+import { projectPhotoSize } from './projectPhotos';
 
 /**
  * "ผลงานจริง" showcase: a horizontal gallery of framed project photographs that
@@ -88,8 +89,10 @@ export class Showcase {
   private build(): void {
     this.track.replaceChildren();
     SHOWCASE_ITEMS.forEach((item, index) => {
+      const size = projectPhotoSize(item.image);
       const frame = document.createElement('figure');
       frame.className = `showcase-frame is-${item.orientation}`;
+      frame.style.setProperty('--photo-ratio', String(size.ratio));
       frame.style.setProperty('--i', String(index));
       frame.setAttribute('role', 'listitem');
       const mat = document.createElement('div');
@@ -99,6 +102,8 @@ export class Showcase {
       img.alt = `${item.title} · ${item.detail}`;
       img.loading = index < 3 ? 'eager' : 'lazy';
       img.decoding = 'async';
+      img.width = size.width;
+      img.height = size.height;
       mat.append(img);
       const caption = document.createElement('figcaption');
       const number = document.createElement('span');

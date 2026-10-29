@@ -1,20 +1,29 @@
 import assert from 'node:assert/strict';
 export async function verifyRedesign(page, { initialize, state, check, outputPath, url, noOverflow }) {
-    const seek = async (p) => { await page.evaluate(p => { const e = document.querySelector('.experience-scroll'); scrollTo({ top: e.getBoundingClientRect().top + scrollY + (e.offsetHeight - document.querySelector('.experience-sticky').offsetHeight) * p, behavior: 'instant' }); }, p); await page.waitForFunction(p => { const d = window.websiteDemo.diagnostics.experience.intro; return Math.abs(d.progress - p) < .003 && !d.animating; }, p); };
-    await page.evaluate(() => { const e = document.querySelector('.experience-scroll'); scrollTo({ top: e.getBoundingClientRect().top + scrollY - innerHeight * 1.2, behavior: 'instant' }); });
-    await page.waitForTimeout(150);
-    await page.evaluate(() => { const e = document.querySelector('.experience-scroll'); scrollTo({ top: e.getBoundingClientRect().top + scrollY - innerHeight * .78, behavior: 'instant' }); });
-    const entryY = await page.evaluate(() => scrollY);
-    await page.waitForFunction(() => { const d = window.websiteDemo.diagnostics.experience.intro; return d.typed[0] > 0 && d.typed[0] < 1; });
+    const offset = (p, r) => p <= r.breakpoint ? p / r.breakpoint * (r.introPx + r.leadPx) - r.leadPx : r.introPx + (p - r.breakpoint) / (1 - r.breakpoint) * (r.travelPx - r.introPx);
+    const seek = async (p) => { const r = (await state()).experience.intro.scroll; await page.evaluate(px => { const e = document.querySelector('.experience-scroll'); scrollTo({ top: e.getBoundingClientRect().top + scrollY + px, behavior: 'instant' }); }, offset(p, r)); await page.waitForFunction(p => { const d = window.websiteDemo.diagnostics.experience.intro; return Math.abs(d.progress - p) < .003 && !d.animating; }, p); };
+    await seek(0);
+    assert.deepEqual((await state()).experience.intro.typed, [0, 0]);
+    await page.mouse.move(1100, 450);
+    await page.mouse.wheel(0, 80);
+    await page.waitForFunction(() => { const d = window.websiteDemo.diagnostics.experience.intro; return d.typed[0] > 0 && d.typed[0] < 1 && !d.animating; });
+    const partial = (await state()).experience.intro.typed;
+    await page.waitForTimeout(300);
+    assert.deepEqual((await state()).experience.intro.typed, partial, 'Stopping the wheel stops typing');
+    await page.mouse.wheel(0, 80);
+    await page.waitForFunction(previous => { const d = window.websiteDemo.diagnostics.experience.intro; return d.typed[0] > previous && !d.animating; }, partial[0]);
+    await page.mouse.wheel(0, -80);
+    await page.waitForFunction(previous => { const d = window.websiteDemo.diagnostics.experience.intro; return Math.abs(d.typed[0] - previous) < .015 && !d.animating; }, partial[0]);
+    await seek(.18);
     assert.equal(await page.locator('.experience-era').evaluate(el => getComputedStyle(el).opacity), '0');
-    await page.waitForFunction(() => { const d = window.websiteDemo.diagnostics.experience.intro; return d.typed.every(n => n === 1) && !d.animating; });
-    assert.equal(await page.evaluate(() => scrollY), entryY, 'Entry typing proceeds without waiting for a full-screen scroll');
     assert.deepEqual(await page.locator('.experience-typed').allTextContents(), ['เบื้องหลังความสมบูรณ์แบบ', 'ของโครงการชั้นนำ']);
+    const stagger = await page.locator('.experience-title-line').evaluateAll(lines => lines.map(e => parseFloat(getComputedStyle(e).translate)));
+    assert.ok(stagger[0] < 0 && stagger[1] > 0, 'Headline and subtitle are gently offset');
     const originalYear = await page.locator('.experience-era strong').elementHandle();
     const originalRing = await page.locator('.experience-ring').first().elementHandle();
     const originalPhoto = await page.locator('.experience-pile-photo').first().elementHandle();
     const originalCounter = await page.locator('.experience-counter strong').elementHandle();
-    await seek(.22);
+    await seek(.24);
     assert.equal(await originalYear.innerText(), '2005');
     assert.equal(await page.locator('.experience-era').evaluate(el => getComputedStyle(el).opacity), '1');
     await seek(.43);
@@ -36,6 +45,11 @@ export async function verifyRedesign(page, { initialize, state, check, outputPat
         assert.equal(frame.archived[index], 0, 'Completed circles and photos have a resting interval');
         assert.deepEqual(frame.photos.slice(index * 3, index * 3 + 3), [1, 1, 1]);
         assert.equal(Number(await page.locator('.experience-ring-arc').nth(index).evaluate(el => el.style.strokeDashoffset)), 0);
+        const intact = await page.locator(`.experience-pile-photo[data-story="${index}"]`).evaluateAll(photos => photos.every(photo => {
+            const img = photo.querySelector('img'), box = photo.getBoundingClientRect(), host = photo.parentElement.getBoundingClientRect();
+            return Math.abs(img.clientWidth / img.clientHeight - img.naturalWidth / img.naturalHeight) < .015 && (!photo.classList.contains('is-portrait') || (photo.offsetHeight > photo.offsetWidth && box.left >= host.left - 1 && box.right <= host.right + 1 && box.top >= host.top - 1 && box.bottom <= host.bottom + 1));
+        }));
+        assert.ok(intact, 'Every portrait uses its full original aspect ratio inside the photo stage');
     }
     await seek(.64);
     assert.deepEqual((await state()).experience.intro.archived, [1, 0, 0]);
@@ -81,7 +95,7 @@ export async function verifyRedesign(page, { initialize, state, check, outputPat
     assert.equal((await state()).experience.intro.gather, 0);
     assert.equal((await state()).experience.intro.archived[0], 0);
     assert.ok(await originalRing.evaluate(el => el.getBoundingClientRect().width) > 145);
-    check('Entry types from zero before the year appears; large gauges and three-photo piles archive and collect as the same DOM nodes into a framed dashboard, with reversible scroll and working project names.');
+    check('Wheel input types, pauses and rewinds the staggered heading before the year; full portrait photographs rest, archive and gather into the framed dashboard.');
     check('All three gauges and photo piles finish before docking; the same area counter grows into the final 175,000 headline.');
     await page.setViewportSize({ width: 1920, height: 900 });
     await page.locator('#collections').evaluate(e => e.scrollIntoView({ behavior: 'instant' }));
@@ -209,21 +223,22 @@ export async function verifyRedesign(page, { initialize, state, check, outputPat
         anchored.searchParams.set('redesign-window', `${viewport.width}x${viewport.height}`);
         anchored.hash = 'experience-intro';
         await initialize(anchored.href);
-        const travel = await page.evaluate(() => { const e = document.querySelector('.experience-scroll'); scrollTo({ top: e.getBoundingClientRect().top + scrollY, behavior: 'instant' }); return e.offsetHeight - document.querySelector('.experience-sticky').offsetHeight; });
+        const r = (await state()).experience.intro.scroll;
+        await seek(0);
         await page.waitForFunction(() => { const d = window.websiteDemo.diagnostics.experience.intro; return d.mode === 'scroll' && d.progress < .005 && !d.animating; });
         await page.mouse.move(viewport.width / 2, viewport.height / 2);
-        await page.mouse.wheel(0, travel * .43);
+        await page.mouse.wheel(0, offset(.43, r) - offset(0, r));
         await page.waitForFunction(() => { const d = window.websiteDemo.diagnostics.experience.intro; return Math.abs(d.progress - .43) < .01 && !d.animating; });
         assert.ok((await state()).experience.intro.counters[0] > 0);
-        await page.mouse.wheel(0, travel * .21);
+        await page.mouse.wheel(0, offset(.64, r) - offset(.43, r));
         await page.waitForFunction(() => { const d = window.websiteDemo.diagnostics.experience.intro; return Math.abs(d.progress - .64) < .01 && !d.animating; });
         assert.equal((await state()).experience.intro.archived[0], 1);
-        await page.mouse.wheel(0, travel * .37);
+        await page.mouse.wheel(0, offset(1, r) - offset(.64, r) + 20);
         await page.waitForFunction(() => { const d = window.websiteDemo.diagnostics.experience.intro; return d.gather === 1 && !d.animating; });
         assert.equal((await state()).experience.intro.counter, 175000);
         assert.equal(await page.locator('.experience-checks li.is-checked').count(), 4);
         await page.screenshot({ path: outputPath(`redesign-summary-${viewport.width}x${viewport.height}.png`) });
-        await page.mouse.wheel(0, -travel * .58);
+        await page.mouse.wheel(0, offset(.43, r) - offset(1, r));
         await page.waitForFunction(() => { const d = window.websiteDemo.diagnostics.experience.intro; return d.active === 0 && d.gather === 0 && d.progress < .49 && !d.animating; });
         await noOverflow();
     }

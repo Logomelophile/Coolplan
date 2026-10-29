@@ -604,7 +604,7 @@
 }
 
 /* Give each full photo pile and completed gauge time to be seen before docking. */
-.experience-scroll { height: 900svh; }
+.experience-scroll { height: 1100svh; }
 #experience-intro .experience-counter {
   left: 0;
   top: 0;
