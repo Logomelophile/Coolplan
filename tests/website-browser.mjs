@@ -128,13 +128,10 @@ try {
   await page.mouse.move(startX, startY); await page.mouse.down();
   await page.mouse.move(startX + 85, startY + 35, { steps: 12 }); await page.mouse.up();
   await page.waitForFunction(before => window.websiteDemo.diagnostics.viewer.cameraPosition.some((value, index) => Math.abs(value - before[index]) > .01), beforeOrbit);
-  await page.locator('#layer-slider').fill('72');
-  await page.locator('#layer-slider').dispatchEvent('input');
-  assert.equal((await state()).viewer.explode, .72);
-  await page.locator('#layers-toggle').click(); assert.equal((await state()).progress, 0);
-  await page.locator('#layers-toggle').click(); assert.equal((await state()).progress, 1);
-  await escapeExpanded('hero-expand', 'hero-3d-shell', 'hero-fullscreen-close');
-  check('Hero: wheel scrolls the page and advances the story; actual drag changes camera; slider, layer toggle and fullscreen Escape work.');
+  assert.equal(await page.locator('#hero .hero-3d-tools').isVisible(), false);
+  assert.equal(await page.locator('#hero .hero-3d-hint').isVisible(), false);
+  assert.equal(await page.locator('#hero .hero-3d-tools').evaluate(el => el.inert), true);
+  check('Hero: wheel advances the automatic five-layer story and drag rotates the camera; internal adjustment controls stay hidden and unfocusable.');
 
   await page.locator('#client-logos').scrollIntoViewIfNeeded();
   await page.mouse.move(0, 0);
@@ -342,14 +339,14 @@ try {
   await page.locator('#main-navigation [data-contact-open]').click();
   assert.equal(await page.locator('#contact-dialog').evaluate(dialog => dialog.open), true);
   await page.keyboard.press('Escape');
-  await escapeExpanded('hero-expand', 'hero-3d-shell', 'hero-fullscreen-close');
+  assert.equal(await page.locator('#hero .hero-3d-tools').isVisible(), false);
   await page.locator('[data-filter="4"]').click(); await page.locator('[data-product="4"]').click();
   await page.waitForFunction(() => window.websiteDemo.diagnostics.viewer.productId === 'greige-oak');
   assert.equal((await state()).preview.finish, 4);
   await escapeExpanded('preview-expand', 'room-preview-shell', 'preview-close');
   await uploadAndReset('mobile');
   await noOverflow();
-  check('Mobile 390px: menu/contact, product selection, hero and room fullscreen, upload controls fit and work without horizontal overflow.');
+  check('Mobile 390px: menu/contact, product selection, room fullscreen and upload controls work; hero adjustments stay hidden without horizontal overflow.');
 
   await page.evaluate(() => { window.websiteDemo.dispose(); window.websiteDemo.dispose(); });
   assert.equal(await page.locator('#hero-viewer canvas,#room-preview canvas,.hero-room-floor-canvas').count(), 0);

@@ -34,5 +34,7 @@ export function sampleStory(value:number){
   const detail=smoother(progress-(d-1));
   const explode=progress<d ? .22*(1-smoother((progress-(d-1))/.75)) : smoother((progress-(d+.25))/(STORY_LAYER_COUNT-.5));
   const labelsVisible=Array.from({length:STORY_LAYER_COUNT},(_,index)=>smooth((progress-(d+1+index)+.4)/.4));
-  return {progress,step,from,to,mix,finishIndex:mix>=.5?to:from,detail,zoom:detail,profile:smoother((progress-(d-.8))/.8)*(1-smoother((progress-(d+.25))/.75)),explode,explosion:explode,focus:progress>=d+1&&progress<STORY_LAST-.25?Math.min(STORY_LAYER_COUNT-1,Math.floor(progress)-(d+1)):-1,labelsVisible,thickness:smoother((progress-(d-.3))/.3),intro:1-smooth(progress/.55),complete:progress>=STORY_LAST};
+  // Finish the dimension callout before the first layer label enters the same column.
+  const thickness=smoother((progress-(d-.3))/.3)*(1-smoother((progress-(d+.2))/.4));
+  return {progress,step,from,to,mix,finishIndex:mix>=.5?to:from,detail,zoom:detail,profile:smoother((progress-(d-.8))/.8)*(1-smoother((progress-(d+.25))/.75)),explode,explosion:explode,focus:progress>=d+1&&progress<STORY_LAST-.25?Math.min(STORY_LAYER_COUNT-1,Math.floor(progress)-(d+1)):-1,labelsVisible,thickness,intro:1-smooth(progress/.55),complete:progress>=STORY_LAST};
 }

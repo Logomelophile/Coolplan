@@ -41,6 +41,7 @@ async function layout() {
     documentWidth: document.documentElement.scrollWidth,
     hero: document.getElementById('hero').getBoundingClientRect().toJSON(),
     controls: document.querySelector('.hero-3d-tools').getBoundingClientRect().toJSON(),
+    text: [...document.querySelectorAll('#story-title,#story-description,#story-thickness')].filter(node => Number(getComputedStyle(node).opacity) > .01).map(node => ({ id: node.id, box: node.getBoundingClientRect().toJSON() })),
     rooms: document.getElementById('rooms').getBoundingClientRect().toJSON(),
     next: (document.getElementById('client-logos') ?? document.getElementById('experience-intro') ?? document.getElementById('showcase') ?? document.getElementById('rooms')).getBoundingClientRect().toJSON(),
     finishCards: [...document.querySelectorAll('.story-layer[data-shown="true"]')].map(node => ({ id: node.dataset.layer, box: node.getBoundingClientRect().toJSON() })),
@@ -57,6 +58,11 @@ function assertLabelsClear(value, label) {
     const overlapX = Math.min(card.box.right, value.controls.right) - Math.max(card.box.left, value.controls.left);
     const overlapY = Math.min(card.box.bottom, value.controls.bottom) - Math.max(card.box.top, value.controls.top);
     assert.ok(overlapX <= 0 || overlapY <= 0, `${label}: 3D controls cover the ${card.id} explanation`);
+    for (const text of value.text) {
+      const x = Math.min(card.box.right, text.box.right) - Math.max(card.box.left, text.box.left);
+      const y = Math.min(card.box.bottom, text.box.bottom) - Math.max(card.box.top, text.box.top);
+      assert.ok(x <= 0 || y <= 0, `${label}: ${text.id} overlaps the ${card.id} explanation`);
+    }
   }
 }
 async function roomPixels() {
@@ -77,6 +83,12 @@ async function roomPixels() {
 
 async function assertWheelFinishes(label) {
   await seek(0);
+  assert.equal(await page.locator('#hero .hero-3d-tools').isVisible(), false, `${label}: the adjustment toolbar stays hidden`);
+  const openingClear = await page.evaluate(() => {
+    const benefits = document.querySelector('.benefits').getBoundingClientRect();
+    return [...document.querySelectorAll('.hero-copy,.hero-signature')].filter(el => getComputedStyle(el).display !== 'none').every(el => el.getBoundingClientRect().bottom + 12 <= benefits.top);
+  });
+  assert.ok(openingClear, `${label}: opening copy and signature leave a gap above the benefit icons`);
   const first = await roomPixels();
   const hashes = [first[0].floor];
   for (let step = 1; step < DETAIL; step++) {
@@ -169,7 +181,8 @@ try {
   const paths = await page.locator('[data-leader]').evaluateAll(nodes => nodes.filter(node => node.getAttribute('d') || node.getAttribute('points')).map(node => node.getAttribute('d') || node.getAttribute('points')));
   assert.equal(paths.length, 5);
   assert.ok(paths.every(path => !/NaN|Infinity/.test(path)));
-  await page.locator('#hero-reset').click();
+  // The reset remains an internal controller hook after the opening toolbar is hidden.
+  await page.locator('#hero-reset').evaluate(button => button.click());
   check('Mouse drag still rotates the enlarged 3D sample and all five leader paths retain finite projected endpoints.');
 
   for (let step = DETAIL - 1; step >= 0; step--) {

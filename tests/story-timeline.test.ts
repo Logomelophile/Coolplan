@@ -14,6 +14,11 @@ test('story offers four distinct finishes, a 5 mm introduction, five layers and 
   assert.equal(sampleStory(DETAIL_STOP).detail, 1, 'The enlargement completes exactly at the 5 MM stop.');
   assert.equal(sampleStory(DETAIL_STOP).profile, 1, 'The 5 MM stop presents the assembled profile edge.');
   assert.equal(sampleStory(DETAIL_STOP).explode, 0, 'An assembled thickness dimension cannot measure exploded gaps.');
+  assert.equal(sampleStory(DETAIL_STOP).thickness, 1, 'The assembled dimension has its own reading stop.');
+  for (let p = DETAIL_STOP; p <= STORY_END; p += .02) {
+    const frame = sampleStory(p);
+    assert.ok(frame.thickness < .001 || frame.labelsVisible.every(opacity => opacity < .001), 'The dimension and layer explanations must never compete for the same space.');
+  }
   assert.equal(sampleStory(STORY_LAST).profile, 0, 'Full layer overview returns from the temporary side profile.');
   for (let step = 0; step < STORY_STEPS.length; step++) {
     const frame = sampleStory(step);

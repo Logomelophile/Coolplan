@@ -1,7 +1,37 @@
 /* Preserve every project photograph's original shape, including portrait frames. */
 #experience-intro .experience-pile-photo {
-  width: min(76%,640px,max(1px,calc((var(--pile-height,400px) * .9 - 38px) * var(--photo-ratio,1.3333))));
+  width: min(92%,760px,max(1px,calc((var(--pile-height,400px) * .86 - 38px) * var(--photo-ratio,1.3333))));
   max-width: none;
+}
+#experience-intro .experience-pile-photo.is-portrait {
+  width: min(90%,620px,max(1px,calc((var(--pile-height,400px) * .97 - 38px) * var(--photo-ratio,.75))));
+}
+#experience-intro .experience-token-dashboard { z-index: 3; }
+#experience-intro .experience-token-photos.is-docking { z-index: 2; }
+#experience-intro .experience-stat.is-docked .experience-ring { border-radius: 50%; background: rgb(255 255 255 / calc(1 - var(--gather,0))); }
+/* Give full portrait frames their own tall stage rather than squeezing them into a landscape slot. */
+@media(min-width:521px) {
+  #experience-intro:not(.is-reduced) .experience-photo-pile {
+    --photo-lift: clamp(95px,14svh,155px);
+    height: calc(100% + var(--photo-lift));
+    margin-top: calc(-1 * var(--photo-lift));
+  }
+}
+@media(max-width:520px) {
+  #experience-intro:not(.is-reduced) .experience-sticky {
+    padding: 14px 18px;
+    grid-template-rows: 74px 108px minmax(0,1fr) 18px;
+    gap: 8px;
+  }
+  #experience-intro:not(.is-reduced) .experience-scene { grid-template-columns: minmax(0,1fr); grid-template-rows: minmax(0,1fr); }
+  #experience-intro:not(.is-reduced) .experience-dashboard { grid-column: 1; grid-row: 1; width: 90px; height: 100px; align-self: start; }
+  #experience-intro:not(.is-reduced) .experience-milestone-content { left: 106px; width: calc(100% - 106px); height: 100px; }
+  #experience-intro:not(.is-reduced) .experience-milestone-copy h3 { font-size: 17px; }
+  #experience-intro:not(.is-reduced) .experience-milestone-copy p { font-size: 9px; -webkit-line-clamp: 2; }
+  #experience-intro:not(.is-reduced) .experience-token-dashboard .experience-ring { width: 86px; }
+  #experience-intro:not(.is-reduced) .experience-token-dashboard .experience-ring-value strong { font-size: 29px; }
+  #experience-intro:not(.is-reduced) .experience-token-dashboard .experience-stat[aria-label^="พื้นที่"] .experience-ring-value strong { font-size: 19px; }
+  #experience-intro:not(.is-reduced) .experience-photo-pile { grid-column: 1; grid-row: 1; margin-top: 110px; height: calc(100% - 110px); }
 }
 #experience-intro .experience-pile-photo img,
 #featured .featured-photo img {

@@ -167,3 +167,7 @@
   .story-leaders circle{r:8}
   .story-leaders text{font-size:9px}
 }
+/* The opening story keeps a dedicated benefit band; its automatic 3D controls stay internal. */
+#floor-story .hero-3d-tools[hidden],#floor-story .hero-3d-hint[hidden]{display:none}
+#floor-story .benefits{bottom:24px}
+@media(max-height:430px){#floor-story .benefits{bottom:16px}}

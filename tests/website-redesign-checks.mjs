@@ -47,9 +47,9 @@ export async function verifyRedesign(page, { initialize, state, check, outputPat
         assert.equal(Number(await page.locator('.experience-ring-arc').nth(index).evaluate(el => el.style.strokeDashoffset)), 0);
         const intact = await page.locator(`.experience-pile-photo[data-story="${index}"]`).evaluateAll(photos => photos.every(photo => {
             const img = photo.querySelector('img'), box = photo.getBoundingClientRect(), host = photo.parentElement.getBoundingClientRect();
-            return Math.abs(img.clientWidth / img.clientHeight - img.naturalWidth / img.naturalHeight) < .015 && (!photo.classList.contains('is-portrait') || (photo.offsetHeight > photo.offsetWidth && box.left >= host.left - 1 && box.right <= host.right + 1 && box.top >= host.top - 1 && box.bottom <= host.bottom + 1));
+            return Math.abs(img.clientWidth / img.clientHeight - img.naturalWidth / img.naturalHeight) < .015 && (!photo.classList.contains('is-portrait') || (photo.offsetHeight > Math.max(photo.offsetWidth,innerHeight * .5) && box.left >= host.left - 1 && box.right <= host.right + 1 && box.top >= host.top - 1 && box.bottom <= host.bottom + 1));
         }));
-        assert.ok(intact, 'Every portrait uses its full original aspect ratio inside the photo stage');
+        assert.ok(intact, 'Every portrait fills at least half the viewport height and keeps its full original aspect ratio inside the photo stage');
     }
     await seek(.64);
     assert.deepEqual((await state()).experience.intro.archived, [1, 0, 0]);

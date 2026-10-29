@@ -20,13 +20,13 @@
       </div>
       <div class="hero-3d-shell" id="hero-3d-shell">
         <div id="hero-viewer" aria-label="แผ่นพื้นสามมิติ เลื่อนหน้าเพื่อแยกชั้น ลากเมาส์เพื่อหมุนดู"></div>
-        <div class="hero-3d-tools">
+        <div class="hero-3d-tools" hidden inert aria-hidden="true">
           <button id="layers-toggle" type="button" aria-label="แยกชั้นวัสดุ" title="แยกชั้นวัสดุ"><span data-icon="layers"></span></button>
           <input id="layer-slider" type="range" min="0" max="100" value="65" aria-label="ระยะแยกชั้นวัสดุ" />
           <button id="hero-reset" type="button" aria-label="กลับมุมเริ่มต้น" title="กลับมุมเริ่มต้น"><span data-icon="reset"></span></button>
           <button id="hero-expand" type="button" aria-label="ดู 3D เต็มจอ" title="ดู 3D เต็มจอ"><span data-icon="expand"></span></button>
         </div>
-        <p class="hero-3d-hint" id="hero-hint">ตัวอย่างชั้นวัสดุ · เลื่อนเพื่อแยกชั้น · ลากเพื่อหมุนดู</p>
+        <p class="hero-3d-hint" id="hero-hint" hidden>ตัวอย่างชั้นวัสดุ · เลื่อนเพื่อแยกชั้น · ลากเพื่อหมุนดู</p>
         <button class="hero-fullscreen-close" id="hero-fullscreen-close" type="button" hidden aria-label="ปิดภาพเต็มจอ"><span data-icon="close"></span></button>
       </div>
       <div class="hero-signature" aria-hidden="true">More<br />than just<br />a floor</div>
