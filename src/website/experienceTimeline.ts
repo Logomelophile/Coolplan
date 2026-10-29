@@ -6,6 +6,8 @@ export const EXPERIENCE_END_YEAR = COMPANY.since + COMPANY.years;
 /** Display total requested for this story; catalogue source figures remain independent. */
 export const EXPERIENCE_TOTAL_SQM = 175000;
 export const EXPERIENCE_GATHER_START = .96;
+export const EXPERIENCE_GATHER_END = .985;
+export const EXPERIENCE_SUMMARY_HOLD_MS = 800;
 export const EXPERIENCE_PHOTO_DURATION = .04;
 export const EXPERIENCE_STAGES = [
     { start: .29, filled: .395, photos: [.29, .345, .4], archive: [.475, .52], seek: .455 },
@@ -18,7 +20,7 @@ export function experienceFrame(value: number, proofValue = value) {
     const proof = clamp(Number.isFinite(proofValue) ? proofValue : 0);
     const timeline = phase(progress, .24, .955);
     const active = progress < EXPERIENCE_STAGES[1].start ? 0 : progress < EXPERIENCE_STAGES[2].start ? 1 : 2;
-    const gather = ease(phase(progress, EXPERIENCE_GATHER_START, 1));
+    const gather = ease(phase(progress, EXPERIENCE_GATHER_START, EXPERIENCE_GATHER_END));
     const accumulated = .9 * phase(progress, .29, EXPERIENCE_GATHER_START) + .1 * gather;
     return {
         progress,

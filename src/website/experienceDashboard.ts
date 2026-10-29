@@ -1,6 +1,6 @@
 import { COMPANY, PACKAGES } from './catalog';
 import { motionPreference } from './motionPreference';
-import { experienceFrame, EXPERIENCE_END_YEAR, EXPERIENCE_TOTAL_SQM, EXPERIENCE_GATHER_START, EXPERIENCE_STAGES } from './experienceTimeline';
+import { experienceFrame, EXPERIENCE_END_YEAR, EXPERIENCE_TOTAL_SQM, EXPERIENCE_GATHER_START, EXPERIENCE_GATHER_END, EXPERIENCE_SUMMARY_HOLD_MS, EXPERIENCE_STAGES } from './experienceTimeline';
 import { sitePath } from '../sitePath';
 const METRICS = [
     { value: COMPANY.years, unit: 'ปี', suffix: '', label: 'ประสบการณ์งานพื้น', detail: `ดูแลงานพื้นมาตั้งแต่ปี ${COMPANY.since}`, code: '01 / EXPERIENCE' },
@@ -13,15 +13,15 @@ const MILESTONES = [
     { position: 82, label: 'ลูกค้ารายย่อย', title: 'ใส่ใจในพื้นที่ของคุณ', text: 'บ้านพัก คาเฟ่ และออฟฟิศ ทุกพื้นที่เริ่มจากการพูดคุย เลือกลายที่เหมาะกับการใช้งาน และดูแลตั้งแต่ติดตั้งจนส่งมอบ' },
 ];
 const PHOTOS = [
-    { file: 'installation-team', caption: 'ทีมช่างระหว่างติดตั้ง', x: .04, y: .05, angle: -6 },
-    { file: 'installation-prep', caption: 'เตรียมพื้นจากหน้างานจริง', x: .65, y: .24, angle: 5 },
-    { file: 'installation-room', caption: 'ติดตั้งพื้นภายในห้อง', x: .36, y: .58, angle: -3 },
+    { file: 'experience-herringbone-hall', caption: 'พื้นก้างปลาในพื้นที่โถง', x: .04, y: .05, angle: -6 },
+    { file: 'experience-window-room', caption: 'เก็บงานพื้นริมหน้าต่าง', x: .65, y: .24, angle: 5 },
+    { file: 'chevron-hall', caption: 'ลายพื้นต่อเนื่องตลอดโถงทางเดิน', position: '50% 70%', x: .36, y: .58, angle: -3 },
     { file: 'narasiri-light', caption: 'บ้านเดี่ยว @ Narasiri', x: .12, y: .6, angle: -5 },
     { file: 'narasiri-dark', caption: 'อีกมุมของบ้าน Narasiri', x: .9, y: .04, angle: 6 },
     { file: 'narasiri-stairs', caption: 'บันไดบ้าน @ Narasiri', x: .4, y: .4, angle: -2 },
-    { file: 'cafe-herringbone', caption: 'คาเฟ่ลายก้างปลา', x: .25, y: .16, angle: -4 },
-    { file: 'cafe-herringbone-top', caption: 'อีกมุมของคาเฟ่เดียวกัน', x: .8, y: .08, angle: 5 },
-    { file: 'office-meeting', caption: 'Office · ห้องประชุม', x: .68, y: .65, angle: 3 },
+    { file: 'customer-open-plan', caption: 'พื้นที่เปิดโล่งภายในบ้าน', x: .25, y: .16, angle: -4 },
+    { file: 'customer-connected-room', caption: 'พื้นเชื่อมต่อระหว่างห้อง', x: .8, y: .08, angle: 5 },
+    { file: 'stair-oak', caption: 'เก็บรายละเอียดงานบันได', position: '50% 60%', x: .68, y: .65, angle: 3 },
 ];
 export interface IntroDiagnostics {
     progress: number;
@@ -43,6 +43,9 @@ export interface IntroDiagnostics {
     mode: 'scroll' | 'flow';
     reduced: boolean;
     gather: number;
+    summaryHoldRemainingMs: number;
+    summaryVisibleAt: number | null;
+    summaryHolding: boolean;
 }
 interface TravelPose {
     x: number;
@@ -104,6 +107,9 @@ export class ExperienceIntro {
     private disposed = false;
     private projectsPaused = false;
     private flow = false;
+    private summaryHoldStarted: number | null = null;
+    private summaryVisibleAt: number | null = null;
+    private summaryHoldConsumed = false;
     constructor(private readonly section: HTMLElement) {
         this.sticky = section.querySelector<HTMLElement>('.experience-sticky')!;
         this.scroll = section.querySelector<HTMLElement>('.experience-scroll')!;
@@ -142,7 +148,7 @@ export class ExperienceIntro {
         story.innerHTML = MILESTONES.map((milestone, index) => `<article class="experience-milestone-copy"><span>0${index + 1} / ${milestone.label}</span><h3>${milestone.title}</h3><p>${milestone.text}</p></article>`).join('');
         this.stories = Array.from(story.children) as HTMLElement[];
         this.pile = section.querySelector<HTMLElement>('.experience-photo-pile')!;
-        this.pile.innerHTML = PHOTOS.map((photo, index) => `<figure class="experience-pile-photo" data-story="${Math.floor(index / 3)}"><img src="${sitePath(`/website/showcase/${photo.file}.webp`)}" alt="${photo.caption}" loading="lazy" decoding="async" width="960" height="720"/><figcaption>${photo.caption}</figcaption></figure>`).join('');
+        this.pile.innerHTML = PHOTOS.map((photo, index) => `<figure class="experience-pile-photo" data-story="${Math.floor(index / 3)}"><img src="${sitePath(`/website/showcase/${photo.file}.webp`)}" alt="${photo.caption}" style="object-position:${photo.position ?? '50% 50%'}" loading="lazy" decoding="async" width="960" height="720"/><figcaption>${photo.caption}</figcaption></figure>`).join('');
         this.photos = Array.from(this.pile.children) as HTMLElement[];
         this.checks = Array.from(section.querySelectorAll<HTMLElement>('.experience-checks li'));
         this.projectButton = section.querySelector<HTMLButtonElement>('.experience-projects-toggle')!;
@@ -191,6 +197,7 @@ export class ExperienceIntro {
         this.syncTokenLayout();
         const signal = this.abort.signal;
         window.addEventListener('scroll', this.onScroll, { passive: true, signal });
+        window.addEventListener('wheel', this.onWheel, { passive: false, signal });
         window.addEventListener('resize', this.onResize, { signal });
         document.addEventListener('visibilitychange', this.onVisibility, { signal });
         motionPreference.addEventListener('change', this.onPreference, { signal });
@@ -231,8 +238,10 @@ export class ExperienceIntro {
     }
     get diagnostics(): IntroDiagnostics {
         const frame = experienceFrame(this.progress, this.proofProgress);
-        return { progress: this.progress, counter: frame.counter, active: frame.active, panels: this.panels.length, animating: this.raf !== 0, rings: frame.rings, counters: METRICS.map((metric, index) => Math.round(metric.value * frame.rings[index])), typed: [...this.typedFractions], year: frame.year, timeline: frame.timeline, checks: frame.checks, marqueeRunning: this.projectsRunning, milestones: frame.milestones, photos: frame.photos, archived: frame.archived, proof: this.proofProgress, mode: this.flow ? 'flow' : 'scroll', reduced: this.reduced, gather: frame.gather };
+        return { progress: this.progress, counter: frame.counter, active: frame.active, panels: this.panels.length, animating: this.raf !== 0, rings: frame.rings, counters: METRICS.map((metric, index) => Math.round(metric.value * frame.rings[index])), typed: [...this.typedFractions], year: frame.year, timeline: frame.timeline, checks: frame.checks, marqueeRunning: this.projectsRunning, milestones: frame.milestones, photos: frame.photos, archived: frame.archived, proof: this.proofProgress, mode: this.flow ? 'flow' : 'scroll', reduced: this.reduced, gather: frame.gather, summaryHoldRemainingMs: this.summaryHoldRemainingMs, summaryVisibleAt: this.summaryVisibleAt, summaryHolding: this.summaryHoldStarted !== null && !this.summaryHoldConsumed && (this.summaryVisibleAt === null || this.summaryHoldRemainingMs > 0) };
     }
+    private get summaryHoldRemainingMs(): number { return this.reduced || this.summaryHoldConsumed || this.summaryVisibleAt === null ? 0 : Math.max(0, EXPERIENCE_SUMMARY_HOLD_MS - (performance.now() - this.summaryVisibleAt)); }
+    private resetSummaryHold(): void { this.summaryHoldStarted = null; this.summaryVisibleAt = null; this.summaryHoldConsumed = false; }
     private get projectsRunning(): boolean { return this.visible && !document.hidden && !this.reduced && !this.projectsPaused && experienceFrame(this.progress, this.proofProgress).marquee > .05; }
     private syncProjects(): void {
         this.section.classList.toggle('is-projects-running', this.projectsRunning);
@@ -305,7 +314,8 @@ export class ExperienceIntro {
         this.flow = travel <= 0;
         this.section.classList.toggle('is-flow', this.flow);
         this.target = travel > 0 ? Math.max(0, Math.min(1, -rect.top / travel)) : 1;
-        this.proofTarget = Math.max(0, Math.min(1, (this.target - EXPERIENCE_GATHER_START) / (1 - EXPERIENCE_GATHER_START)));
+        this.proofTarget = Math.max(0, Math.min(1, (this.target - EXPERIENCE_GATHER_START) / (EXPERIENCE_GATHER_END - EXPERIENCE_GATHER_START)));
+        if (this.target < EXPERIENCE_GATHER_START - .02) this.resetSummaryHold();
     }
     private seekMilestone(index: number): void {
         if (this.reduced || this.flow) {
@@ -325,6 +335,7 @@ export class ExperienceIntro {
     };
     private onPreference = (): void => {
         this.reduced = motionPreference.matches;
+        this.resetSummaryHold();
         this.section.classList.toggle('is-reduced', this.reduced);
         this.syncTokenLayout();
         this.stop();
@@ -341,6 +352,26 @@ export class ExperienceIntro {
         if (!this.visible || document.hidden || this.raf)
             return;
         this.raf = requestAnimationFrame(this.tick);
+    };
+    /** A single brief wheel dwell lets the finished number be read. Reverse, keyboard,
+     * anchors and reduced motion remain native; a watchdog bounds a stalled renderer. */
+    private onWheel = (event: WheelEvent): void => {
+        if (this.disposed || this.reduced || this.flow || !this.visible || this.summaryHoldConsumed || event.defaultPrevented || event.ctrlKey || event.shiftKey || !event.cancelable || event.deltaY <= 0 || Math.abs(event.deltaX) > event.deltaY || (event.target instanceof Element && event.target.closest('dialog[open]'))) return;
+        const rect = this.scroll.getBoundingClientRect(), start = rect.top + window.scrollY;
+        const travel = this.scroll.offsetHeight - this.sticky.offsetHeight;
+        if (travel <= 0 || window.scrollY < start - 1 || window.scrollY > start + travel + 1) return;
+        const anchor = Math.ceil(start + travel * EXPERIENCE_GATHER_END);
+        const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1);
+        if (window.scrollY + delta < anchor) return;
+        const now = performance.now();
+        if ((this.summaryVisibleAt !== null && now - this.summaryVisibleAt >= EXPERIENCE_SUMMARY_HOLD_MS) || (this.summaryHoldStarted !== null && now - this.summaryHoldStarted >= 2500)) {
+            this.summaryHoldConsumed = true;
+            return;
+        }
+        this.summaryHoldStarted ??= now;
+        event.preventDefault();
+        window.scrollTo({ top: Math.min(start + travel, Math.max(anchor, window.scrollY)), behavior: 'instant' });
+        this.onScroll();
     };
     private tick = (time: number): void => {
         this.raf = 0;
@@ -360,6 +391,7 @@ export class ExperienceIntro {
     };
     private render(): void {
         const frame = experienceFrame(this.progress, this.proofProgress);
+        if (!this.reduced && this.visible && frame.gather === 1 && frame.counter === EXPERIENCE_TOTAL_SQM && this.summaryVisibleAt === null && Math.abs(this.sticky.getBoundingClientRect().top) < 1) this.summaryVisibleAt = performance.now();
         this.counter.textContent = frame.counter.toLocaleString('th-TH');
         const gather = this.reduced ? 1 : frame.gather, counter = this.counterPose;
         this.counterWrap.style.setProperty('--counter-reveal', String(this.reduced ? 1 : frame.counterReveal));

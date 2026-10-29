@@ -19,6 +19,11 @@ export async function verifyRedesign(page, { initialize, state, check, outputPat
     assert.equal(await page.locator('.experience-era').evaluate(el => getComputedStyle(el).opacity), '1');
     await seek(.43);
     await page.waitForFunction(() => [...document.querySelectorAll('.experience-pile-photo img')].every(img => img.complete && img.naturalWidth > 0));
+    assert.deepEqual(await page.locator('.experience-pile-photo img').evaluateAll(images => images.map(img => img.src.split('/').pop())), [
+        'experience-herringbone-hall.webp', 'experience-window-room.webp', 'chevron-hall.webp',
+        'narasiri-light.webp', 'narasiri-dark.webp', 'narasiri-stairs.webp',
+        'customer-open-plan.webp', 'customer-connected-room.webp', 'stair-oak.webp',
+    ], 'The two replacement photo sets follow attachment order 6/4/8 and 3/5/2; residential photos are retained');
     assert.ok(await originalRing.evaluate(el => el.getBoundingClientRect().width) > 145, 'The main dashboard gauge is large');
     const pile = await page.locator('.experience-pile-photo[data-story="0"]').evaluateAll(photos => { const r = photos.map(p => p.getBoundingClientRect()); return { large: r.every(p => p.width > 220), overlap: r.every((p, i) => r.some((q, j) => i !== j && Math.min(p.right, q.right) > Math.max(p.left, q.left) + 35)) }; });
     assert.ok(pile.large && pile.overlap, 'Large photographs pile together on the right');
@@ -35,6 +40,26 @@ export async function verifyRedesign(page, { initialize, state, check, outputPat
     await seek(.64);
     assert.deepEqual((await state()).experience.intro.archived, [1, 0, 0]);
     assert.equal(await page.locator('.experience-pile-photo[data-story="0"]').evaluateAll(items => items.every(el => getComputedStyle(el).opacity === '1')), true);
+    await seek(.97);
+    await page.mouse.move(1080, 450);
+    await page.mouse.wheel(0, 40000);
+    await page.waitForFunction(() => { const d = window.websiteDemo.diagnostics.experience.intro; return d.gather === 1 && d.counter === 175000 && d.summaryHolding && d.summaryHoldRemainingMs > 500; });
+    const heldY = await page.evaluate(() => scrollY);
+    await page.mouse.wheel(0, 1500);
+    await page.waitForTimeout(100);
+    assert.equal(await page.evaluate(() => scrollY), heldY, 'Extra wheel input holds the complete 175,000 dashboard');
+    const remainingHold = (await state()).experience.intro.summaryHoldRemainingMs;
+    await page.waitForTimeout(remainingHold + 70);
+    await page.mouse.wheel(0, 1500);
+    await page.waitForFunction(y => scrollY > y + 500, heldY);
+    await seek(.93);
+    await seek(.97);
+    await page.mouse.wheel(0, 1500);
+    await page.waitForFunction(() => { const d = window.websiteDemo.diagnostics.experience.intro; return d.counter === 175000 && d.summaryHolding && d.summaryHoldRemainingMs > 500; });
+    const reverseY = await page.evaluate(() => scrollY);
+    await page.mouse.wheel(0, -180);
+    await page.waitForFunction(y => scrollY < y - 100, reverseY);
+    check('The completed 175,000 dashboard holds for 0.8 seconds before forward wheel scrolling resumes; reversing stays immediate.');
     await page.locator('.experience-scene-footer a[href="#experience-evidence"]').click();
     await page.waitForFunction(() => { const d = window.websiteDemo.diagnostics.experience.intro; return d.gather === 1 && d.proof === 1 && !d.animating; });
     assert.deepEqual((await state()).experience.intro.counters, [21, 175000, 10]);

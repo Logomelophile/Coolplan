@@ -151,6 +151,12 @@ try {
   const moving = await logoTransform();
   await page.waitForTimeout(180);
   assert.notEqual(await logoTransform(), moving, 'Customer logos move continuously');
+  await page.locator('.client-logos-window').hover();
+  const hovered = await logoTransform();
+  await page.waitForTimeout(180);
+  assert.notEqual(await logoTransform(), hovered, 'Hover does not pause the customer ribbon');
+  await page.locator('.client-logos-window').focus();
+  assert.equal(await page.locator('.client-logos-track').evaluate(el => getComputedStyle(el).animationPlayState), 'running');
   await page.locator('.client-logos-toggle').click();
   assert.equal(await page.locator('.client-logos-toggle').getAttribute('aria-pressed'), 'true');
   await page.waitForTimeout(100);

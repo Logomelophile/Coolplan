@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { COMPANY } from '../src/website/catalog';
-import { experienceFrame, EXPERIENCE_TOTAL_SQM, EXPERIENCE_STAGES, EXPERIENCE_GATHER_START, EXPERIENCE_PHOTO_DURATION } from '../src/website/experienceTimeline';
+import { experienceFrame, EXPERIENCE_TOTAL_SQM, EXPERIENCE_STAGES, EXPERIENCE_GATHER_START, EXPERIENCE_GATHER_END, EXPERIENCE_PHOTO_DURATION } from '../src/website/experienceTimeline';
 
 test('the entry begins empty and types before revealing the year or area total', () => {
     const initial = experienceFrame(0);
@@ -20,6 +20,8 @@ test('the accumulated total increases continuously and finishes at 175,000 durin
     assert.equal(experienceFrame(EXPERIENCE_GATHER_START).counter, 157500);
     assert.ok(experienceFrame(.98).counter > 170000);
     assert.equal(experienceFrame(1).counter, 175000); assert.equal(experienceFrame(1).year, 2026);
+    assert.equal(experienceFrame(EXPERIENCE_GATHER_END).counter, 175000, 'Finish the number before the pinned scene releases');
+    assert.equal(experienceFrame(EXPERIENCE_GATHER_END).gather, 1);
 });
 test('every gauge fills and three photos rest before any stage is archived', () => {
     for (const [index, stage] of EXPERIENCE_STAGES.entries()) {
@@ -52,7 +54,7 @@ test('every phase stays finite and reversible, including invalid scroll samples'
         for (const n of [f.head, f.sub, f.dock, f.era, f.eraDock, f.timeline, f.timelineReveal, f.counterReveal, f.gather, ...f.photos, ...f.archived, ...f.rings, ...f.story])
             assert.ok(Number.isFinite(n) && n >= 0 && n <= 1);
     }
-    for (const p of EXPERIENCE_STAGES.flatMap(stage => stage.archive).concat(EXPERIENCE_GATHER_START)) {
+    for (const p of EXPERIENCE_STAGES.flatMap(stage => stage.archive).concat(EXPERIENCE_GATHER_START, EXPERIENCE_GATHER_END)) {
         const a = experienceFrame(p - .00001), b = experienceFrame(p + .00001);
         a.archived.forEach((n, i) => assert.ok(Math.abs(n - b.archived[i]) < .01));
         assert.ok(Math.abs(a.gather - b.gather) < .01);
