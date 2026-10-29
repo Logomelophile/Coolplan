@@ -18,13 +18,7 @@ export const SHOWCASE_ITEMS: ShowcaseItem[] = [
   { image: '/website/showcase/cafe-herringbone.webp', title: 'คาเฟ่ลายก้างปลา', detail: 'มุมนั่งริมกระจก · ลายก้างปลากับแสงธรรมชาติ', orientation: 'portrait' },
   { image: '/website/showcase/office-meeting.webp', title: 'Office · ห้องประชุม', detail: 'พื้นที่ทำงานและห้องประชุม · พื้นลายก้างปลา', orientation: 'landscape' },
   { image: '/website/showcase/narasiri-light.webp', title: 'บ้านเดี่ยว @ Narasiri', detail: 'ห้องนั่งเล่น · SPC ลายก้างปลาโทนอ่อน', orientation: 'landscape' },
-  { image: '/website/showcase/cafe-herringbone-top.webp', title: 'คาเฟ่เดียวกัน · อีกมุม', detail: 'มุมสูงเห็นแนวปูพื้นและพื้นที่นั่ง', orientation: 'portrait' },
-  { image: '/website/showcase/office-lounge.webp', title: 'Office · มุมพักผ่อน', detail: 'อีกมุมของพื้นที่ทำงานเดียวกัน', orientation: 'landscape' },
-  { image: '/website/showcase/narasiri-dark.webp', title: 'บ้านเดี่ยว @ Narasiri', detail: 'มุมรับแขก · ลายก้างปลาโทนเข้ม', orientation: 'landscape' },
-  { image: '/website/showcase/chevron-hall.webp', title: 'ทางเดินลายเชฟรอน', detail: 'โถงทางเดินโทนโอ๊คอ่อน · ลายเชฟรอนรับแสงธรรมชาติ', orientation: 'portrait' },
   { image: '/website/showcase/pethotel-herringbone.webp', title: 'Pet Hotel @ พัฒนาการ', detail: 'ห้องพักสัตว์เลี้ยง · ก้างปลาโทนโอ๊ค ทำความสะอาดง่าย', orientation: 'landscape' },
-  { image: '/website/showcase/stair-railing.webp', title: 'Staircase Flooring', detail: 'หุ้มขั้นบันไดพร้อมจมูกบันไดเข้าชุด', orientation: 'landscape' },
-  { image: '/website/showcase/narasiri-stairs.webp', title: 'บันไดโค้ง @ Narasiri', detail: 'ขั้นบันไดโค้งตามราวเหล็กดัด', orientation: 'landscape' },
 ];
 
 export interface ShowcaseDiagnostics {
@@ -128,7 +122,10 @@ export class Showcase {
   private measure = (): void => {
     if (this.disposed) return;
     const padding = parseFloat(getComputedStyle(this.track).paddingLeft) || 0;
-    this.overflow = Math.max(0, this.track.scrollWidth - this.sticky.clientWidth + padding);
+    const last = this.frames.at(-1);
+    const lastCenter = last ? last.offsetLeft + last.offsetWidth / 2 : 0;
+    // Let the last project reach the viewing center, even with a short gallery.
+    this.overflow = Math.max(0, this.track.scrollWidth - this.sticky.clientWidth + padding, lastCenter - this.sticky.clientWidth / 2);
     this.section.style.setProperty('--showcase-scroll', `${Math.round(this.overflow)}px`);
     this.onScroll();
   };

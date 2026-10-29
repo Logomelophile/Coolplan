@@ -10,7 +10,7 @@ At the owner's request, the website now uses individually regenerated, clean art
 - `source/sources-root.json`: remaining brand sources and exact prompts.
 - `source/sources-iconsiam.json`: prompt and source for the readable transparent ICONSIAM variant.
 - `../../public/website/clients/*.webp`: production files, alpha-trimmed and resized to at most 600 x 260 pixels, encoded losslessly.
-- `../../public/website/clients/manifest.json`: accessible names, production dimensions and filenames.
+- `../../src/website/clientLogos.json`: accessible names, production dimensions and filenames (kept in source so Vite can import it in development and builds).
 
 Unnecessary paper, screenshot borders and catalog textures have been removed. Intentional parts of the identities remain: Cafe Amazon's green badge and white outline, SCB's purple disk, and SAVVI / The Urban Property's brand panels. Other marks have transparent surroundings. The logo strip uses normal color compositing without a blend mode.
 

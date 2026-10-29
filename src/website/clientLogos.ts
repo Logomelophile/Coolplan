@@ -1,6 +1,6 @@
 import { sitePath } from '../sitePath';
 import { motionPreference } from './motionPreference';
-import clients from '../../public/website/clients/manifest.json';
+import clients from './clientLogos.json';
 
 /** Two equal groups give the logo strip a seamless loop, with no animation JS. */
 export class ClientLogos {

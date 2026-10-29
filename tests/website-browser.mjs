@@ -158,6 +158,14 @@ try {
   assert.equal(await logoTransform(), paused, 'Pause control freezes the logo ribbon');
   await page.locator('.client-logos-toggle').click();
   assert.equal(await page.locator('.client-logos-toggle').getAttribute('aria-pressed'), 'false');
+  await page.locator('#client-logos').evaluate(el => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
+  const handoff = await page.evaluate(() => {
+    const logos = document.querySelector('#client-logos').getBoundingClientRect();
+    const title = document.querySelector('.experience-dashboard-heading').getBoundingClientRect();
+    return { logoBottom: logos.bottom, titleTop: title.top, titleBottom: title.bottom, height: innerHeight, text: document.querySelector('.experience-dashboard-heading h2').innerText };
+  });
+  assert.ok(handoff.titleTop - handoff.logoBottom <= 80 && handoff.titleBottom < handoff.height, 'The complete intro heading is visible directly below the customer strip');
+  assert.equal(handoff.text.replace(/\s+/g, ''), 'เบื้องหลังความสมบูรณ์แบบของโครงการชั้นนำ');
   await page.screenshot({ path: outputPath('client-logos-desktop.png') });
   check('Authentic customer logos load, loop before the experience intro, and can be paused and resumed.');
 
@@ -179,6 +187,35 @@ try {
     await page.screenshot({ path: outputPath(`featured-${id}-desktop.png`) });
     await seekFeature(.2);
     assert.notEqual(await page.locator(`${selector} .featured-photo-2`).evaluate(el => getComputedStyle(el).transform), endTransform, `${id}: photo motion rewinds with scroll`);
+    const photoBounds = await page.locator(selector).evaluate(section => {
+      const media = section.querySelector('.featured-media').getBoundingClientRect();
+      const copy = section.querySelector('.featured-copy').getBoundingClientRect();
+      return [...section.querySelectorAll('.featured-photo')].map(photo => {
+        const rect = photo.getBoundingClientRect();
+        return { bounded: rect.left >= media.left - 1 && rect.right <= media.right + 1 && rect.top >= media.top - 1 && rect.bottom <= media.bottom + 1, clearOfCopy: rect.right <= copy.left || rect.left >= copy.right || rect.bottom <= copy.top || rect.top >= copy.bottom };
+      });
+    });
+    assert.ok(photoBounds.every(photo => photo.bounded && photo.clearOfCopy), `${id}: photos stay in the frame, clear of text`);
+    if (id === 'office') {
+      const photo = page.locator(`${selector} .featured-photo-2`);
+      const before = await photo.boundingBox();
+      await page.mouse.move(before.x + before.width * .5, before.y + before.height * .5);
+      await page.mouse.down();
+      await page.mouse.move(before.x + before.width * .5 - 90, before.y + before.height * .5 - 65, { steps: 10 });
+      await page.mouse.up();
+      const moved = await photo.boundingBox();
+      assert.ok(Math.hypot(moved.x - before.x, moved.y - before.y) > 20, 'Mouse drag changes photo position');
+      assert.equal(await photo.getAttribute('aria-pressed'), 'true');
+      const z = await page.locator(`${selector} .featured-photo`).evaluateAll(photos => photos.map(photo => Number(getComputedStyle(photo).zIndex)));
+      assert.ok(z[1] > z[0], 'The clicked photo remains in front');
+      await page.keyboard.press('Home');
+      const reset = await photo.boundingBox();
+      assert.ok(Math.hypot(reset.x - before.x, reset.y - before.y) < 2, 'Keyboard Home resets the dragged position');
+      await photo.focus();
+      await page.keyboard.press('ArrowLeft');
+      assert.ok((await photo.boundingBox()).x < reset.x - 5, 'Keyboard arrows move the selected photo');
+      await page.keyboard.press('Home');
+    }
   }
   assert.match(await page.locator('#installation-warranty').innerText(), /รับประกันการติดตั้ง 10 ปี/);
   assert.match(await page.locator('#installation-warranty').innerText(), /เปลี่ยนให้ฟรี/);
@@ -190,12 +227,12 @@ try {
   await page.evaluate(y => scrollTo({ top: y, behavior: 'instant' }), showcaseTop);
   await page.waitForTimeout(400);
   const showcaseStart = await page.evaluate(() => window.websiteDemo.diagnostics.showcase);
-  assert.equal(showcaseStart.frames, 10);
+  assert.equal(showcaseStart.frames, 4);
   await page.evaluate(({ top, height }) => scrollTo({ top: top + (height - innerHeight) * .6, behavior: 'instant' }), { top: showcaseTop, height: showcaseHeight });
   await page.waitForFunction(() => window.websiteDemo.diagnostics.showcase.progress > .5 && window.websiteDemo.diagnostics.showcase.trackX < -500);
   const showcaseMid = await page.evaluate(() => window.websiteDemo.diagnostics.showcase);
   assert.ok(showcaseMid.active > showcaseStart.active, `active frame advanced ${showcaseStart.active} -> ${showcaseMid.active}`);
-  assert.match(await page.locator('#showcase-counter').innerText(), /\d\d \/ 10/);
+  assert.match(await page.locator('#showcase-counter').innerText(), /\d\d \/ 04/);
   await page.evaluate(() => document.getElementById('herringbone').scrollIntoView({ block: 'start', behavior: 'instant' }));
   await page.waitForFunction(() => { const h = window.websiteDemo.diagnostics.herringbone; return h && h.visible && h.laid >= h.planks * .5; }, null, { timeout: 15000 });
   await page.locator('[data-shade="CPW-KH5-735"]').click();
@@ -208,16 +245,21 @@ try {
   await page.screenshot({ path: outputPath('showcase-desktop.png'), fullPage: false });
   check(`Showcase gallery (${showcaseMid.mode}) advances frames with scroll; herringbone section lays its pattern, switches shades and its CTA selects the herringbone lay-up.`);
 
-  // Experience run: typed intro, trust counters, catalogue collections and the price-list calculator.
+  // The short headline is always readable; native scroll drives the dashboard and background count.
   const introTop = await page.evaluate(() => document.getElementById('experience-intro').getBoundingClientRect().top + scrollY);
   const introHeight = await page.evaluate(() => document.getElementById('experience-intro').offsetHeight);
-  // Scroll-linked timeline: typing finishes by mid-way, the counter stops at 175,900, the photo pile completes near the end, and scrolling back rewinds.
-  await page.evaluate(({ top, height }) => scrollTo({ top: top + (height - innerHeight) * .6, behavior: 'instant' }), { top: introTop, height: introHeight });
-  await page.waitForFunction(() => { const i = window.websiteDemo.diagnostics.experience?.intro; return i && i.typed === i.total && i.counter === 175900; }, null, { timeout: 15000 });
+  await page.evaluate(({ top, height }) => scrollTo({ top: top + (height - innerHeight) * .12, behavior: 'instant' }), { top: introTop, height: introHeight });
+  await page.waitForFunction(() => { const i = window.websiteDemo.diagnostics.experience?.intro; return i && !i.animating && i.progress < .14; });
+  const introEarly = await page.evaluate(() => window.websiteDemo.diagnostics.experience.intro);
+  assert.equal(introEarly.panels, 3);
+  assert.equal(await page.locator('.experience-dashboard-heading h2 span').count(), 2);
   await page.evaluate(({ top, height }) => scrollTo({ top: top + (height - innerHeight) * .97, behavior: 'instant' }), { top: introTop, height: introHeight });
-  await page.waitForFunction(() => window.websiteDemo.diagnostics.experience?.intro?.cards === 10, null, { timeout: 15000 });
+  await page.waitForFunction(() => { const i = window.websiteDemo.diagnostics.experience?.intro; return i && !i.animating && i.counter === 175900 && i.active === 2; });
+  assert.equal(await page.locator('.experience-counter strong').innerText(), '175,900');
+  assert.match(await page.locator('.experience-stat.is-active .experience-stat-label').innerText(), /รับประกันการติดตั้ง/);
+  await page.screenshot({ path: outputPath('experience-dashboard-desktop.png') });
   await page.evaluate(({ top, height }) => scrollTo({ top: top + (height - innerHeight) * .25, behavior: 'instant' }), { top: introTop, height: introHeight });
-  await page.waitForFunction(() => { const i = window.websiteDemo.diagnostics.experience?.intro; return i && i.cards === 0 && i.typed < i.total && i.counter < 175900; }, null, { timeout: 15000 });
+  await page.waitForFunction(() => { const i = window.websiteDemo.diagnostics.experience?.intro; return i && !i.animating && i.active === 0 && i.counter < 175900; });
   assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('.story-rail')).display), 'none');
   await page.evaluate(() => document.getElementById('trust').scrollIntoView({ block: 'center', behavior: 'instant' }));
   await page.waitForFunction(() => { const t = window.websiteDemo.diagnostics.experience?.trust; return t && t.revealed && t.counters[0] >= 175900; }, null, { timeout: 15000 });
@@ -239,8 +281,15 @@ try {
   assert.match(await page.locator('#estimate-total').innerText(), /25,000/);
   assert.equal(await page.locator('#packages .packages-cta').count(), 3);
   assert.match(await page.locator('#packages').innerText(), /550,000/);
+  const pricingOrder = await page.evaluate(() => {
+    const packages = document.querySelector('.pricing-package-stage');
+    const calculator = document.querySelector('#estimate-calculator');
+    const table = document.querySelector('#packages table');
+    return { packagesFirst: Boolean(packages.compareDocumentPosition(calculator) & Node.DOCUMENT_POSITION_FOLLOWING), height: packages.offsetHeight, viewport: innerHeight, columns: table.querySelectorAll('thead th').length };
+  });
+  assert.ok(pricingOrder.packagesFirst && pricingOrder.height >= pricingOrder.viewport && pricingOrder.columns === 4, 'A full-screen three-package comparison comes before the calculator');
   await page.screenshot({ path: outputPath('pricing-desktop.png'), fullPage: false });
-  check('Experience run: scroll-linked intro types, counts to 175,900, piles ten photos and rewinds on the way back; story rail is retired, trust counters reach 175,900, catalogue filters and expansion work, and the price-list calculator matches the 2026 rates.');
+  check('Experience dashboard: two-line headline is visible immediately, scroll fills three stats and counts to 175,900 reversibly; four-image gallery, full-screen packages before calculator, trust counters and catalogue interactions work.');
 
   assert.equal(await page.locator('#product-grid .product-card').count(), 6);
   const originalHash = await previewHash();
@@ -288,7 +337,7 @@ try {
   await initialize();
   report.mobile = await noOverflow();
   await page.screenshot({ path: outputPath('homepage-mobile.png') });
-  for (const selector of ['#client-logos', '#project-cafe', '#project-office', '#project-narasiri', '#installation-warranty']) {
+  for (const selector of ['#client-logos', '#experience-intro', '#project-cafe', '#project-office', '#project-narasiri', '#installation-warranty', '#pricing', '#estimate-calculator']) {
     await page.locator(selector).evaluate(el => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
     await page.waitForFunction(selector => {
       const section = document.querySelector(selector);
@@ -297,6 +346,10 @@ try {
     }, selector);
     const width = await page.evaluate(() => ({ viewport: innerWidth, document: document.documentElement.scrollWidth }));
     assert.ok(width.document <= width.viewport + 1, `${selector}: mobile document overflows`);
+    if (selector === '#experience-intro') {
+      const headline = await page.locator('.experience-dashboard-heading h2 span').evaluateAll(lines => lines.map(line => ({ height: line.getBoundingClientRect().height, lineHeight: parseFloat(getComputedStyle(line).lineHeight) })));
+      assert.ok(headline.every(line => line.height < line.lineHeight * 1.2), 'Mobile dashboard title uses exactly two lines');
+    }
     await page.screenshot({ path: outputPath(`${selector.slice(1)}-mobile.png`) });
   }
   await page.emulateMedia({ reducedMotion: 'reduce' });

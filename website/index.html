@@ -47,10 +47,17 @@
     </section>
     <section class="experience-intro" id="experience-intro" aria-label="ประสบการณ์งานปูพื้นของเรา">
       <div class="experience-sticky">
-        <div class="experience-lines" aria-live="polite"></div>
-        <div class="experience-counter" aria-hidden="true"><strong>0</strong><span>ตารางเมตรที่ส่งมอบแล้ว</span></div>
-        <div class="experience-pile" aria-hidden="true"></div>
-        <p class="experience-outro" aria-hidden="true">ประสบการณ์เหล่านี้คือผลงานจริงที่เราอยากให้คุณเห็น <span>เลื่อนต่อ ↓</span></p>
+        <header class="experience-dashboard-heading">
+          <p class="experience-dashboard-eyebrow">COOLPLAN · SINCE 2005</p>
+          <h2><span>เบื้องหลังความสมบูรณ์แบบ</span><span>ของโครงการชั้นนำ</span></h2>
+        </header>
+        <div class="experience-counter" aria-hidden="true"><strong>0</strong></div>
+        <div class="experience-dashboard" aria-label="ประสบการณ์และการดูแลงานพื้น">
+          <article class="experience-stat"><div class="experience-stat-label">จุดเริ่มต้น <small>01 / EXPERIENCE</small></div><strong>2005</strong><p>ดูแลงานพื้นมาตั้งแต่ปี 2005</p><div class="experience-stat-meter" aria-hidden="true"><span></span></div></article>
+          <article class="experience-stat"><div class="experience-stat-label">พื้นที่ที่ส่งมอบ <small>02 / PROJECTS</small></div><strong>175,900<small>ตร.ม.</small></strong><p>บ้าน คาเฟ่ และโครงการทั่วประเทศ</p><div class="experience-stat-meter" aria-hidden="true"><span></span></div></article>
+          <article class="experience-stat"><div class="experience-stat-label">รับประกันการติดตั้ง <small>03 / CARE</small></div><strong>10<small>ปี</small></strong><p>ติดตั้งและดูแลด้วยทีมช่างของเรา</p><div class="experience-stat-meter" aria-hidden="true"><span></span></div></article>
+        </div>
+        <footer class="experience-dashboard-footer"><ol class="experience-dashboard-steps" aria-hidden="true"><li class="experience-dashboard-step">ประสบการณ์</li><li class="experience-dashboard-step">ผลงาน</li><li class="experience-dashboard-step">การดูแล</li></ol><a class="experience-dashboard-next" href="#featured">ดูผลงานใกล้ ๆ <span aria-hidden="true">↓</span></a></footer>
       </div>
     </section>
     <section class="featured" id="featured" aria-labelledby="featured-title">
@@ -130,44 +137,57 @@
       </div>
     </section>
     <section class="pricing" id="pricing" aria-labelledby="pricing-title">
-      <header class="pricing-heading">
-        <span class="pricing-eyebrow">PRICE LIST 2026 · ราคาชัดเจน ไม่มีซ่อน</span>
-        <h2 id="pricing-title">คำนวณราคาและแพ็กเกจ</h2>
-        <p>ใส่พื้นที่ เลือกรุ่น ระบบจะคำนวณค่าวัสดุและค่าติดตั้งตามใบราคา 2026 ให้ทันที หรือเลือกแพ็กเกจเหมารวมติดตั้ง 30 / 100 / 1,000 ตร.ม. ด้านล่าง</p>
-      </header>
-      <div class="pricing-grid">
+      <div class="pricing-package-stage">
+        <header class="pricing-heading">
+          <div><span class="pricing-eyebrow">01 / FLOORING PACKAGES</span><h2 id="pricing-title">พื้นที่ที่ใช่ ในแพ็กเกจที่ลงตัว</h2></div>
+          <p>พื้น SPC ลายไม้ พร้อมติดตั้ง<br>เลือกขนาดพื้นที่ แล้วเริ่มต้นกับเรา</p>
+        </header>
+        <p class="packages-scroll-hint">เลื่อนตารางเพื่อเปรียบเทียบทั้ง 3 แพ็กเกจ <span aria-hidden="true">↔</span></p>
+        <div id="packages" role="region" aria-label="ตารางเปรียบเทียบแพ็กเกจ 30, 100 และ 1,000 ตารางเมตร" tabindex="0"></div>
+        <p class="packages-footnote">ราคาแพ็กเกจอ้างอิงข้อเสนอของ COOLPLAN · ยืนยันรายละเอียดและราคาจริงกับทีมงานก่อนเริ่มงาน</p>
+      </div>
+      <section class="pricing-calculator" id="estimate-calculator" aria-labelledby="estimate-heading">
+        <header class="pricing-calculator-heading">
+          <span class="pricing-eyebrow">02 / YOUR SPACE, YOUR ESTIMATE</span>
+          <h2 id="estimate-heading">คำนวณจาก<br>พื้นที่ของคุณ</h2>
+          <p>ใส่พื้นที่และเลือกรุ่นพื้น<br>เห็นค่าวัสดุและค่าติดตั้งได้ทันที</p>
+          <a href="#pricing-rates">ดูใบราคาทุกรุ่น <span aria-hidden="true">↓</span></a>
+        </header>
         <form class="estimate" id="estimate-form" novalidate>
-          <h3><i>฿</i>ป้ายคำนวณราคา</h3>
-          <label for="estimate-sqm">พื้นที่ (ตารางเมตร)<input id="estimate-sqm" name="sqm" type="number" min="1" max="100000" step="1" value="40" inputmode="numeric" /></label>
-          <div class="estimate-quick" aria-label="พื้นที่ยอดนิยม"><button type="button" data-sqm="30">30 ตร.ม.</button><button type="button" data-sqm="60">60 ตร.ม.</button><button type="button" data-sqm="100">100 ตร.ม.</button><button type="button" data-sqm="250">250 ตร.ม.</button><button type="button" data-sqm="1000">1,000 ตร.ม.</button></div>
-          <label for="estimate-product">รุ่น / ความหนา<select id="estimate-product" name="product"></select></label>
-          <div class="estimate-prep" id="estimate-prep" role="group" aria-label="งานปรับพื้นเพิ่มเติม"></div>
-          <label class="estimate-prep"><span><input id="estimate-night" name="night" type="checkbox" /> ทำงานกลางคืน <small>+฿3,500/คืน</small></span></label>
-          <div class="estimate-breakdown" aria-live="polite">
-            <div><span>ค่าวัสดุ</span><span id="estimate-material">฿0</span></div>
-            <div><span>ค่าติดตั้ง</span><span id="estimate-install">฿0</span></div>
-            <div><span>งานปรับพื้น</span><span id="estimate-prep-cost">฿0</span></div>
-            <div><span>ค่าเดินทาง (พื้นที่น้อยกว่า 50 ตร.ม.)</span><span id="estimate-travel">—</span></div>
-            <div><span>งานกลางคืน</span><span id="estimate-night-cost">—</span></div>
+          <div class="estimate-fields">
+            <h3><i>฿</i>ประเมินราคาติดตั้ง</h3>
+            <label for="estimate-sqm">พื้นที่ (ตารางเมตร)<input id="estimate-sqm" name="sqm" type="number" min="1" max="100000" step="1" value="40" inputmode="numeric" /></label>
+            <div class="estimate-quick" aria-label="พื้นที่ยอดนิยม"><button type="button" data-sqm="30">30 ตร.ม.</button><button type="button" data-sqm="60">60 ตร.ม.</button><button type="button" data-sqm="100">100 ตร.ม.</button><button type="button" data-sqm="250">250 ตร.ม.</button><button type="button" data-sqm="1000">1,000 ตร.ม.</button></div>
+            <label for="estimate-product">รุ่น / ความหนา<select id="estimate-product" name="product"></select></label>
+            <div class="estimate-prep" id="estimate-prep" role="group" aria-label="งานปรับพื้นเพิ่มเติม"></div>
+            <label class="estimate-prep"><span><input id="estimate-night" name="night" type="checkbox" /> ทำงานกลางคืน <small>+฿3,500/คืน</small></span></label>
           </div>
-          <div class="estimate-total"><span id="estimate-summary">ใส่พื้นที่เพื่อคำนวณ</span><strong id="estimate-total">฿0</strong></div>
-          <p class="estimate-per" id="estimate-per-sqm">—</p>
-          <p class="estimate-note" id="estimate-travel-note" hidden>พื้นที่น้อยกว่า 50 ตร.ม. ในเขตกรุงเทพฯ และปริมณฑล มีค่าเดินทาง 2,500 บาท</p>
-          <p class="estimate-note">ราคาประเมินเบื้องต้นตามใบราคา 2026 ยังไม่รวมภาษีมูลค่าเพิ่มและงานพิเศษ ยืนยันราคาจริงหลังสำรวจหน้างาน</p>
-          <div class="estimate-actions"><button type="button" class="primary-button" data-contact-open>ขอใบเสนอราคา <span data-icon="arrow"></span></button><a class="quiet-button" href="/calculator/">เครื่องคำนวณแบบละเอียด</a></div>
+          <div class="estimate-result">
+            <span class="estimate-result-label">ราคาโดยประมาณ</span>
+            <div class="estimate-total" aria-live="polite" aria-atomic="true"><span id="estimate-summary">ใส่พื้นที่เพื่อคำนวณ</span><strong id="estimate-total">฿0</strong></div>
+            <p class="estimate-per" id="estimate-per-sqm">—</p>
+            <div class="estimate-breakdown" aria-live="polite">
+              <div><span>ค่าวัสดุ</span><span id="estimate-material">฿0</span></div>
+              <div><span>ค่าติดตั้ง</span><span id="estimate-install">฿0</span></div>
+              <div><span>งานปรับพื้น</span><span id="estimate-prep-cost">฿0</span></div>
+              <div><span>ค่าเดินทาง (พื้นที่น้อยกว่า 50 ตร.ม.)</span><span id="estimate-travel">—</span></div>
+              <div><span>งานกลางคืน</span><span id="estimate-night-cost">—</span></div>
+            </div>
+            <p class="estimate-note" id="estimate-travel-note" hidden>พื้นที่น้อยกว่า 50 ตร.ม. ในเขตกรุงเทพฯ และปริมณฑล มีค่าเดินทาง 2,500 บาท</p>
+            <p class="estimate-note">ราคาประเมินเบื้องต้นตามใบราคา 2026 ยังไม่รวมภาษีมูลค่าเพิ่มและงานพิเศษ ยืนยันราคาจริงหลังสำรวจหน้างาน</p>
+            <div class="estimate-actions"><button type="button" class="primary-button" data-contact-open>ขอใบเสนอราคา <span data-icon="arrow"></span></button><a class="quiet-button" href="/calculator/">เครื่องคำนวณแบบละเอียด</a></div>
+          </div>
         </form>
+      </section>
+      <section class="pricing-rates" id="pricing-rates" aria-labelledby="pricing-rates-title">
+        <header class="pricing-rates-heading"><span class="pricing-eyebrow">03 / PRICE LIST 2026</span><h2 id="pricing-rates-title">ราคาวัสดุและค่าติดตั้ง</h2><p>เปรียบเทียบทุกรุ่น ต่อ 1 ตารางเมตร</p></header>
         <div class="pricing-tables">
           <div>
-            <h3>ราคาวัสดุและค่าติดตั้ง (ต่อ ตร.ม.)</h3>
-            <div class="price-table-wrap"><table class="price-table" id="price-table"><thead><tr><th scope="col">รายการ</th><th scope="col">ขนาด (มม.)</th><th scope="col">ค่าวัสดุ</th><th scope="col">ค่าติดตั้ง</th><th scope="col">รวม</th></tr></thead><tbody></tbody></table></div>
+            <div class="price-table-wrap" role="region" aria-label="ใบราคาวัสดุและค่าติดตั้งทุกรุ่น" tabindex="0"><table class="price-table" id="price-table"><thead><tr><th scope="col">รายการ</th><th scope="col">ขนาด (มม.)</th><th scope="col">ค่าวัสดุ</th><th scope="col">ค่าติดตั้ง</th><th scope="col">รวม</th></tr></thead><tbody></tbody></table></div>
           </div>
           <ul class="price-notes" id="price-notes"></ul>
-          <div>
-            <h3>แพ็กเกจเหมารวมติดตั้ง</h3>
-            <div id="packages"></div>
-          </div>
         </div>
-      </div>
+      </section>
     </section>
     <section class="configurator" aria-label="เลือกพื้นสำหรับห้องของคุณ">
       <div class="room-collection" id="rooms">

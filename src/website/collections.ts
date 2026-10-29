@@ -6,8 +6,8 @@ import { track } from './visualizer/analytics';
 /**
  * #collections — every catalogue series as a card (swatch mosaic, size, price
  * per m²) with a family filter and an expandable shade strip.
- * #pricing     — a live estimate calculator fed by the 2026 price list, the full
- * price table and the 30 / 100 / 1,000 m² packages.
+ * #pricing     — a full-width package comparison, followed by the live estimate
+ * calculator and the detailed 2026 material / installation price list.
  */
 const reduced = (): boolean => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const FAMILIES: { id: 'all' | Series['family']; label: string }[] = [
@@ -81,7 +81,7 @@ export class Collections {
       card.querySelector('.collection-expand')!.addEventListener('click', () => this.toggle(series.id), { signal: this.abort.signal });
       card.querySelector('.collection-estimate')!.addEventListener('click', () => {
         document.dispatchEvent(new CustomEvent('coolplan:estimate', { detail: { seriesId: series.id } }));
-        document.getElementById('pricing')?.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'start' });
+        document.getElementById('estimate-calculator')?.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'start' });
       }, { signal: this.abort.signal });
       this.grid.append(card);
     });
@@ -216,13 +216,13 @@ export class Pricing {
 
   private buildPackages(): void {
     const host = this.section.querySelector<HTMLElement>('#packages')!;
-    host.innerHTML = `<table class="packages-table"><thead><tr><th scope="col">แพ็กเกจ</th>${PACKAGES.map(pkg => `<th scope="col"><span class="packages-title">${pkg.title}</span><span class="packages-subtitle">${pkg.subtitle}</span></th>`).join('')}</tr></thead><tbody>
-      <tr><th scope="row">รายละเอียด</th>${PACKAGES.map(pkg => `<td class="packages-description">${pkg.description}</td>`).join('')}</tr>
-      <tr><th scope="row">ราคาต่อ ตร.ม. (รวมติดตั้ง)</th>${PACKAGES.map(pkg => `<td><strong>${money(pkg.perSqm)}</strong></td>`).join('')}</tr>
-      <tr><th scope="row">ระยะเวลาในการทำงาน</th>${PACKAGES.map(pkg => `<td>${pkg.days}</td>`).join('')}</tr>
-      <tr><th scope="row">รับประกันการติดตั้ง 10 ปี</th>${PACKAGES.map(() => `<td><i class="packages-check" aria-label="รวมอยู่ในแพ็กเกจ"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i></td>`).join('')}</tr>
-      <tr class="packages-price"><th scope="row">ราคา</th>${PACKAGES.map(pkg => `<td><strong>${money(pkg.total)}</strong></td>`).join('')}</tr>
-      <tr><th scope="row"></th>${PACKAGES.map(pkg => `<td><button type="button" class="primary-button packages-cta" data-package="${pkg.id}" data-contact-open>เลือกแพ็กเกจนี้</button></td>`).join('')}</tr>
+    host.innerHTML = `<table class="packages-table"><caption>เปรียบเทียบแพ็กเกจพื้น SPC ลายไม้ รวมค่าติดตั้ง</caption><thead><tr><th scope="col"><span class="packages-corner">เลือกพื้นที่<br>ที่ใช่สำหรับคุณ</span></th>${PACKAGES.map(pkg => `<th scope="col"><span class="packages-area">${pkg.sqm.toLocaleString('th-TH')}<small>ตร.ม.</small></span><span class="packages-subtitle">${pkg.subtitle}</span></th>`).join('')}</tr></thead><tbody>
+      <tr class="packages-price"><th scope="row">ราคาแพ็กเกจ<span>รวมค่าติดตั้ง</span></th>${PACKAGES.map(pkg => `<td><strong>${money(pkg.total)}</strong><small>ต่อแพ็กเกจ</small></td>`).join('')}</tr>
+      <tr><th scope="row">ราคาต่อตารางเมตร</th>${PACKAGES.map(pkg => `<td><strong>${money(pkg.perSqm)}</strong><span class="packages-cell-unit"> / ตร.ม.</span></td>`).join('')}</tr>
+      <tr><th scope="row">ระยะเวลาทำงาน</th>${PACKAGES.map(pkg => `<td>${pkg.days}</td>`).join('')}</tr>
+      <tr><th scope="row">รับประกันการติดตั้ง</th>${PACKAGES.map(pkg => `<td><span class="packages-warranty"><i class="packages-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>${pkg.warrantyYears} ปี</span></td>`).join('')}</tr>
+      <tr class="packages-actions"><th scope="row"><a href="#estimate-calculator">หรือคำนวณตามพื้นที่จริง <span aria-hidden="true">↓</span></a></th>${PACKAGES.map(pkg => `<td><button type="button" class="primary-button packages-cta" data-package="${pkg.id}" data-contact-open aria-label="สอบถามแพ็กเกจ ${pkg.title}">เลือกแพ็กเกจนี้ <span aria-hidden="true">↗</span></button></td>`).join('')}</tr>
+      <tr class="packages-detail-row"><th scope="row">รายละเอียด</th>${PACKAGES.map(pkg => `<td><details><summary>ดูรายละเอียดแพ็กเกจ</summary><p class="packages-description">${pkg.description}</p></details></td>`).join('')}</tr>
     </tbody></table>`;
     host.querySelectorAll<HTMLButtonElement>('[data-package]').forEach(button => button.addEventListener('click', () => track({ name: 'visualizer_quote', product: `package:${button.dataset.package}` }), { signal: this.abort.signal }));
   }
