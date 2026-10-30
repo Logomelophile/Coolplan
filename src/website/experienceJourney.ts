@@ -1,9 +1,9 @@
 /** One native scroll range and one pinned viewport for the photographic story. */
-export const ORBIT_END = .26;
-export const TIMELINE_START = .26;
+export const ORBIT_END = .38;
+export const TIMELINE_START = .40;
 const clamp=(n:number)=>Math.max(0,Math.min(1,Number.isFinite(n)?n:0));
 export function journeyFrame(progress:number) {
-    const p=clamp(progress),t=clamp((p-.23)/(.26-.23));
+    const p=clamp(progress),t=clamp((p-ORBIT_END)/(TIMELINE_START-ORBIT_END));
     return {orbit:clamp(p/ORBIT_END),handoff:t*t*(3-2*t)};
 }
 export function journeyRange(top:number,height:number,viewport:number) {

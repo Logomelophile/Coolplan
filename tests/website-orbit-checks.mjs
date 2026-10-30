@@ -1,5 +1,15 @@
 import assert from 'node:assert/strict';
 export async function verifyOrbit(page,{state,check,outputPath}){
+ await page.evaluate(()=>scrollTo({top:0,behavior:'instant'}));
+ await page.locator('#guided-scroll').click();
+ await page.waitForFunction(()=>scrollY>100);
+ assert.equal(await page.locator('#guided-scroll').getAttribute('aria-pressed'),'true');
+ await page.keyboard.press('Escape');const stopped=await page.evaluate(()=>scrollY);
+ await page.waitForTimeout(180);assert.equal(await page.evaluate(()=>scrollY),stopped);
+ await page.evaluate(()=>scrollTo({top:0,behavior:'instant'}));await page.locator('#guided-scroll').click();
+ await page.evaluate(()=>scrollTo({top:document.documentElement.scrollHeight-innerHeight-60,behavior:'instant'}));
+ await page.waitForFunction(()=>document.querySelector('#guided-scroll').getAttribute('aria-pressed')==='false');
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollHeight-innerHeight-scrollY<3),'The guided tour reaches the actual page bottom and stops');
  const orbit=()=>page.evaluate(()=>window.websiteDemo.diagnostics.experience.orbit);
  const seek=async p=>{await page.evaluate(p=>{const r=window.websiteDemo.diagnostics.experience.orbit.scroll;scrollTo({top:r.startPx+p*r.orbitEnd*r.travelPx,behavior:'instant'});},p);await page.waitForFunction(p=>{const d=window.websiteDemo.diagnostics.experience.orbit;return Math.abs(d.progress-p)<.002&&!d.animating;},p);};
  await seek(0);assert.deepEqual((await orbit()).typed,[0,0]);
@@ -30,9 +40,13 @@ export async function verifyOrbit(page,{state,check,outputPath}){
  const xs=await page.locator('.orbit-photo').evaluateAll(es=>es.map(e=>e.getBoundingClientRect().x));assert.ok(xs.slice(1).every((x,i)=>x>xs[i]));
  await page.screenshot({path:outputPath('orbit-single-wave.png')});
  const handoff=async p=>{await page.evaluate(p=>{const r=window.websiteDemo.diagnostics.experience.orbit.scroll;scrollTo({top:r.startPx+p*r.travelPx,behavior:'instant'});},p);await page.waitForFunction(p=>Math.abs(window.websiteDemo.diagnostics.experience.orbit.journeyProgress-p)<.001&&!window.websiteDemo.diagnostics.experience.orbit.animating,p);return page.locator('.experience-scroll').boundingBox();};
- const entering=await handoff(.245);assert.ok(entering.x<-.2*entering.width&&entering.x>-.9*entering.width);assert.ok(Math.abs(entering.y)<1);
- const parked=await handoff(.26);assert.ok(Math.abs(parked.x)<1&&Math.abs(parked.y)<1,'Timeline slides from the left and parks in the same pinned viewport');
- await handoff(.235);assert.ok((await page.locator('.experience-scroll').boundingBox()).x<entering.x,'The horizontal handoff reverses with native scroll');
+ await seek(.77);assert.equal(await page.locator('.orbit-messages p').first().evaluate(e=>Number(e.style.opacity)),1);
+ await seek(.85);assert.equal(await page.locator('.orbit-messages p').nth(1).evaluate(e=>Number(e.style.opacity)),1);
+ await handoff(.379);assert.equal(await page.locator('.experience-scroll').evaluate(e=>Number(getComputedStyle(e).opacity)),0);
+ const photosGone=await page.locator('.orbit-photo').evaluateAll(es=>es.every(e=>e.getBoundingClientRect().left>innerWidth));assert.ok(photosGone,'All snake photos leave before the timeline is revealed');
+ const entering=await handoff(.39);assert.ok(Math.abs(entering.x)<1&&Math.abs(entering.y)<1);assert.ok(await page.locator('.experience-scroll').evaluate(e=>{const n=Number(getComputedStyle(e).opacity);return n>.2&&n<.8;}));
+ const parked=await handoff(.40);assert.ok(Math.abs(parked.x)<1&&Math.abs(parked.y)<1,'Timeline draws in the same pinned viewport after the photographs clear');
+ await handoff(.38);assert.equal(await page.locator('.experience-scroll').evaluate(e=>Number(getComputedStyle(e).opacity)),0,'The drawn handoff reverses with native scroll');
  await page.emulateMedia({reducedMotion:'reduce'});await page.locator('.orbit-photo').first().isVisible();await page.waitForFunction(()=>window.websiteDemo.diagnostics.experience.orbit.reduced);
  assert.equal((await orbit()).running,false);assert.equal(await page.locator('.orbit-photo').evaluateAll(es=>es.every(e=>getComputedStyle(e).position==='relative')),true);
  await page.emulateMedia({reducedMotion:'no-preference'});

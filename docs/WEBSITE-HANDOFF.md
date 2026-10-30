@@ -195,3 +195,5 @@ npm run test:visualizer
 | `tests/story-browser.mjs`, `tests/story-timeline.test.ts` | การตรวจ Motion Scrolling ในเบราว์เซอร์และตรรกะลำดับ |
 
 หมายเลขโทรและอีเมลปรากฏทั้งใน `shared.ts`, `calculator.ts` และ metadata ของ HTML ควรแก้ให้ตรงกันทุกตำแหน่งเมื่อเปลี่ยนผู้ติดต่อ
+
+อัปเดต 30 ตุลาคม 2026 — ปุ่ม Hero เปลี่ยนเป็น “เลื่อนลงข้างล่าง” เริ่ม guided scroll 320 px/s ไปจนท้ายหน้าจริง หยุดด้วยปุ่มเดิม วงล้อ แตะ คลิก แป้นพิมพ์ หรือซ่อนแท็บ และคืนค่า scroll-behavior เมื่อหยุด (`guidedScroll.ts`) วงรูปเพิ่มข้อความ Luxury Flooring / ยกระดับบ้านของคุณ หลังตัวเลขและวง Dashboard จบ พื้นที่ journey ขยายเป็น 2000svh, orbit จบที่ .38 แล้ววาด Timeline ด้วย clip-path จาก .38–.40 ใน viewport เดิมแทนแผงเลื่อนมาทับ รูปงูทุกใบออกหมดก่อนเริ่ม Timeline ย้อนกลับได้และ reduced motion แสดงเนื้อหาทั้งหมด สำรองก่อนแก้ที่ `backup/website-20261030-before-guided-scroll-luxury` (`48402b5`)

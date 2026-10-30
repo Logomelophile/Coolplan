@@ -29,6 +29,7 @@ export class ExperienceOrbit {
     private readonly letters:string[][];
     private readonly stats:HTMLElement;
     private readonly counter:HTMLElement;
+    private readonly messages:HTMLElement[];
     private readonly arcs:SVGCircleElement[];
     private readonly values:HTMLElement[];
     private readonly toggle:HTMLButtonElement;
@@ -56,6 +57,9 @@ export class ExperienceOrbit {
             const s=projectPhotoSize(file);if(!s.portrait)throw new Error(`Orbit photo must be portrait: ${file}`);
             return `<figure class="orbit-photo" style="--photo-ratio:${s.ratio}"><img src="${sitePath(`/website/showcase/${file}.webp`)}" alt="${alt}" width="${s.width}" height="${s.height}" loading="lazy" decoding="sync"/></figure>`;
         }).join('')}</div><header class="orbit-heading"><p>COOLPLAN · OUR STORY</p><h2 id="experience-orbit-title" aria-label="เบื้องหลังความสมบูรณ์แบบ ของโครงการชั้นนำ">${['เบื้องหลังความสมบูรณ์แบบ','ของโครงการชั้นนำ'].map((text,i)=>`<span class="orbit-title-line ${i?'is-sub':''}"><span class="orbit-title-placeholder" aria-hidden="true">${text}</span><span class="orbit-typed" aria-hidden="true"></span></span>`).join('')}</h2></header><div class="orbit-statistics"><div class="orbit-total" aria-label="ปูพื้นสะสม 175,000 ตารางเมตร"><span>ปูพื้นสะสม</span><div><strong>0</strong><span>ตร.ม.</span></div></div><div class="orbit-dashboard">${METRICS.map((m,i)=>`<article class="orbit-stat" aria-label="${m.title} ${m.value.toLocaleString('th-TH')} ${m.unit}"><div class="orbit-gauge"><svg viewBox="0 0 240 240" aria-hidden="true"><circle class="orbit-gauge-orbit" cx="120" cy="120" r="116"/><circle class="orbit-gauge-track" cx="120" cy="120" r="103"/><circle class="orbit-gauge-fill" cx="120" cy="120" r="103" pathLength="100"/></svg><div><strong>0</strong><span>${m.unit}</span></div></div><p>${m.title}</p></article>`).join('')}</div></div><div class="orbit-handoff" aria-hidden="true"><span>จากทุกพื้นที่ สู่เรื่องราวของเรา</span></div><footer class="orbit-footer"><button type="button" class="orbit-pause" aria-pressed="false">พักการหมุนภาพ <span aria-hidden="true">Ⅱ</span></button><a href="#experience-timeline">เลื่อนต่อเพื่อชมเส้นทางของเรา <span aria-hidden="true">↓</span></a></footer></div>`;
+        const message=document.createElement('div');message.className='orbit-messages';
+        message.innerHTML='<p><strong>Luxury Flooring</strong><span>สำหรับพื้นที่ที่มีระดับ</span><small>จากโครงการบ้านและคอนโด<br>ถึงงานตกแต่งภายในรถ</small></p><p><strong>ยกระดับบ้านของคุณ</strong><span>ให้หรูอย่างมีสไตล์</span><small>ด้วยพื้น SPC COOLPLAN</small></p>';
+        root.querySelector('.orbit-sticky')!.append(message);this.messages=Array.from(message.children) as HTMLElement[];
         const journey=document.createElement('div');journey.className='experience-journey';
         const pin=document.createElement('div');pin.className='experience-journey-sticky';
         const timeline=host.querySelector<HTMLElement>('.experience-scroll')!;
@@ -105,6 +109,7 @@ export class ExperienceOrbit {
         this.title.style.top=reduced?'':`${48-f.titleDock*23}%`;
         this.typed.forEach((e,i)=>{const fraction=reduced?1:i?f.sub:f.head,count=Math.ceil(this.letters[i].length*fraction);const text=this.letters[i].slice(0,count).join('');if(e.textContent!==text)e.textContent=text;e.classList.toggle('is-typing',fraction>0&&fraction<1);});
         this.title.style.opacity=String(reduced?1:f.title);this.stats.style.opacity=String(reduced?1:f.stats);
+        this.messages.forEach((e,i)=>{const amount=reduced?1:i?f.invitation:f.luxury;e.style.opacity=String(amount);e.style.transform=`translateY(${(1-amount)*12}px)`;});
         const total=(reduced?175000:f.counter).toLocaleString('th-TH');if(this.counter.textContent!==total)this.counter.textContent=total;
         this.stage.style.setProperty('--snake',String(f.snake));this.stage.style.setProperty('--exit',String(f.exit));
         this.arcs.forEach((e,i)=>{const amount=reduced?1:f.rings[i];e.style.strokeDashoffset=String((1-amount)*100);const text=Math.round(METRICS[i].value*amount).toLocaleString('th-TH');if(this.values[i].textContent!==text)this.values[i].textContent=text;this.values[i].closest<HTMLElement>('.orbit-stat')!.style.opacity=String(reduced?1:clamp((this.progress-.44-i*.04)/.06));});

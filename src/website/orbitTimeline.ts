@@ -5,9 +5,11 @@ export function orbitFrame(value: number) {
     const p=clamp(value);
     return { progress:p,head:phase(p,0,.12),sub:phase(p,.018,.16),title:1-phase(p,.225,.265),
         titleDock:smooth(phase(p,.10,.19)),counter:Math.round(175000*phase(p,.40,.66)),
-        stats:phase(p,.40,.48)*(1-phase(p,.79,.84)),
+        stats:phase(p,.40,.48)*(1-phase(p,.71,.74)),
+        luxury:phase(p,.74,.755)*(1-phase(p,.795,.81)),
+        invitation:phase(p,.815,.83)*(1-phase(p,.875,.89)),
         rings:[0,1,2].map(i=>phase(p,.47+i*.04,.62+i*.04)),
-        snake:smooth(phase(p,.84,.94)),exit:smooth(phase(p,.94,1)),photos:1-phase(p,.985,1) };
+        snake:smooth(phase(p,.89,.94)),exit:smooth(phase(p,.94,1)),photos:1-phase(p,.998,1) };
 }
 /** Reserve an empty central rectangle inside the ellipse and its rotated portrait frames. */
 export function orbitLayout(width:number,height:number) {

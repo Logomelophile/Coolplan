@@ -1,7 +1,7 @@
 /* The introduction and timeline share one native-scroll, pinned stage. */
-.experience-journey{position:relative;height:1440svh;background:#fff}
+.experience-journey{position:relative;height:2000svh;background:#fff}
 .experience-journey-sticky{position:sticky;top:0;height:100svh;overflow:hidden;isolation:isolate;background:#fff}
-#experience-intro.has-orbit:not(.is-reduced) .experience-scroll{position:absolute;inset:0;height:100%;transform:translate3d(calc((var(--journey-handoff,0) - 1)*100%),0,0);z-index:2;will-change:transform}
+#experience-intro.has-orbit:not(.is-reduced) .experience-scroll{position:absolute;inset:0;height:100%;opacity:var(--journey-handoff,0);clip-path:inset(0 calc((1 - var(--journey-handoff,0))*100%) 0 0);z-index:2;will-change:clip-path,opacity}
 #experience-intro.has-orbit:not(.is-reduced) .experience-sticky{position:relative;top:0;height:100%;grid-template-rows:0 138px minmax(0,1fr) 22px}
 .orbit-scroll{position:absolute;inset:0;height:100%;opacity:calc(1 - var(--journey-handoff,0));background:#fff}
 .orbit-sticky{position:relative;height:100%;min-height:0;overflow:hidden;isolation:isolate;background:radial-gradient(ellipse at center,#f8f4fa 0%,#fff 65%)}
@@ -17,6 +17,10 @@
 .orbit-typed{position:absolute;inset:0;text-align:center}
 .orbit-typed.is-typing:after{content:'';display:inline-block;width:2px;height:.95em;margin-left:5px;background:#ed854a;vertical-align:-.04em;animation:experience-caret .9s steps(1) infinite}
 .orbit-statistics{position:absolute;z-index:2;left:50%;top:50%;width:var(--orbit-content-width,600px);max-height:var(--orbit-content-height,280px);transform:translate(-50%,-50%);text-align:center;pointer-events:none}
+.orbit-messages{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:var(--orbit-content-width,600px);height:var(--orbit-content-height,280px);display:grid;place-items:center;text-align:center;pointer-events:none;z-index:2;color:#563365}
+.orbit-messages p{grid-area:1/1;margin:0;display:grid;gap:10px;opacity:0;line-height:1.5;text-wrap:balance}
+.orbit-messages strong{font-size:clamp(18px,2.2vw,34px);font-weight:500}.orbit-messages span{font-size:clamp(14px,1.5vw,23px);color:#89609c}.orbit-messages small{font-size:clamp(11px,1vw,16px);color:#80608f}
+.orbit-reduced .orbit-messages{position:relative;inset:auto;transform:none;width:100%;height:auto;display:grid;gap:25px;order:2}.orbit-reduced .orbit-messages p{grid-area:auto;opacity:1!important;transform:none!important}
 .orbit-total>span{font-size:clamp(12px,1vw,17px);color:#80608f}
 .orbit-total>div{display:flex;align-items:baseline;justify-content:center;gap:8px;margin-top:5px}
 .orbit-total strong{font:500 var(--orbit-counter-size,72px)/1.1 Arial,sans-serif;letter-spacing:-.05em;font-variant-numeric:tabular-nums;color:#563365}

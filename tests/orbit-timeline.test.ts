@@ -35,7 +35,7 @@ test('portraits gather near the center before release; the dashboard stays insid
     const r=journeyRange(4000,12960,900);
     assert.equal(r.start+r.travel,4000+12960-900);
     assert.equal(r.timelineStart+r.timelineTravel,r.start+r.travel);
-    assert.equal(journeyFrame(.23).handoff,0);assert.equal(journeyFrame(.26).handoff,1);
+    assert.equal(journeyFrame(.38).handoff,0);assert.equal(journeyFrame(.40).handoff,1);
 });
 test('the post-orbit timeline begins immediately and retains reversible photo and collection stops',()=>{
     const r=experienceScrollRange(900,9000,true);assert.equal(experienceScrollProgress(0,r),.29);
