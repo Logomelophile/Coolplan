@@ -1,0 +1,24 @@
+/* White page canvas; image content and functional accent colors retain their own palette. */
+html:has(> body.home-page){background:#fff}
+body.home-page{--paper:#fff;background:#fff}
+.home-page #main,
+.home-page #floor-story,
+.home-page #featured,
+.home-page #showcase,
+.home-page #collections,
+.home-page #herringbone,
+.home-page #pricing,
+.home-page #package-specs,
+.home-page .pricing-package-stage,
+.home-page .configurator,
+.home-page .brand-introduction,
+.home-page .orbit-sticky,
+.home-page .package-model,
+.home-page .package-model-canvas.is-3d-ready,
+.home-page .package-room,
+.home-page #featured .featured-media{background:#fff}
+.home-page #herringbone::before,
+.home-page #showcase .showcase-backdrop::before,
+.home-page #experience-intro .experience-sticky::before{background:none}
+.home-page #floor-story #hero::before{background:linear-gradient(90deg,#fff6,transparent 62%),linear-gradient(0deg,#ffffffef,transparent 28%)}
+.home-page #floor-story .story-detail-wash{background:linear-gradient(90deg,#ffffff60,#ffffffb3 55%,#fffffff2 85%)}

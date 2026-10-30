@@ -19,6 +19,7 @@ import { mountClientLogos } from './clientLogos';
 import { mountCollections, mountPricing } from './collections';
 import { FloorScrollStory } from './FloorScrollStory';
 import './visualizer.css';
+import './pureWhite.css';
 import { FloorVisualizer, type FloorVisualizerDiagnostics as RoomPreviewDiagnostics } from './visualizer';
 import { mountVisualizerToolbar, type ToolbarHandle } from './visualizer/ui/Toolbar';
 import { mountQrDialog, UPLOAD_HASH } from './visualizer/ui/QrDialog';
