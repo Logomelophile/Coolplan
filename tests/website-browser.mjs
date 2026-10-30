@@ -331,7 +331,7 @@ try {
   assert.equal(await page.locator('.client-logos-track').evaluate(el => getComputedStyle(el).animationName), 'none');
   assert.equal(await logoGroups.last().isVisible(), false);
   assert.equal(await page.locator('.client-logos-toggle').isVisible(), false);
-  assert.equal(await page.locator('#installation-warranty .featured-photo').count(), 5);
+  assert.equal(await page.locator('#installation-warranty .featured-photo').count(), 10);
   assert.deepEqual(await page.locator('.experience-ring-value strong').allInnerTexts(), ['21', '175,000', '10']);
   await page.screenshot({ path: outputPath('warranty-reduced-motion-mobile.png') });
   await page.emulateMedia({ reducedMotion: 'no-preference' });
