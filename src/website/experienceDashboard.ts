@@ -3,6 +3,7 @@ import { motionPreference } from './motionPreference';
 import { experienceFrame, experienceScrollRange, experienceScrollProgress, experienceScrollOffset, type ExperienceScrollRange, EXPERIENCE_END_YEAR, EXPERIENCE_TOTAL_SQM, EXPERIENCE_GATHER_START, EXPERIENCE_GATHER_END, EXPERIENCE_SUMMARY_HOLD_MS, EXPERIENCE_STAGES } from './experienceTimeline';
 import { projectPhotoSize } from './projectPhotos';
 import { sitePath } from '../sitePath';
+import { measureJourney } from './experienceJourney';
 const METRICS = [
     { value: COMPANY.years, unit: 'ปี', suffix: '', label: 'ประสบการณ์งานพื้น', detail: `ดูแลงานพื้นมาตั้งแต่ปี ${COMPANY.since}`, code: '01 / EXPERIENCE' },
     { value: EXPERIENCE_TOTAL_SQM, unit: 'ตร.ม.', suffix: '', label: 'พื้นที่ที่ส่งมอบ', detail: 'บ้านจัดสรร คอนโด และพื้นที่ของคุณ', code: '02 / PROJECTS' },
@@ -47,7 +48,7 @@ export interface IntroDiagnostics {
     summaryHoldRemainingMs: number;
     summaryVisibleAt: number | null;
     summaryHolding: boolean;
-    scroll: ExperienceScrollRange;
+    scroll: ExperienceScrollRange & {startPx:number};
 }
 interface TravelPose {
     x: number;
@@ -96,6 +97,7 @@ export class ExperienceIntro {
     }[] = [];
     private typingProgress = 0;
     private scrollRange = experienceScrollRange(0, 0);
+    private startPx = 0;
     private typedFractions = [0, 0];
     private readonly observer: IntersectionObserver | null;
     private readonly resizeObserver: ResizeObserver | null;
@@ -205,15 +207,14 @@ export class ExperienceIntro {
         document.addEventListener('visibilitychange', this.onVisibility, { signal });
         motionPreference.addEventListener('change', this.onPreference, { signal });
         this.projectButton.addEventListener('click', () => { this.projectsPaused = !this.projectsPaused; this.syncProjects(); }, { signal });
-        section.querySelector('.experience-motion-replay')?.addEventListener('click', () => { window.scrollTo({ top: this.scroll.getBoundingClientRect().top + window.scrollY + (this.reduced ? 0 : experienceScrollOffset(0, this.scrollRange)), behavior: this.reduced ? 'auto' : 'smooth' }); }, { signal });
+        section.querySelector('.experience-motion-replay')?.addEventListener('click', () => { window.scrollTo({ top: this.reduced ? this.scroll.getBoundingClientRect().top + scrollY : measureJourney(section).start, behavior: this.reduced ? 'auto' : 'smooth' }); }, { signal });
         section.querySelector('.experience-scene-footer a[href="#experience-evidence"]')?.addEventListener('click', event => {
             event.preventDefault();
             if (this.reduced || this.flow) {
                 this.evidence.scrollIntoView({ behavior: 'auto', block: 'center' });
                 return;
             }
-            const travel = this.scroll.offsetHeight - this.sticky.offsetHeight;
-            window.scrollTo({ top: this.scroll.getBoundingClientRect().top + window.scrollY + travel, behavior: 'smooth' });
+            window.scrollTo({ top: this.startPx + this.scrollRange.travelPx, behavior: 'smooth' });
         }, { signal });
         this.observer = typeof IntersectionObserver === 'undefined' ? null : new IntersectionObserver(entries => {
             this.visible = entries.some(entry => entry.isIntersecting);
@@ -225,7 +226,7 @@ export class ExperienceIntro {
                 this.stop();
             this.syncProjects();
         }, { rootMargin: '10% 0px' });
-        this.observer?.observe(this.scroll);
+        this.observer?.observe(section.querySelector('.experience-journey') ?? this.scroll);
         if (!this.observer)
             this.visible = true;
         this.resizeObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(this.onResize);
@@ -242,7 +243,7 @@ export class ExperienceIntro {
     }
     get diagnostics(): IntroDiagnostics {
         const frame = this.sample();
-        return { progress: this.progress, counter: frame.counter, active: frame.active, panels: this.panels.length, animating: this.raf !== 0, rings: frame.rings, counters: METRICS.map((metric, index) => Math.round(metric.value * frame.rings[index])), typed: [...this.typedFractions], year: frame.year, timeline: frame.timeline, checks: frame.checks, marqueeRunning: this.projectsRunning, milestones: frame.milestones, photos: frame.photos, archived: frame.archived, proof: this.proofProgress, mode: this.flow ? 'flow' : 'scroll', reduced: this.reduced, gather: frame.gather, summaryHoldRemainingMs: this.summaryHoldRemainingMs, summaryVisibleAt: this.summaryVisibleAt, scroll: { ...this.scrollRange }, summaryHolding: this.summaryHoldStarted !== null && !this.summaryHoldConsumed && (this.summaryVisibleAt === null || this.summaryHoldRemainingMs > 0) };
+        return { progress: this.progress, counter: frame.counter, active: frame.active, panels: this.panels.length, animating: this.raf !== 0, rings: frame.rings, counters: METRICS.map((metric, index) => Math.round(metric.value * frame.rings[index])), typed: [...this.typedFractions], year: frame.year, timeline: frame.timeline, checks: frame.checks, marqueeRunning: this.projectsRunning, milestones: frame.milestones, photos: frame.photos, archived: frame.archived, proof: this.proofProgress, mode: this.flow ? 'flow' : 'scroll', reduced: this.reduced, gather: frame.gather, summaryHoldRemainingMs: this.summaryHoldRemainingMs, summaryVisibleAt: this.summaryVisibleAt, scroll: { ...this.scrollRange,startPx:this.startPx }, summaryHolding: this.summaryHoldStarted !== null && !this.summaryHoldConsumed && (this.summaryVisibleAt === null || this.summaryHoldRemainingMs > 0) };
     }
     private get summaryHoldRemainingMs(): number { return this.reduced || this.summaryHoldConsumed || this.summaryVisibleAt === null ? 0 : Math.max(0, EXPERIENCE_SUMMARY_HOLD_MS - (performance.now() - this.summaryVisibleAt)); }
     private resetSummaryHold(): void { this.summaryHoldStarted = null; this.summaryVisibleAt = null; this.summaryHoldConsumed = false; }
@@ -307,12 +308,13 @@ export class ExperienceIntro {
         this.onScroll();
     } };
     private measure(): void {
-        const rect = this.scroll.getBoundingClientRect();
-        const travel = this.scroll.offsetHeight - this.sticky.offsetHeight;
+        const journey = measureJourney(this.section);
+        const travel = this.reduced ? 0 : journey.timelineTravel;
+        this.startPx = journey.timelineStart;
         this.scrollRange = experienceScrollRange(window.innerHeight, travel, true);
         this.flow = travel <= 0;
         this.section.classList.toggle('is-flow', this.flow);
-        this.target = experienceScrollProgress(-rect.top, this.scrollRange);
+        this.target = experienceScrollProgress(window.scrollY-this.startPx, this.scrollRange);
         this.proofTarget = Math.max(0, Math.min(1, (this.target - EXPERIENCE_GATHER_START) / (EXPERIENCE_GATHER_END - EXPERIENCE_GATHER_START)));
         if (this.target < EXPERIENCE_GATHER_START - .02) this.resetSummaryHold();
     }
@@ -321,7 +323,7 @@ export class ExperienceIntro {
             this.stories[index].scrollIntoView({ behavior: this.reduced ? 'auto' : 'smooth', block: 'center' });
             return;
         }
-        window.scrollTo({ top: this.scroll.getBoundingClientRect().top + window.scrollY + experienceScrollOffset(EXPERIENCE_STAGES[index].seek, this.scrollRange), behavior: 'smooth' });
+        window.scrollTo({ top: this.startPx + experienceScrollOffset(EXPERIENCE_STAGES[index].seek, this.scrollRange), behavior: 'smooth' });
     }
     private stop(): void { cancelAnimationFrame(this.raf); this.raf = 0; }
     private onVisibility = (): void => {
@@ -356,8 +358,7 @@ export class ExperienceIntro {
      * anchors and reduced motion remain native; a watchdog bounds a stalled renderer. */
     private onWheel = (event: WheelEvent): void => {
         if (this.disposed || this.reduced || this.flow || !this.visible || this.summaryHoldConsumed || event.defaultPrevented || event.ctrlKey || event.shiftKey || !event.cancelable || event.deltaY <= 0 || Math.abs(event.deltaX) > event.deltaY || (event.target instanceof Element && event.target.closest('dialog[open]'))) return;
-        const rect = this.scroll.getBoundingClientRect(), start = rect.top + window.scrollY;
-        const travel = this.scroll.offsetHeight - this.sticky.offsetHeight;
+        const start = this.startPx, travel = this.scrollRange.travelPx;
         if (travel <= 0 || window.scrollY < start - 1 || window.scrollY > start + travel + 1) return;
         const anchor = Math.ceil(start + experienceScrollOffset(EXPERIENCE_GATHER_END, this.scrollRange));
         const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1);

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 export async function verifyRedesign(page, { initialize, state, check, outputPath, url, noOverflow }) {
     const offset = (p, r) => r.introPx === 0 ? Math.max(0,(p-r.breakpoint)/(1-r.breakpoint))*r.travelPx : p <= r.breakpoint ? p / r.breakpoint * (r.introPx + r.leadPx) - r.leadPx : r.introPx + (p - r.breakpoint) / (1 - r.breakpoint) * (r.travelPx - r.introPx);
-    const seek = async (p) => { const r = (await state()).experience.intro.scroll; await page.evaluate(px => { const e = document.querySelector('.experience-scroll'); scrollTo({ top: e.getBoundingClientRect().top + scrollY + px, behavior: 'instant' }); }, offset(p, r)); await page.waitForFunction(p => { const d = window.websiteDemo.diagnostics.experience.intro; return Math.abs(d.progress - p) < .003 && !d.animating; }, p); };
+    const seek = async (p) => { const r = (await state()).experience.intro.scroll; await page.evaluate(top => { scrollTo({ top, behavior: 'instant' }); }, r.startPx+offset(p, r)); await page.waitForFunction(p => { const d = window.websiteDemo.diagnostics.experience.intro; return Math.abs(d.progress - p) < .003 && !d.animating; }, p); };
     const originalYear = await page.locator('.experience-era strong').elementHandle();
     const originalRing = await page.locator('.experience-ring').first().elementHandle();
     const originalPhoto = await page.locator('.experience-pile-photo').first().elementHandle();

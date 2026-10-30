@@ -1,13 +1,16 @@
 import assert from 'node:assert/strict';
 export async function verifyOrbit(page,{state,check,outputPath}){
  const orbit=()=>page.evaluate(()=>window.websiteDemo.diagnostics.experience.orbit);
- const seek=async p=>{await page.evaluate(p=>{const e=document.querySelector('.orbit-scroll'),lead=Math.min(180,innerHeight*.2),travel=e.offsetHeight-innerHeight;scrollTo({top:e.getBoundingClientRect().top+scrollY+p*(travel+lead)-lead,behavior:'instant'});},p);await page.waitForFunction(p=>{const d=window.websiteDemo.diagnostics.experience.orbit;return Math.abs(d.progress-p)<.002&&!d.animating;},p);};
+ const seek=async p=>{await page.evaluate(p=>{const r=window.websiteDemo.diagnostics.experience.orbit.scroll;scrollTo({top:r.startPx+p*r.orbitEnd*r.travelPx,behavior:'instant'});},p);await page.waitForFunction(p=>{const d=window.websiteDemo.diagnostics.experience.orbit;return Math.abs(d.progress-p)<.002&&!d.animating;},p);};
  await seek(0);assert.deepEqual((await orbit()).typed,[0,0]);
  await page.mouse.move(1100,450);await page.mouse.wheel(0,70);
  await page.waitForFunction(()=>{const d=window.websiteDemo.diagnostics.experience.orbit;return d.typed[0]>0&&d.typed[0]<1&&!d.animating;});
  const typed=(await orbit()).typed;await page.waitForTimeout(150);assert.deepEqual((await orbit()).typed,typed);
  await seek(.16);assert.deepEqual(await page.locator('.orbit-typed').allTextContents(),['เบื้องหลังความสมบูรณ์แบบ','ของโครงการชั้นนำ']);
  const centered=await page.locator('.orbit-title-line').evaluateAll(es=>es.every(e=>{const b=e.getBoundingClientRect();return Math.abs(b.left+b.width/2-innerWidth/2)<1;}));assert.ok(centered);
+ await seek(.22);
+ const pile=await page.locator('.orbit-photo').evaluateAll(es=>es.map(e=>{const b=e.getBoundingClientRect();return b.x+b.width/2;}));assert.ok(Math.max(...pile)-Math.min(...pile)<100,'All photos first gather at the center');
+ await seek(.40);
  await page.waitForFunction(()=>[...document.querySelectorAll('.orbit-photo img')].every(i=>i.complete&&i.naturalWidth));
  assert.equal(await page.locator('.orbit-photo img').evaluateAll(es=>es.every(i=>i.naturalHeight>i.naturalWidth&&Math.abs(i.clientWidth/i.clientHeight-i.naturalWidth/i.naturalHeight)<.015)),true);
  const first=await page.locator('.orbit-photo').first().elementHandle(),angle=(await orbit()).angle,y=await page.evaluate(()=>scrollY);
@@ -19,12 +22,17 @@ export async function verifyOrbit(page,{state,check,outputPath}){
  await seek(.45);const before=(await orbit()).counter;await page.mouse.move(1100,450);await page.mouse.wheel(0,120);
  await page.waitForFunction(n=>{const d=window.websiteDemo.diagnostics.experience.orbit;return d.counter>n&&!d.animating;},before);
  await page.mouse.wheel(0,-120);await page.waitForFunction(n=>Math.abs(window.websiteDemo.diagnostics.experience.orbit.counter-n)<250,before);
- await seek(.70);assert.equal((await orbit()).counter,175000);assert.deepEqual((await orbit()).rings,[1,1,1]);
+ await seek(.72);assert.equal((await orbit()).counter,175000);assert.deepEqual((await orbit()).rings,[1,1,1]);
+ const clear=await page.evaluate(()=>{const s=document.querySelector('.orbit-statistics').getBoundingClientRect();return [...document.querySelectorAll('.orbit-photo')].every(e=>{const p=e.getBoundingClientRect();return p.right<s.left||p.left>s.right||p.bottom<s.top||p.top>s.bottom;});});assert.ok(clear,'The entire central dashboard clears every portrait');
  assert.equal(await page.locator('.orbit-gauge-fill').evaluateAll(es=>es.every(e=>Number(e.style.strokeDashoffset)===0)),true);
  await page.screenshot({path:outputPath('orbit-full-dashboard.png')});
- await seek(.90);assert.equal((await orbit()).snake,1);assert.equal(await first.evaluate(e=>e===document.querySelector('.orbit-photo')),true);
+ await seek(.94);assert.ok((await orbit()).snake>.999);assert.equal(await first.evaluate(e=>e===document.querySelector('.orbit-photo')),true);
  const xs=await page.locator('.orbit-photo').evaluateAll(es=>es.map(e=>e.getBoundingClientRect().x));assert.ok(xs.slice(1).every((x,i)=>x>xs[i]));
  await page.screenshot({path:outputPath('orbit-single-wave.png')});
+ const handoff=async p=>{await page.evaluate(p=>{const r=window.websiteDemo.diagnostics.experience.orbit.scroll;scrollTo({top:r.startPx+p*r.travelPx,behavior:'instant'});},p);await page.waitForFunction(p=>Math.abs(window.websiteDemo.diagnostics.experience.orbit.journeyProgress-p)<.001&&!window.websiteDemo.diagnostics.experience.orbit.animating,p);return page.locator('.experience-scroll').boundingBox();};
+ const entering=await handoff(.245);assert.ok(entering.x<-.2*entering.width&&entering.x>-.9*entering.width);assert.ok(Math.abs(entering.y)<1);
+ const parked=await handoff(.26);assert.ok(Math.abs(parked.x)<1&&Math.abs(parked.y)<1,'Timeline slides from the left and parks in the same pinned viewport');
+ await handoff(.235);assert.ok((await page.locator('.experience-scroll').boundingBox()).x<entering.x,'The horizontal handoff reverses with native scroll');
  await page.emulateMedia({reducedMotion:'reduce'});await page.locator('.orbit-photo').first().isVisible();await page.waitForFunction(()=>window.websiteDemo.diagnostics.experience.orbit.reduced);
  assert.equal((await orbit()).running,false);assert.equal(await page.locator('.orbit-photo').evaluateAll(es=>es.every(e=>getComputedStyle(e).position==='relative')),true);
  await page.emulateMedia({reducedMotion:'no-preference'});
