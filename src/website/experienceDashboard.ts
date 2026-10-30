@@ -114,7 +114,7 @@ export class ExperienceIntro {
     private summaryHoldStarted: number | null = null;
     private summaryVisibleAt: number | null = null;
     private summaryHoldConsumed = false;
-    private sample() { const frame=experienceFrame(this.progress,this.proofProgress);return {...frame,eraDock:1,era:frame.timelineReveal,counter:EXPERIENCE_TOTAL_SQM,rings:[1,1,1]}; }
+    private sample() { const frame=experienceFrame(this.progress,this.proofProgress);return {...frame,eraDock:1,era:frame.timelineReveal,rings:[1,1,1]}; }
     constructor(private readonly section: HTMLElement) {
         this.sticky = section.querySelector<HTMLElement>('.experience-sticky')!;
         this.scroll = section.querySelector<HTMLElement>('.experience-scroll')!;

@@ -36,8 +36,8 @@ export async function verifyOrbit(page,{state,check,outputPath}){
  await page.emulateMedia({reducedMotion:'reduce'});await page.locator('.orbit-photo').first().isVisible();await page.waitForFunction(()=>window.websiteDemo.diagnostics.experience.orbit.reduced);
  assert.equal((await orbit()).running,false);assert.equal(await page.locator('.orbit-photo').evaluateAll(es=>es.every(e=>getComputedStyle(e).position==='relative')),true);
  await page.emulateMedia({reducedMotion:'no-preference'});
- assert.equal(await page.locator('#featured .featured-item').count(),2);assert.equal(await page.locator('#installation-warranty .featured-photo').count(),3);
- assert.deepEqual(await page.locator('.installation-preparation h4').allTextContents(),['ปรับ Self-leveling','ปรับสกิมพื้น','ปรับไล้พื้น']);
- assert.deepEqual(await page.locator('#installation-warranty img').evaluateAll(es=>es.map(e=>e.src.split('/').pop())),['installation-room.webp','preparation-primer.webp','preparation-leveling.webp']);
+ assert.equal(await page.locator('#featured .featured-item').count(),2);assert.equal(await page.locator('#installation-warranty .featured-photo').count(),5);
+ assert.deepEqual(await page.locator('.installation-methods h4').allTextContents(),['ปรับ Self-leveling','ปรับสกิมพื้น','ปรับไล้พื้น']);
+ assert.deepEqual(await page.locator('#installation-warranty img').evaluateAll(es=>es.map(e=>e.src.split('/').pop())),['installation-room.webp','preparation-primer.webp','preparation-leveling.webp','installation-prep.webp','installation-team.webp']);
  check('Portrait-only project photos orbit autonomously around centered typing; native scroll drives the total, three gauges and a continuous wave exit into the timeline.');
 }

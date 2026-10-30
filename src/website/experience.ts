@@ -51,6 +51,8 @@ const INSTALLATION_PHOTOS: FeaturedPhoto[] = [
     { image: '/website/showcase/installation-room.webp', alt: 'ทีมช่าง COOLPLAN ติดตั้งพื้นภายในห้อง', caption: 'ดูแลงานตั้งแต่เตรียมพื้นที่' },
     { image: '/website/showcase/preparation-primer.webp', alt: 'ช่างกำลังเตรียมผิวพื้นก่อนติดตั้งบริเวณริมหน้าต่าง', caption: 'เตรียมผิวก่อนติดตั้ง' },
     { image: '/website/showcase/preparation-leveling.webp', alt: 'ทีมช่างกำลังเก็บรายละเอียดผิวพื้นหน้างานจริง', caption: 'ทีมช่างเก็บรายละเอียดหน้างาน' },
+    { image: '/website/showcase/installation-prep.webp', alt: 'ทีมช่างเตรียมพื้นเดิมก่อนเริ่มงานปูพื้น', caption: 'เตรียมพื้นเดิมให้พร้อม' },
+    { image: '/website/showcase/installation-team.webp', alt: 'ทีมช่างกำลังติดตั้งพื้นในพื้นที่ออกกำลังกาย', caption: 'ติดตั้งด้วยทีมช่างของเรา' },
 ];
 export interface FeaturedDiagnostics {
     id: string;
@@ -118,6 +120,15 @@ class FeaturedStoryMotion {
             this.copyLines.push({ host, typed, characters: Array.from(segmenter.segment(text), p => p.segment), count: -1 });
         });
         const signal = this.abort.signal;
+        section.querySelectorAll<HTMLButtonElement>('[data-install-step]').forEach((button,index)=>button.addEventListener('click',()=>{
+            if(this.reducedMotion)return;
+            const travel=section.offsetHeight-innerHeight;
+            scrollTo({top:section.getBoundingClientRect().top+scrollY+(.34+index*.22)*(travel+innerHeight*.45)-innerHeight*.45,behavior:'smooth'});
+        },{signal}));
+        section.querySelector('.installation-motion-toggle')?.addEventListener('click',event=>{
+            const paused=section.classList.toggle('photos-paused'),button=event.currentTarget as HTMLButtonElement;
+            button.setAttribute('aria-pressed',String(paused));button.textContent=paused?'เล่นภาพต่อ ▶':'พักภาพช่าง Ⅱ';
+        },{signal});
         window.addEventListener('scroll', this.onScroll, { passive: true, signal });
         window.addEventListener('resize', this.onResize, { signal });
         document.addEventListener('visibilitychange', this.onVisibility, { signal });
@@ -268,29 +279,44 @@ class FeaturedStoryMotion {
         const width = this.media.clientWidth, height = this.media.clientHeight;
         this.media.style.setProperty('--media-height', `${height}px`);
         this.section.style.setProperty('--feature-progress', p.toFixed(4));
-        const shift = this.reducedMotion ? 1 : 1 - Math.pow(1 - clamp((p - .04) / .4, 0, 1), 3), copy = this.reducedMotion ? 1 : clamp((p - .24) / .34, 0, 1);
+        const installation=this.section.classList.contains('installation-story');
+        const shift = this.reducedMotion ? 1 : 1 - Math.pow(1 - clamp((p - .04) / .4, 0, 1), 3), copy = this.reducedMotion ? 1 : clamp(installation?(p-.01)/.19:(p - .24) / .34, 0, 1);
         this.section.style.setProperty('--feature-shift', String(shift));
         this.section.style.setProperty('--copy-reveal', String(copy));
         this.copyLines.forEach((line, i) => { const fraction = this.reducedMotion ? 1 : clamp((copy - i * .13) / .68, 0, 1), count = Math.floor(line.characters.length * fraction); if (count !== line.count) {
             line.typed.textContent = line.characters.slice(0, count).join('');
             line.count = count;
         } line.host.classList.toggle('is-typing', fraction > 0 && fraction < 1); });
+        if(installation){
+            const active=p<.45?0:p<.67?1:2;
+            this.section.querySelectorAll<HTMLElement>('[data-install-step]').forEach((e,i)=>{
+                const reveal=this.reducedMotion?1:clamp((p-.10-i*.12)/.15,0,1);
+                e.style.setProperty('--method-reveal',String(reveal));e.classList.toggle('is-active',active===i);e.setAttribute('aria-pressed',String(active===i));
+            });
+            const care=this.reducedMotion?1:clamp((p-.50)/.22,0,1);
+            this.section.style.setProperty('--care-reveal',String(care));
+            this.section.querySelector('.installation-care strong')!.textContent=String(Math.round(10*care));
+        }
         this.cards.forEach((card, index) => {
             const centreX = (width - card.offsetWidth) / 2 + (index - (this.cards.length - 1) / 2) * 18, centreY = (height - card.offsetHeight) / 2 + index * 10;
-            const destinationX = (width - card.offsetWidth) * [.12, .8, .4][index], destinationY = (height - card.offsetHeight) * [.04, .6, .3][index];
+            const centerWidth=width<=520?width*.64:Math.min(760,width*.49),lane=(width-centerWidth)/2;
+            const left=index===0||index===3;
+            const destinationX = installation?(left?(lane-card.offsetWidth)/2:width-lane+(lane-card.offsetWidth)/2):(width - card.offsetWidth) * [.12, .8, .4][index];
+            const destinationY = installation?height*[.13,.035,.40,.60,.72][index]:(height - card.offsetHeight) * [.04, .6, .3][index];
             let x = centreX + (destinationX - centreX) * shift, y = centreY + (destinationY - centreY) * shift;
+            if(installation){x=destinationX;y=destinationY;}
             const entering = this.reducedMotion ? 1 : this.id === 'warranty' ? clamp((p - .02 - index * .04) / .25, 0, 1) : 1;
-            const rotate = this.reducedMotion ? 0 : [-6, 5, -2][index] + (this.id === 'warranty' ? (1 - entering) * (index % 2 ? -22 : 22) : 0);
+            const rotate = this.reducedMotion ? 0 : (installation?[-7,5,-4,6,-6][index]:[-6, 5, -2][index]) + (this.id === 'warranty' ? (1 - entering) * (index % 2 ? -22 : 22) : 0);
             // Account for rotation when bounding each photo, including its caption.
             const radians = rotate * Math.PI / 180;
             const extraX = (Math.abs(card.offsetWidth * Math.cos(radians)) + Math.abs(card.offsetHeight * Math.sin(radians)) - card.offsetWidth) / 2;
             const extraY = (Math.abs(card.offsetHeight * Math.cos(radians)) + Math.abs(card.offsetWidth * Math.sin(radians)) - card.offsetHeight) / 2;
-            const minX = 8 + extraX - card.offsetLeft, maxX = width - 8 - extraX - card.offsetLeft - card.offsetWidth;
-            const minY = 8 + extraY - card.offsetTop, maxY = height - 44 - extraY - card.offsetTop - card.offsetHeight;
+            const minX = (installation&&!left?width-lane:0)+8 + extraX - card.offsetLeft, maxX = (installation&&left?lane:width) - 8 - extraX - card.offsetLeft - card.offsetWidth;
+            const minY = (installation?24:8) + extraY - card.offsetTop, maxY = height - (installation?28:44) - extraY - card.offsetTop - card.offsetHeight;
             const bound = (value: number, min: number, max: number): number => max >= min ? clamp(value, min, max) : (min + max) / 2;
             x = bound(x, minX, maxX);
             y = bound(y, minY, maxY);
-            const flyX = this.id === 'warranty' && !this.reducedMotion ? (1 - entering) * (index % 2 ? -width : width) : 0;
+            const flyX = this.id === 'warranty' && !this.reducedMotion ? (1 - entering) * (installation?(left?-width*.35:width*.35):(index % 2 ? -width : width)) : 0;
             const flyY = this.id === 'warranty' && !this.reducedMotion ? (1 - entering) * (height * .7 + index * 35) : 0;
             this.offsets[index].x = bound(x + this.offsets[index].x, minX, maxX) - x;
             this.offsets[index].y = bound(y + this.offsets[index].y, minY, maxY) - y;
@@ -360,19 +386,14 @@ export class Experience {
             this.featured.push(new FeaturedStoryMotion(article, item.id, this.motion.matches));
         });
         const warranty = document.createElement('section');
-        warranty.className = 'featured-warranty';
+        warranty.className = 'installation-story';
         warranty.id = 'installation-warranty';
         warranty.setAttribute('aria-labelledby', 'installation-warranty-title');
-        warranty.innerHTML = `<div class="featured-stage"><div class="featured-copy"><span class="featured-eyebrow">03 / PROFESSIONAL INSTALLATION</span><div class="warranty-years" aria-hidden="true"><strong>10</strong><span>ปี<br><small>INSTALLATION WARRANTY</small></span></div><h3 id="installation-warranty-title">ช่างมืออาชีพ
-รับประกันติดตั้ง 10 ปี</h3><p class="warranty-promise">เปลี่ยนให้ฟรี<span aria-hidden="true">↗</span></p><p class="featured-description">ใส่ใจตั้งแต่เตรียมพื้น จนถึงเก็บงาน<br>ด้วยทีมช่างที่ดูแลพื้นที่ของคุณ</p><p class="warranty-detail">สอบถามรายละเอียดการรับประกันกับทีมงาน</p></div><div class="featured-media featured-media-3" aria-label="ภาพทีมช่างติดตั้งพื้น COOLPLAN">${this.photoMarkup(INSTALLATION_PHOTOS)}<div class="featured-photo-count" aria-hidden="true"><span>CPW</span><span>คลิกค้างเพื่อลากรูป</span></div></div><div class="featured-story-progress" aria-hidden="true"><span></span></div></div>`;
+        warranty.innerHTML = `<div class="installation-stage"><div class="featured-media" aria-label="ภาพทีมช่างติดตั้งพื้น COOLPLAN">${this.photoMarkup(INSTALLATION_PHOTOS)}</div><div class="featured-copy"><span class="installation-eyebrow">COOLPLAN · PROFESSIONAL INSTALLATION</span><h3 id="installation-warranty-title">การติดตั้งแบบมืออาชีพ</h3><p class="featured-subtitle">พื้นสวย เริ่มจากฐานที่เรียบ</p><p class="installation-intro">เตรียมพื้นให้พร้อม ปูอย่างใส่ใจ<br>เก็บครบทุกมุม ด้วยทีมช่างของเรา</p><ol class="installation-methods" aria-label="บริการปรับพื้นตามสภาพหน้างาน">${[
+            ['ปรับ Self-leveling','ปรับระดับให้ได้ระนาบ'],['ปรับสกิมพื้น','เก็บรอยและผิวพื้น'],['ปรับไล้พื้น','ไล้เก็บผิวให้เรียบ'],
+        ].map(([title,text],i)=>`<li><button type="button" data-install-step="${i}" aria-pressed="false"><span>0${i+1}</span><h4>${title}</h4><p>${text}</p></button></li>`).join('')}</ol><p class="installation-method-note">เลือกวิธีปรับพื้นให้เหมาะกับสภาพหน้างาน</p><div class="installation-care" aria-label="รับประกันติดตั้ง 10 ปี เปลี่ยนให้ฟรี"><div><strong aria-hidden="true">0</strong><span>ปี</span></div><p>รับประกันติดตั้ง 10 ปี<br><b>เปลี่ยนให้ฟรี ↗</b></p></div><p class="installation-terms">สอบถามรายละเอียดการรับประกันกับทีมงาน</p><a class="installation-cta" href="#package-specs">เลือกรุ่นและคำนวณราคา <span aria-hidden="true">↗</span></a></div><footer class="installation-footer"><button type="button" class="installation-motion-toggle" aria-pressed="false">พักภาพช่าง Ⅱ</button><span>ภาพทีมช่างจริง · คลิกค้างเพื่อลากรูป</span></footer><div class="installation-progress" aria-hidden="true"><span></span></div></div>`;
         host.append(warranty);
         this.featured.push(new FeaturedStoryMotion(warranty, 'warranty', this.motion.matches));
-        const preparation=document.createElement('section');preparation.className='installation-preparation';preparation.setAttribute('aria-labelledby','installation-preparation-title');
-        preparation.innerHTML=`<header><span class="featured-eyebrow">BEFORE EVERY FLOOR</span><h3 id="installation-preparation-title">พื้นสวย เริ่มจากฐานที่เรียบ</h3><p>เลือกวิธีเตรียมพื้นให้เหมาะกับสภาพหน้างาน ก่อนเริ่มติดตั้งจริง</p></header><ol>${[
-            ['ปรับ Self-leveling','ปรับระดับพื้นให้ได้ระนาบ พร้อมสำหรับงานติดตั้ง'],
-            ['ปรับสกิมพื้น','เก็บรอยและผิวพื้น ให้พร้อมรับวัสดุปูพื้น'],
-            ['ปรับไล้พื้น','ไล้เก็บรายละเอียดผิวพื้นให้เรียบ ก่อนปูจริง'],
-        ].map(([title,text],i)=>`<li><span>0${i+1}</span><h4>${title}</h4><p>${text}</p></li>`).join('')}</ol>`;host.append(preparation);
     }
     private photoMarkup(photos: FeaturedPhoto[]): string {
         return photos.map((photo, index) => { const size = projectPhotoSize(photo.image); return `<figure class="featured-photo featured-photo-${index + 1}${size.portrait ? ' is-portrait' : ''}" style="--photo-ratio:${size.ratio}" tabindex="0" role="button" aria-pressed="false" aria-label="${photo.caption} · คลิกค้างเพื่อลากรูป ใช้ปุ่มลูกศรเพื่อขยับ และ Home เพื่อคืนตำแหน่ง"><div class="featured-photo-image"><img src="${sitePath(photo.image)}" alt="${photo.alt}" loading="lazy" decoding="async" draggable="false" width="${size.width}" height="${size.height}" /></div><figcaption><span>${String(index + 1).padStart(2, '0')}</span>${photo.caption}</figcaption></figure>`; }).join('');

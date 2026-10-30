@@ -10,6 +10,7 @@ import './collections.css';
 import './compactLayout.css';
 import './projectPhotos.css';
 import './experienceOrbit.css';
+import './installationStory.css';
 import './herringbone.css';
 import { mountShowcase } from './showcase';
 import { mountHerringbone } from './herringbone';

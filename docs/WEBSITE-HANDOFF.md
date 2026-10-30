@@ -159,6 +159,8 @@ npm run test:visualizer
 
 ## จุดแก้ไขหลัก
 
+ปรับฉากช่างล่าสุด 30 ต.ค. 2026: `#installation-warranty.installation-story` รวมข้อความการติดตั้ง วิธีปรับ Self-leveling/สกิม/ไล้พื้น และรับประกันติดตั้ง 10 ปีไว้ใน sticky viewport เดียว 270 svh มีภาพช่างจริงทั้ง 5 ใบล้อมข้อความกลางตาม reference Fastwork Selling (`https://fastwork.com/selling`) ใช้โครงและ CSS ของเราใน `installationStory.css` พร้อมข้อความและภาพ COOLPLAN เท่านั้น ใช้ `FeaturedStoryMotion` เดิมเพิ่ม entrance, reveal วิธีปรับพื้น, นับ 0→10 ปี และ click-seek วิธีบริการ; CSS ทำ float ต่อเนื่อง มีปุ่มพักภาพและลาก/ยกชั้น/คีย์บอร์ดเหมือนเดิม รูปเก็บ aspect ratio จริงทุกใบ ไม่สื่อว่าทุกงานต้องปรับทั้ง 3 วิธี ไม่มี `.installation-preparation` แยกด้านล่างแล้ว ตัวเลขมุมซ้ายใน Timeline คืนใช้ `experienceFrame().counter` เพิ่มตาม scroll จนจบ 175,000; ชุด ring ไม่ reset
+
 ปรับล่าสุด 30 ต.ค. 2026: `experienceJourney.ts` กำหนดระยะเลื่อนร่วม 1440 svh ของ `.experience-journey` ซึ่งมี sticky viewport เพียงตัวเดียว วงรูปและ Timeline เป็นสองชั้นภายในจอเดิม Timeline เคลื่อนเข้าจากซ้ายระหว่าง progress .23–.26 แล้วเล่นต่อในตำแหน่งเดิม ไม่ใช้ส่วน sticky สองช่วงต่อกันแล้ว `measureJourney()` เป็นแหล่ง geometry ของลิงก์ หมุด replay และ wheel dwell; diagnostics `.orbit.scroll` และ `.intro.scroll.startPx` ใช้ seek ทดสอบได้
 
 `orbitTimeline.ts` แบ่งจังหวะพิมพ์ → รูปแนวตั้ง 11 ใบผุดซ้อนกลางจอหลังข้อความเกือบจบ → เหวี่ยงออก → หมุนอัตโนมัติตามเวลา → เลข 175,000 และวงส้มสามวงเติมตามระยะเลื่อน → แถวรูปออกขวาและ Timeline เข้าซ้าย โดยใช้ DOM รูปเดิมตลอด `orbitLayout()` กำหนดทั้งรัศมีรูปและพื้นที่ปลอดภัยกลางวงพร้อมกัน ชุดเลข/วงลดขนาดตามช่องกลาง มีแนวตั้งบนมือถือและแนวนอนบนจอเตี้ย จึงไม่ทับภาพ; รองรับ pause, ย้อน scroll, เปลี่ยนขนาดจอ และ Reduce Motion แบบ normal flow โดยไม่เพิ่มตัวดัก wheel ในช่วงเปิด

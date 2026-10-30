@@ -71,14 +71,3 @@
 .orbit-reduced .orbit-handoff,.orbit-reduced .orbit-pause{display:none}.orbit-reduced .orbit-footer{position:relative;inset:auto;order:3;justify-content:end}
 .orbit-reduced .orbit-dashboard{grid-template-columns:repeat(3,minmax(0,1fr))}.orbit-reduced .orbit-stat{flex-direction:column;text-align:center}
 @media(max-width:600px){.orbit-reduced .orbit-photo-field{grid-template-columns:repeat(3,minmax(0,1fr))}}
-.installation-preparation{padding:60px 6.7% 85px;background:linear-gradient(135deg,#f7f2fa,#fff);border-radius:28px;margin:0 0 45px;color:#523460}
-.installation-preparation header{max-width:1000px;margin-bottom:35px}
-.installation-preparation h3{font-size:clamp(30px,3.5vw,58px);line-height:1.5;font-weight:500;margin:14px 0}
-.installation-preparation header>p{font-size:clamp(14px,1.3vw,21px);color:#977ba2;line-height:1.8}
-.installation-preparation ol{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;list-style:none;padding:0;margin:0}
-.installation-preparation li{border:1px solid #e7d9ed;border-radius:22px;background:#ffffffcf;padding:30px}
-.installation-preparation li>span{font:400 50px/1 Arial,sans-serif;color:#e88752;display:block;margin-bottom:24px}
-.installation-preparation h4{font-size:clamp(22px,2vw,33px);font-weight:500;line-height:1.5;margin-bottom:14px}
-.installation-preparation li p{font-size:14px;line-height:1.9;color:#977ba2}
-@media(max-width:700px){.installation-preparation{padding:35px 24px 45px}.installation-preparation ol{grid-template-columns:1fr;gap:14px}.installation-preparation li{padding:24px}.installation-preparation li>span{font-size:36px;margin-bottom:12px}}
-#installation-warranty .featured-copy h3{white-space:pre-line;font-size:clamp(21px,2.15vw,38px);line-height:1.5}

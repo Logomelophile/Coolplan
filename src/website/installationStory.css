@@ -1,0 +1,86 @@
+/* A single photographic installation desk: real work around a clear central message. */
+.installation-story{position:relative;height:270svh;background:#fff;border-radius:28px;color:#493052;isolation:isolate;margin-bottom:35px}
+.installation-stage{position:sticky;top:0;height:100svh;min-height:0;overflow:hidden;border-radius:28px;background:radial-gradient(ellipse at center,#fff 30%,#fbf8fc 100%)}
+.installation-story .featured-media{position:absolute;inset:0;width:100%;height:100%;max-height:none;min-height:0;transform:none;translate:none;overflow:hidden;background:none;border:0;border-radius:0;pointer-events:none;isolation:auto}
+.installation-story .featured-media::before,.installation-story .featured-media::after{display:none}
+.installation-story .featured-photo{inset:0 auto auto 0;width:min(20%,230px);max-width:none;padding:6px 6px 0;border-radius:15px;background:#fff;box-shadow:0 12px 30px -14px #49305250;pointer-events:auto;animation:installation-float 7s ease-in-out infinite;transition:opacity .2s ease;will-change:transform}
+.installation-story .featured-photo.is-portrait{width:min(14%,175px)}
+.installation-story .featured-photo:nth-child(2n){animation-duration:8.5s;animation-delay:-2.5s}
+.installation-story .featured-photo:nth-child(3n){animation-duration:9s;animation-delay:-4s}
+.installation-story .featured-photo-image{height:auto;aspect-ratio:auto;overflow:hidden;border-radius:10px;background:#f4edf4}
+.installation-story .featured-photo img{width:100%;height:auto;max-height:none;aspect-ratio:auto;object-fit:contain;transform:none}
+.installation-story .featured-photo figcaption{padding:10px 5px 12px;min-height:36px;font-size:10px;line-height:1.5;gap:7px;color:#735981;white-space:normal}
+.installation-story .featured-photo figcaption>span{color:#e9864d;font-size:9px}
+.installation-story .featured-copy{position:absolute;left:50%;top:50%;width:min(49%,760px);max-width:none;display:flex;flex-direction:column;align-items:center;gap:0;transform:translate(-50%,-50%);translate:none;text-align:center;z-index:10;pointer-events:none}
+.installation-story .featured-copy>*{opacity:1;translate:none;transition:none;max-width:100%}
+.installation-eyebrow{font:600 9px/1.5 Arial,sans-serif;letter-spacing:2px;color:#a082ab;margin-bottom:14px}
+#installation-warranty.installation-story .featured-copy h3{font-size:clamp(23px,2.7vw,44px);line-height:1.45;font-weight:550;white-space:normal;letter-spacing:-.8px;margin:0}
+.installation-story .featured-copy .featured-subtitle{font-size:clamp(19px,2vw,32px);line-height:1.5;max-width:none;margin:2px 0 0;color:#976bab}
+.installation-intro{font-size:clamp(12px,1.05vw,16px);line-height:1.8;margin:18px 0 0;color:#8c7a93}
+.installation-methods{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;width:100%;list-style:none;padding:0;margin:24px 0 0}
+.installation-methods li{min-width:0}
+.installation-methods button{display:grid;justify-items:center;align-content:center;gap:5px;width:100%;min-height:112px;padding:15px 9px;border:1px solid #ece3f0;border-radius:20px;background:#f9f6fa;color:#765587;font-family:inherit;cursor:pointer;pointer-events:auto;opacity:var(--method-reveal,0);transform:translateY(calc((1 - var(--method-reveal,0))*20px));transition:background .3s,border-color .3s,box-shadow .3s}
+.installation-methods button>span{font:400 24px/1 Arial,sans-serif;color:#b49ac1}
+.installation-methods h4{font-size:clamp(11px,1vw,16px);font-weight:500;line-height:1.5;margin:0;white-space:nowrap}
+.installation-methods p{font-size:clamp(9px,.75vw,12px);line-height:1.5;color:#9983a1;margin:0}
+.installation-methods button.is-active{background:#f2eaf5;border-color:#b996cd;box-shadow:0 6px 18px -12px #70458980}
+.installation-methods button.is-active>span{color:#ed864c}
+.installation-methods button:focus-visible,.installation-cta:focus-visible{outline:2px solid #976bab;outline-offset:4px}
+.installation-method-note{font-size:10px;line-height:1.6;color:#a18aaa;margin:10px 0 0}
+.installation-story .installation-care{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:20px;opacity:var(--care-reveal,0);transform:translateY(calc((1 - var(--care-reveal,0))*18px))}
+.installation-care>div{display:flex;align-items:baseline;gap:5px;color:#ee854a}
+.installation-care strong{font:500 70px/1 Arial,sans-serif;letter-spacing:-4px;font-variant-numeric:tabular-nums}
+.installation-care>div>span{font-size:17px}
+.installation-care p{font-size:15px;line-height:1.8;text-align:left;color:#735481;margin:0}
+.installation-care b{font-size:20px;color:#eb864b;font-weight:500}
+.installation-terms{font-size:9px;color:#a18aaa;line-height:1.6;margin:7px 0 0}
+.installation-cta{display:inline-flex;align-items:center;gap:25px;margin-top:20px;background:#523461;color:white;border-radius:30px;padding:13px 26px;font-size:13px;line-height:1.4;pointer-events:auto}
+.installation-footer{position:absolute;bottom:18px;left:4%;right:4%;display:flex;justify-content:space-between;gap:15px;z-index:11;font-size:9px;color:#aa91b3}
+.installation-motion-toggle{padding:4px 0;border:0;background:none;font:inherit;color:inherit;cursor:pointer}
+.installation-progress{position:absolute;bottom:0;left:0;right:0;height:2px;background:#f0e6f4}
+.installation-progress>span{display:block;height:100%;background:#e9854e;transform:scaleX(var(--feature-progress,0));transform-origin:left}
+@keyframes installation-float{0%,100%{transform:translate3d(var(--photo-x,0px),var(--photo-y,0px),0) rotate(var(--photo-angle,0deg))}50%{transform:translate3d(var(--photo-x,0px),calc(var(--photo-y,0px) - 10px),0) rotate(calc(var(--photo-angle,0deg) + 1deg))}}
+.installation-story.photos-paused .featured-photo,.installation-story .featured-photo.is-dragging{animation-play-state:paused}
+@media(max-width:850px), (max-height:650px){
+ .installation-eyebrow{font-size:7px;letter-spacing:1.3px;margin-bottom:8px}
+ #installation-warranty.installation-story .featured-copy h3{font-size:clamp(18px,3.3vw,28px);line-height:1.45}
+ .installation-story .featured-copy .featured-subtitle{font-size:clamp(16px,2.6vw,24px);line-height:1.45}
+ .installation-intro{font-size:11px;line-height:1.65;margin-top:10px}
+ .installation-methods{gap:5px;margin-top:14px}.installation-methods button{border-radius:13px;min-height:86px;gap:5px;padding:10px 4px}.installation-methods button>span{font-size:20px}.installation-methods h4{font-size:10px}.installation-methods p{font-size:8px}
+ .installation-method-note{font-size:8px;margin-top:7px}.installation-story .installation-care{gap:10px;margin-top:12px}.installation-care strong{font-size:49px;letter-spacing:-3px}.installation-care p{font-size:11px}.installation-care b{font-size:15px}.installation-care>div>span{font-size:12px}
+ .installation-terms{font-size:7px;margin-top:5px}.installation-cta{font-size:10px;padding:10px 18px;gap:12px;margin-top:12px}
+ .installation-story .featured-photo figcaption{font-size:8px;padding:7px 2px 9px;gap:4px}.installation-story .featured-photo figcaption>span{font-size:7px}
+ .installation-footer{font-size:7px;bottom:12px}
+}
+@media(max-width:520px){
+ .installation-story{border-radius:20px}.installation-stage{border-radius:20px}
+ .installation-story .featured-copy{width:64%}
+ .installation-story .featured-photo,.installation-story .featured-photo.is-portrait{width:13%;padding:3px 3px 0;border-radius:8px}
+ .installation-story .featured-photo-image{border-radius:5px}.installation-story .featured-photo figcaption{font-size:6px;padding:4px 0 5px;gap:2px;min-height:22px}.installation-story .featured-photo figcaption>span{display:none}
+ .installation-eyebrow{font-size:6px;letter-spacing:.7px}
+ #installation-warranty.installation-story .featured-copy h3{font-size:23px;line-height:1.5;letter-spacing:-.5px}
+ .installation-story .featured-copy .featured-subtitle{font-size:19px}
+ .installation-intro{font-size:10px}
+ .installation-methods{grid-template-columns:1fr;gap:6px;margin-top:13px}
+ .installation-methods button{grid-template-columns:24px minmax(0,1fr);text-align:left;justify-items:start;min-height:50px;padding:8px 10px;gap:0 7px}
+ .installation-methods button>span{grid-row:1/3;align-self:center;font-size:19px}.installation-methods h4{font-size:12px}.installation-methods p{font-size:9px}
+ .installation-footer{font-size:6px;left:12px;right:12px;gap:8px}
+}
+@media(max-height:450px) and (min-width:521px){
+ .installation-eyebrow{font-size:6px;margin-bottom:4px}
+ #installation-warranty.installation-story .featured-copy h3{font-size:21px}
+ .installation-story .featured-copy .featured-subtitle{font-size:16px}
+ .installation-intro{font-size:9px;margin-top:6px;line-height:1.5}
+ .installation-methods{margin-top:9px;gap:5px}.installation-methods button{min-height:63px;padding:6px 3px;gap:3px}.installation-methods button>span{font-size:16px}.installation-methods h4{font-size:9px}.installation-methods p{font-size:7px}
+ .installation-method-note{font-size:7px;margin-top:4px}.installation-story .installation-care{margin-top:7px;gap:8px}.installation-care strong{font-size:37px}.installation-care p{font-size:9px;line-height:1.6}.installation-care b{font-size:12px}.installation-care>div>span{font-size:10px}
+ .installation-terms{font-size:6px;margin-top:3px}.installation-cta{font-size:9px;padding:7px 14px;margin-top:7px}
+ .installation-story .featured-photo,.installation-story .featured-photo.is-portrait{width:13%}.installation-story .featured-photo figcaption{font-size:7px;min-height:25px;padding:5px 2px}
+}
+.installation-story.is-reduced{height:auto}
+.installation-story.is-reduced .installation-stage{position:relative;height:auto;display:flex;flex-direction:column;padding:40px 18px 45px;gap:30px;overflow:visible}
+.installation-story.is-reduced .featured-copy{position:relative;inset:auto;width:100%;transform:none;order:0}
+.installation-story.is-reduced .featured-media{position:relative;inset:auto;height:auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;order:1;overflow:visible}
+.installation-story.is-reduced .featured-photo{position:relative;inset:auto;width:100%;max-width:none;align-self:start;transform:none!important;translate:none!important;animation:none;opacity:1!important}
+.installation-story.is-reduced .installation-footer{position:relative;inset:auto;order:2;width:100%}
+.installation-story.is-reduced .installation-motion-toggle{display:none}
+@media(max-width:650px){.installation-story.is-reduced .featured-media{grid-template-columns:repeat(2,minmax(0,1fr))}}

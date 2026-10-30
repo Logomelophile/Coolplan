@@ -262,10 +262,10 @@
   padding: 9px 9px 0;
   transition: none;
 }
-.featured-photo-2 {
+.featured-stage .featured-photo-2 {
   width: 65%!important;
 }
-.featured-photo-3 {
+.featured-stage .featured-photo-3 {
   width: 62%!important;
 }
 .featured-photo img {

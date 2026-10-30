@@ -1,5 +1,6 @@
 import {verifyRedesign} from './website-redesign-checks.mjs';
 import {verifyOrbit} from './website-orbit-checks.mjs';
+import {verifyInstallation} from './website-installation-checks.mjs';
 import { chromium } from '@playwright/test';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -176,7 +177,7 @@ try {
   await verifyOrbit(page,{state,check,outputPath});
 
   assert.deepEqual(await page.locator('#featured .featured-item').evaluateAll(items => items.map(item => item.id)), ['project-cafe', 'project-office']);
-  const featureIds = ['cafe', 'office', 'warranty'];
+  const featureIds = ['cafe', 'office'];
   for (const id of featureIds) {
     const selector = id === 'warranty' ? '#installation-warranty' : `#project-${id}`;
     const target = await page.locator(selector).evaluate(el => ({ top: el.getBoundingClientRect().top + scrollY, travel: el.offsetHeight - innerHeight }));
@@ -227,7 +228,7 @@ try {
   }
   assert.match(await page.locator('#installation-warranty').innerText(), /รับประกันติดตั้ง 10 ปี/);
   assert.match(await page.locator('#installation-warranty').innerText(), /เปลี่ยนให้ฟรี/);
-  check('Café and Office lead into the professional installation story, three supplied team photos and the 10-year warranty.');
+  await verifyInstallation(page,{state,check,outputPath});
 
   // Showcase gallery: pinned scroll moves the track and the counter; herringbone section lays its pattern and the CTA switches the simulator.
   const showcaseTop = await page.evaluate(() => document.getElementById('showcase').getBoundingClientRect().top + scrollY);
@@ -330,7 +331,7 @@ try {
   assert.equal(await page.locator('.client-logos-track').evaluate(el => getComputedStyle(el).animationName), 'none');
   assert.equal(await logoGroups.last().isVisible(), false);
   assert.equal(await page.locator('.client-logos-toggle').isVisible(), false);
-  assert.equal(await page.locator('#installation-warranty .featured-photo').count(), 3);
+  assert.equal(await page.locator('#installation-warranty .featured-photo').count(), 5);
   assert.deepEqual(await page.locator('.experience-ring-value strong').allInnerTexts(), ['21', '175,000', '10']);
   await page.screenshot({ path: outputPath('warranty-reduced-motion-mobile.png') });
   await page.emulateMedia({ reducedMotion: 'no-preference' });

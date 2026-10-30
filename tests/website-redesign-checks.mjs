@@ -8,7 +8,11 @@ export async function verifyRedesign(page, { initialize, state, check, outputPat
     const originalCounter = await page.locator('.experience-counter strong').elementHandle();
     await seek(.29);
     assert.equal(await originalYear.innerText(), '2005');
-    assert.equal(await originalCounter.innerText(), '175,000');
+    assert.ok(Number((await originalCounter.innerText()).replaceAll(',',''))<100);
+    await seek(.38);const earlyTotal=Number((await originalCounter.innerText()).replaceAll(',',''));
+    await seek(.45);const laterTotal=Number((await originalCounter.innerText()).replaceAll(',',''));
+    assert.ok(earlyTotal>0&&laterTotal>earlyTotal&&laterTotal<175000,'The small cumulative total grows during the timeline');
+    await seek(.38);assert.ok(Number((await originalCounter.innerText()).replaceAll(',',''))<laterTotal,'The cumulative total reverses with scroll');
     await seek(.43);
     await page.waitForFunction(() => [...document.querySelectorAll('.experience-pile-photo img')].every(img => img.complete && img.naturalWidth > 0));
     assert.deepEqual(await page.locator('.experience-pile-photo img').evaluateAll(images => images.map(img => img.src.split('/').pop())), [
