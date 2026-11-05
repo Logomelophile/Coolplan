@@ -9,16 +9,14 @@
 .package-plan-heading>p{font-size:11px;letter-spacing:.8px;font-weight:500;color:#927d9e;margin:0 0 10px}
 .package-plan-heading h3{font:550 clamp(23px,2.25vw,34px)/1.3 'Noto Sans Thai',sans-serif;letter-spacing:-1px;white-space:nowrap;margin:0;color:#48354f}
 .package-plan-heading>span{display:block;font-size:11px;line-height:1.65;color:#94879a;margin-top:7px;min-height:36px}
-.package-plan-price{display:flex;align-items:baseline;gap:8px;margin-top:24px}
-.package-plan-price strong{font:550 clamp(38px,3.5vw,52px)/1.1 Arial,sans-serif;letter-spacing:-2px;color:#553861;font-variant-numeric:tabular-nums}
-.is-recommended .package-plan-price strong{color:#da692f}
-.package-plan-price>span{font-size:12px;color:#8f8197}
-.package-plan-total{display:flex;justify-content:space-between;gap:10px;font-size:11px;line-height:1.6;color:#9b8ba3;margin:12px 0 21px}
-.package-plan-total b{font-size:13px;font-weight:500;color:#5b4765}
-.package-plan-price>.package-price-before{margin-left:auto;font-size:13px;color:#786685}
-.package-price-before{white-space:nowrap;color:#786685}
-.package-price-before s{text-decoration-thickness:2px;text-decoration-color:#96769f}
-.package-plan-total-values{display:flex;align-items:baseline;justify-content:flex-end;flex-wrap:wrap;gap:3px 9px;text-align:right}
+.package-plan-price{display:grid;justify-items:start;gap:4px;margin-top:24px}
+.package-plan-unit{display:flex;align-items:baseline;gap:7px;font-size:12px;color:#8f8197}
+.package-plan-price strong{font:600 22px/1.1 Arial,sans-serif;color:#553861;font-variant-numeric:tabular-nums}
+.package-plan-total{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;font-size:12px;line-height:1.6;color:#786685;margin:12px 0 21px}
+.package-plan-total b{font:650 26px/1.1 Arial,sans-serif;color:#553861;font-variant-numeric:tabular-nums}
+.is-recommended .package-plan-price strong,.is-recommended .package-plan-total b{color:#c65b29}
+.package-price-before{font-size:13px;white-space:nowrap;color:#786685;text-decoration-thickness:2px;text-decoration-color:#96769f}
+.package-plan-total-values{display:grid;justify-items:end;gap:4px;text-align:right;white-space:nowrap}
 .package-plan .packages-cta{display:flex;align-items:center;justify-content:space-between;width:100%;font-size:12px;padding:12px 16px;border:1px solid #d6c6e0;background:#f4eef8;color:#684579;box-shadow:none}
 .package-plan .packages-cta:hover{background:#eae0f1;filter:none}
 .package-plan.is-recommended .packages-cta{background:#e77739;color:#fff;border-color:#e77739;box-shadow:0 6px 18px -9px #d97543}
@@ -42,7 +40,7 @@
 .package-shared-spec dd>small{display:block;font-size:9px;font-weight:400;color:#94839e;margin-top:5px}
 @media(hover:hover){.package-plan:hover{box-shadow:0 15px 40px -20px #62436c45;transform:translateY(-3px)}}
 @media(max-width:1150px){.package-plan-grid{gap:14px}.package-plan{padding:26px 20px 23px}.package-plan.is-recommended{padding:25px 19px 22px}.package-starburst{right:-8px}.package-plan-heading{padding-right:46px}.package-shared-spec{grid-template-columns:135px minmax(0,1fr);gap:18px;padding:22px 20px}.package-shared-spec dl{gap:12px}.package-shared-spec dd{font-size:11px}}
-@media(max-width:850px){.package-plan-grid{grid-template-columns:1fr;gap:28px;max-width:500px;margin:auto}.package-plan,.package-plan.is-recommended{padding:27px 25px 25px}.package-plan-heading>span{min-height:0}.package-plan-heading h3{font-size:29px}.package-plan-price strong{font-size:46px}.package-plan-price{margin-top:20px}.package-plan-total{margin-bottom:18px}.package-plan-features{gap:10px}.package-starburst{right:-8px;width:96px}.package-starburst>span{font-size:11px}.package-shared-spec{grid-template-columns:1fr;max-width:500px;margin:28px auto 0;gap:18px}.package-shared-heading h3 br{display:none}.package-shared-spec dl{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.package-shared-spec dd{font-size:13px}}
+@media(max-width:850px){.package-plan-grid{grid-template-columns:1fr;gap:28px;max-width:500px;margin:auto}.package-plan,.package-plan.is-recommended{padding:27px 25px 25px}.package-plan-heading>span{min-height:0}.package-plan-heading h3{font-size:29px}.package-plan-price{margin-top:20px}.package-plan-total{margin-bottom:18px}.package-plan-features{gap:10px}.package-starburst{right:-8px;width:96px}.package-starburst>span{font-size:11px}.package-shared-spec{grid-template-columns:1fr;max-width:500px;margin:28px auto 0;gap:18px}.package-shared-heading h3 br{display:none}.package-shared-spec dl{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.package-shared-spec dd{font-size:13px}}
 @media(prefers-reduced-motion:reduce){.package-plan{transition:none}.package-plan:hover{transform:none}}
 @media(max-width:350px){.package-starburst{width:84px}.package-starburst>span{font-size:10px}}
 /* Package rates can also be selected directly in the estimate. */
