@@ -57,8 +57,17 @@ export class Collections {
             card.className = 'collection-card';
             card.dataset.series = option.id;
             card.style.setProperty('--i', String(index));
-            card.innerHTML = `<div class="collection-mosaic"><img src="${selectionImage(option)}" alt="${series ? option.name : `ภาพตัวอย่างตระกูล ${reference.nameTh}`}" loading="lazy" decoding="async"/><span class="collection-count">${series ? `${series.codes.length} เฉดสี` : 'ภาพตัวอย่างตระกูลสินค้า'}</span></div><div class="collection-body"><span class="collection-eyebrow">${option.family.toUpperCase()} / ${option.thicknessMm} MM</span><h3>${option.name}</h3><dl class="collection-specs"><div><dt>ความหนา</dt><dd>${option.thicknessMm} มม.</dd></div><div><dt>ขนาดแผ่น</dt><dd>${sizeLabel(option)}</dd></div><div><dt>ติดตั้ง</dt><dd>${option.install === 'glue' ? 'ทากาว' : 'คลิกล็อก'}</dd></div></dl><ul class="collection-highlights">${(series?.highlights ?? ['มีราคาในใบราคา 2026', 'ให้ทีมงานยืนยันรุ่น ขนาด และเฉดสีก่อนสั่งซื้อ']).map(t => `<li>${t}</li>`).join('')}</ul><div class="collection-price"><strong>${money(row.pricePerSqm + row.installPerSqm)}<small>/ตร.ม. รวมติดตั้ง</small></strong><span>วัสดุ ${money(row.pricePerSqm)} + ติดตั้ง ${money(row.installPerSqm)}</span></div><div class="collection-actions"><button type="button" class="collection-expand" aria-expanded="false" aria-controls="collection-shades-${option.id}">${finishes.length ? 'ดูเฉดสีทั้งหมด' : 'ดูรายละเอียดรุ่น'} ${icon('arrow')}</button></div><div class="collection-shades" id="collection-shades-${option.id}" hidden><div class="collection-shade-strip">${finishes.map(f => `<figure>${f.image ? `<img src="${f.image}" alt="${f.code}" loading="lazy" decoding="async"/>` : '<span class="collection-shade-empty">สอบถามภาพเฉดสี</span>'}<figcaption>${f.code}</figcaption></figure>`).join('')}</div><p class="collection-note">${series?.note ?? (!series ? 'ภาพใช้แสดงตระกูลสินค้า รุ่นนี้มีราคาในใบราคา 2026 กรุณายืนยันสีและขนาดกับทีมงาน' : 'ราคาตามใบราคา 2026 ยืนยันรุ่นและขนาดก่อนสั่งซื้อ')}</p>${series && row.sizeMm && row.sizeMm !== series.sizeMm ? `<p class="collection-note">แค็ตตาล็อก: ${series.sizeMm} มม. · ใบราคา: ${formatDimensions(row.sizeMm)} ให้ทีมงานยืนยันขนาดตามรุ่น</p>` : ''}<div class="collection-actions collection-quote-actions"><button type="button" class="collection-quote" data-contact-open>ขอใบเสนอราคา ${icon('arrow')}</button></div></div></div>`;
-            card.querySelector('.collection-expand')!.addEventListener('click', () => this.toggle(option.id), { signal: this.abort.signal });
+            card.innerHTML = `<div class="collection-mosaic"><img src="${selectionImage(option)}" alt="${series ? option.name : `ภาพตัวอย่างตระกูล ${reference.nameTh}`}" loading="lazy" decoding="async"/><span class="collection-count">${series ? `${series.codes.length} เฉดสี` : 'ภาพตัวอย่างตระกูลสินค้า'}</span></div><div class="collection-body"><span class="collection-eyebrow">${option.family.toUpperCase()} / ${option.thicknessMm} MM</span><h3>${option.name}</h3><dl class="collection-specs"><div><dt>ความหนา</dt><dd>${option.thicknessMm} มม.</dd></div><div><dt>ขนาดแผ่น</dt><dd>${sizeLabel(option)}</dd></div><div><dt>ติดตั้ง</dt><dd>${option.install === 'glue' ? 'ทากาว' : 'คลิกล็อก'}</dd></div></dl><ul class="collection-highlights">${(series?.highlights ?? ['มีราคาในใบราคา 2026', 'ให้ทีมงานยืนยันรุ่น ขนาด และเฉดสีก่อนสั่งซื้อ']).map(t => `<li>${t}</li>`).join('')}</ul><div class="collection-price"><strong>${money(row.pricePerSqm + row.installPerSqm)}<small>/ตร.ม. รวมติดตั้ง</small></strong><span>วัสดุ ${money(row.pricePerSqm)} + ติดตั้ง ${money(row.installPerSqm)}</span></div><div class="collection-actions"><button type="button" class="collection-expand" aria-expanded="false" aria-controls="collection-shades-${option.id}">${finishes.length ? 'ดูเฉดสีทั้งหมด' : 'ดูรายละเอียดรุ่น'} ${icon('arrow')}</button></div><div class="collection-shades" id="collection-shades-${option.id}" hidden><button type="button" class="collection-collapse" aria-label="ปิดรายละเอียดรุ่น">${icon('close')}</button><div class="collection-shade-strip">${finishes.map(f => `<figure>${f.image ? `<img src="${f.image}" alt="${f.code}" loading="lazy" decoding="async"/>` : '<span class="collection-shade-empty">สอบถามภาพเฉดสี</span>'}<figcaption>${f.code}</figcaption></figure>`).join('')}</div><p class="collection-note">${series?.note ?? (!series ? 'ภาพใช้แสดงตระกูลสินค้า รุ่นนี้มีราคาในใบราคา 2026 กรุณายืนยันสีและขนาดกับทีมงาน' : 'ราคาตามใบราคา 2026 ยืนยันรุ่นและขนาดก่อนสั่งซื้อ')}</p>${series && row.sizeMm && row.sizeMm !== series.sizeMm ? `<p class="collection-note">แค็ตตาล็อก: ${series.sizeMm} มม. · ใบราคา: ${formatDimensions(row.sizeMm)} ให้ทีมงานยืนยันขนาดตามรุ่น</p>` : ''}<div class="collection-actions collection-quote-actions"><button type="button" class="collection-quote" data-contact-open>ขอใบเสนอราคา ${icon('arrow')}</button></div></div></div>`;
+            const expand = card.querySelector<HTMLButtonElement>('.collection-expand')!;
+            const collapse = card.querySelector<HTMLButtonElement>('.collection-collapse')!;
+            expand.addEventListener('click', () => {
+                this.toggle(option.id, true);
+                collapse.focus({ preventScroll: true });
+            }, { signal: this.abort.signal });
+            collapse.addEventListener('click', () => {
+                this.toggle(option.id, false);
+                expand.focus({ preventScroll: true });
+            }, { signal: this.abort.signal });
             const quote = card.querySelector<HTMLButtonElement>('.collection-quote')!;
             quote.dataset.contactContext = `${option.name} · ${sizeLabel(option)} · ${money(row.pricePerSqm + row.installPerSqm)}/ตร.ม. รวมติดตั้ง`;
             quote.addEventListener('click', () => {
@@ -71,7 +80,17 @@ export class Collections {
         else
             this.expanded = null;
     }
-    private toggle(id: string, force?: boolean): void { const open = force ?? this.expanded !== id; this.grid.querySelectorAll<HTMLElement>('.collection-card').forEach(card => { const show = card.dataset.series === id && open; card.classList.toggle('is-expanded', show); card.querySelector<HTMLElement>('.collection-shades')!.hidden = !show; card.querySelector('button')!.setAttribute('aria-expanded', String(show)); }); this.expanded = open ? id : null; }
+    private toggle(id: string, open: boolean): void {
+        this.grid.querySelectorAll<HTMLElement>('.collection-card').forEach(card => {
+            const show = card.dataset.series === id && open;
+            card.classList.toggle('is-expanded', show);
+            card.querySelector<HTMLElement>('.collection-shades')!.hidden = !show;
+            const expand = card.querySelector<HTMLButtonElement>('.collection-expand')!;
+            expand.hidden = show;
+            expand.setAttribute('aria-expanded', String(show));
+        });
+        this.expanded = open ? id : null;
+    }
     dispose(): void { this.abort.abort(); }
 }
 export interface PricingDiagnostics {

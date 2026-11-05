@@ -298,14 +298,36 @@ try {
   check('Room gallery, previous/next, view crop, comparison and preview fullscreen Escape work.');
   await uploadAndReset('desktop');
 
+  const shadeCard = page.locator('.collection-card').first();
+  await shadeCard.locator('.collection-expand').click();
+  assert.equal(await shadeCard.locator('.collection-expand').isVisible(), false);
+  await shadeCard.locator('.collection-quote').click();
+  assert.equal(await page.locator('#contact-selection').isVisible(), true);
+  assert.match(await page.locator('#contact-dialog a[href^="mailto:"]').getAttribute('href'), /&body=/);
+  await page.keyboard.press('Escape');
+  await shadeCard.locator('.collection-collapse').click();
+  assert.equal(await shadeCard.locator('.collection-expand').isVisible(), true);
+  check('Opening shades hides the opener, keeps the product quote, and restores the opener after closing.');
+
   await page.locator('#main-navigation [data-contact-open]').click();
   assert.equal(await page.locator('#contact-dialog').evaluate(dialog => dialog.open), true);
   assert.equal(await page.locator('#contact-dialog a[href^="tel:"]').getAttribute('href'), 'tel:+66846707551');
   assert.match(await page.locator('#contact-dialog a[href^="mailto:"]').getAttribute('href'), /^mailto:coolplanworkshop@gmail\.com\?subject=/);
   assert.match(await page.locator('#contact-dialog').innerText(), /คุณคะน้า/);
   assert.equal(await page.locator('#contact-selection').isVisible(), false, 'A general contact enquiry clears the prior package selection');
+  const social = page.locator('#contact-dialog .contact-social');
+  const footerSocial = page.locator('.footer-social');
+  assert.equal(await social.locator('.social-link').count(), 6);
+  assert.equal(await footerSocial.locator('.social-link').count(), 6);
+  assert.equal(await social.getByRole('link', { name: 'TikTok' }).getAttribute('href'), 'https://www.tiktok.com/@coolplanworkshop');
+  assert.equal(await social.locator('img').evaluateAll(images => images.every(image => image.complete && image.naturalWidth > 0)), true);
+  await social.getByRole('button', { name: 'LINE' }).click();
+  assert.equal(await page.locator('#contact-line-panel').isVisible(), true);
   await page.keyboard.press('Escape');
-  check('Contact dialog displays the named contact and correct phone/email link destinations; no external call or email is opened.');
+  await footerSocial.getByRole('button', { name: 'LINE' }).click();
+  assert.equal(await page.locator('#contact-line-panel').isVisible(), true);
+  await page.keyboard.press('Escape');
+  check('Quote and footer show six brand logos, preserve the phone/email links, and open the LINE panel.');
 
   await page.setViewportSize({ width: 390, height: 844 });
   await initialize();

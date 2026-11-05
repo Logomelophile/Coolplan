@@ -159,3 +159,7 @@
   .estimate-actions{grid-template-columns:1fr}
 }
 @media(max-width:520px){.collections-grid{grid-template-columns:1fr}}
+.collection-card.is-expanded .collection-body > .collection-actions{display:none}
+.collection-collapse{display:grid;place-items:center;margin:0 0 8px auto;width:32px;height:32px;border:1px solid #d9cfe2;border-radius:50%;background:#fff;color:var(--purple-dark)}
+.collection-collapse:hover{background:#f6f0fa}
+.collection-collapse svg{width:15px;height:15px}

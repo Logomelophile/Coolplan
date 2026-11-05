@@ -1,6 +1,32 @@
+import qrcode from 'qrcode-generator';
 import { localizeSiteLinks, sitePath } from '../sitePath';
 
 export const contact = { name:'คุณคะน้า', phone:'0846707551', tel:'+66846707551', email:'coolplanworkshop@gmail.com' };
+
+const lineUrl: string | null = null;
+const quoteSubject = encodeURIComponent('สอบถามพื้น SPC และขอใบเสนอราคา COOLPLAN');
+const quoteEmail = `mailto:${contact.email}?subject=${quoteSubject}`;
+const socialChannels = [
+  { id: 'line', name: 'LINE' },
+  { id: 'facebook', name: 'Facebook', url: 'https://www.facebook.com/Coolplanworkshop' },
+  { id: 'instagram', name: 'Instagram', url: 'https://www.instagram.com/coolplanworkshopcpw/' },
+  { id: 'youtube', name: 'YouTube', url: 'https://www.youtube.com/@coolplanworkshop' },
+  { id: 'tiktok', name: 'TikTok', url: 'https://www.tiktok.com/@coolplanworkshop' },
+  { id: 'gmail', name: 'Gmail', url: quoteEmail },
+];
+
+function socialLinks(footer = false): string {
+  return socialChannels.map(({ id, name, url }) => {
+    const content = `<img src="${sitePath(`/website/assets/social/${id}.svg`)}" width="28" height="28" alt=""><span>${name}</span>`;
+    if (!url) {
+      const action = footer ? 'data-contact-open data-contact-line' : 'aria-expanded="false" aria-controls="contact-line-panel" data-line-toggle';
+      return `<button type="button" class="social-link" ${action}>${content}</button>`;
+    }
+    const external = id === 'gmail' ? '' : ' target="_blank" rel="noopener noreferrer"';
+    return `<a class="social-link" href="${url}"${external}>${content}</a>`;
+  }).join('');
+}
+
 export const icon = (name:string) => {
   const paths:Record<string,string> = {
     arrow:'<path d="M4 12h15m-5-5 5 5-5 5"/>',
@@ -54,6 +80,7 @@ export function mountFooter() {
       <nav class="footer-menu" aria-label="วางแผนพื้นของคุณ"><h3>วางแผนพื้นของคุณ</h3><a href="/website/#rooms">ลองสีพื้นในห้อง</a><a href="/website/#package-specs">คำนวณราคาเบื้องต้น</a><a href="/">Material Studio · ดูชั้นวัสดุ</a><a href="/room/">Room Motion · ห้อง 3D</a><button type="button" data-contact-open>ปรึกษาเรื่องพื้น</button></nav>
       <address class="footer-contact" id="contact"><h3>ติดต่อเรา</h3><p>${contact.name}</p><a class="footer-phone" href="tel:${contact.tel}">084 670 7551 ${icon('arrow')}</a><a class="footer-email" href="mailto:${contact.email}">${contact.email}</a><button type="button" data-contact-open>ดูช่องทางติดต่อ ${icon('arrow')}</button></address>
     </div>
+    <nav class="footer-social" aria-label="ช่องทางออนไลน์ COOLPLAN">${socialLinks(true)}</nav>
     <div class="footer-bottom"><p>© ${new Date().getFullYear()} COOLPLAN. All rights reserved.</p><span>SPC FLOORING · YOUR SPACE, YOUR EVERYDAY</span><a href="#main">กลับด้านบน ↑</a></div>
   </footer>`;
   localizeSiteLinks(host);
@@ -61,16 +88,33 @@ export function mountFooter() {
 export function mountContactDialog() {
   if(document.getElementById('contact-dialog'))return;
   const holder=document.createElement('div');
-  holder.innerHTML=`<dialog class="site-dialog contact-dialog" id="contact-dialog" aria-labelledby="contact-heading"><button class="dialog-close" data-dialog-close type="button" aria-label="ปิด">${icon('close')}</button><span class="dialog-eyebrow">LET'S CREATE YOUR SPACE</span><h2 id="contact-heading">คุยเรื่องพื้นที่ของคุณ</h2><p>ปรึกษาเรื่องวัสดุ การติดตั้ง และขอใบเสนอราคากับ ${contact.name}</p><a class="contact-method" href="tel:${contact.tel}">${icon('phone')}<span><small>โทรหา${contact.name}</small>084 670 7551</span>${icon('arrow')}</a><a class="contact-method" href="mailto:${contact.email}?subject=${encodeURIComponent('สอบถามพื้น SPC และขอใบเสนอราคา COOLPLAN')}">${icon('mail')}<span><small>ส่งอีเมลถึงเรา</small>${contact.email}</span>${icon('arrow')}</a><a class="primary-button purple" href="/website/#package-specs">คำนวณงบประมาณเบื้องต้น ${icon('arrow')}</a></dialog><dialog class="site-dialog" id="about-dialog" aria-labelledby="about-heading"><button class="dialog-close" data-dialog-close type="button" aria-label="ปิด">${icon('close')}</button><span class="dialog-eyebrow">COOLPLAN · SPC FLOORING</span><h2 id="about-heading">พื้นที่ดี เริ่มต้นจากพื้นฐานที่ดีกว่า</h2><p>เลือกพื้น SPC ลายไม้ที่เข้ากับสไตล์ของคุณ สำรวจสีและชั้นวัสดุ เปรียบเทียบบรรยากาศในห้อง และวางงบประมาณก่อนเลือกพื้น</p><div class="about-services"><div>${icon('diamond')}<strong>เลือกวัสดุ</strong><p>ดูสี ลายไม้ และโครงสร้างของแผ่นพื้น</p></div><div>${icon('room')}<strong>วางแผนพื้นที่</strong><p>คำนวณค่าวัสดุและค่าติดตั้งเบื้องต้น</p></div><div>${icon('chat')}<strong>ปรึกษาโดยตรง</strong><p>สอบถามรายละเอียดกับ${contact.name}</p></div></div><button class="primary-button purple" type="button" data-contact-open>ปรึกษาผู้เชี่ยวชาญ ${icon('arrow')}</button></dialog>`;
+  holder.innerHTML=`<dialog class="site-dialog contact-dialog" id="contact-dialog" aria-labelledby="contact-heading"><button class="dialog-close" data-dialog-close type="button" aria-label="ปิด">${icon('close')}</button><span class="dialog-eyebrow">COOLPLAN · CONTACT</span>
+    <h2 id="contact-heading">คุยเรื่องพื้นที่ของคุณ</h2>
+    <p>เลือกช่องทางที่สะดวกเพื่อปรึกษาหรือขอใบเสนอราคากับ${contact.name}</p>
+    <p id="contact-selection" class="contact-selection" hidden></p>
+    <div class="contact-social">${socialLinks()}</div>
+    <div id="contact-line-panel" class="contact-line-panel" hidden></div>
+    <a class="contact-phone-link" href="tel:${contact.tel}">${icon('phone')} โทรหา${contact.name} · 084 670 7551</a></dialog><dialog class="site-dialog" id="about-dialog" aria-labelledby="about-heading"><button class="dialog-close" data-dialog-close type="button" aria-label="ปิด">${icon('close')}</button><span class="dialog-eyebrow">COOLPLAN · SPC FLOORING</span><h2 id="about-heading">พื้นที่ดี เริ่มต้นจากพื้นฐานที่ดีกว่า</h2><p>เลือกพื้น SPC ลายไม้ที่เข้ากับสไตล์ของคุณ สำรวจสีและชั้นวัสดุ เปรียบเทียบบรรยากาศในห้อง และวางงบประมาณก่อนเลือกพื้น</p><div class="about-services"><div>${icon('diamond')}<strong>เลือกวัสดุ</strong><p>ดูสี ลายไม้ และโครงสร้างของแผ่นพื้น</p></div><div>${icon('room')}<strong>วางแผนพื้นที่</strong><p>คำนวณค่าวัสดุและค่าติดตั้งเบื้องต้น</p></div><div>${icon('chat')}<strong>ปรึกษาโดยตรง</strong><p>สอบถามรายละเอียดกับ${contact.name}</p></div></div><button class="primary-button purple" type="button" data-contact-open>ปรึกษาผู้เชี่ยวชาญ ${icon('arrow')}</button></dialog>`;
   document.body.append(holder);
   const contactDialog = holder.querySelector<HTMLDialogElement>('#contact-dialog')!;
-  const selectedSpec = document.createElement('p');
-  selectedSpec.id = 'contact-selection';
-  selectedSpec.className = 'contact-selection';
-  selectedSpec.hidden = true;
-  contactDialog.querySelector('p')!.after(selectedSpec);
+  const selectedSpec = contactDialog.querySelector<HTMLElement>('#contact-selection')!;
+  const contactHeading = contactDialog.querySelector<HTMLElement>('#contact-heading')!;
   const contactEmail = contactDialog.querySelector<HTMLAnchorElement>('a[href^="mailto:"]')!;
-  contactDialog.querySelector('.primary-button')!.addEventListener('click',()=>contactDialog.close());
+  const lineToggle = contactDialog.querySelector<HTMLButtonElement>('[data-line-toggle]')!;
+  const linePanel = contactDialog.querySelector<HTMLElement>('#contact-line-panel')!;
+  if (lineUrl) {
+    const qr = qrcode(0, 'M');
+    qr.addData(lineUrl);
+    qr.make();
+    linePanel.innerHTML = `<div class="contact-line-code" role="img" aria-label="QR Code เพิ่มเพื่อน COOLPLAN ทาง LINE">${qr.createSvgTag(4, 16)}</div><p>สแกน QR Code เพื่อเพิ่มเพื่อน</p><a href="${lineUrl}" target="_blank" rel="noopener noreferrer">เปิดใน LINE ${icon('arrow')}</a>`;
+  } else {
+    linePanel.textContent = 'ช่องทาง LINE ยังไม่พร้อมใช้งาน กรุณาเลือกช่องทางอื่น';
+  }
+  const showLine = (show: boolean) => {
+    linePanel.hidden = !show;
+    lineToggle.setAttribute('aria-expanded', String(show));
+  };
+  lineToggle.addEventListener('click', () => showLine(linePanel.hidden));
   localizeSiteLinks(document);
   holder.querySelectorAll<HTMLDialogElement>('dialog').forEach(dialog=>{
     dialog.querySelector('[data-dialog-close]')!.addEventListener('click',()=>dialog.close());
@@ -81,6 +125,8 @@ export function mountContactDialog() {
     event.preventDefault();holder.querySelectorAll<HTMLDialogElement>('dialog[open]').forEach(d=>d.close());
     if (button.hasAttribute('data-contact-open')) {
       const context = button.getAttribute('data-contact-context')?.trim() ?? '';
+      contactHeading.textContent = context ? 'ขอใบเสนอราคา' : 'คุยเรื่องพื้นที่ของคุณ';
+      showLine(button.hasAttribute('data-contact-line'));
       selectedSpec.textContent = context;
       selectedSpec.hidden = !context;
       contactEmail.href = `mailto:${contact.email}?subject=${encodeURIComponent('สอบถามพื้น SPC และขอใบเสนอราคา COOLPLAN')}${context ? `&body=${encodeURIComponent(`สนใจสอบถามรายละเอียดและขอใบเสนอราคา\n\n${context}`)}` : ''}`;
