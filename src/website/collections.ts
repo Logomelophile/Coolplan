@@ -75,12 +75,14 @@ export interface PricingDiagnostics {
     rowIndex: number;
     total: number;
     perSqm: number;
+    packageId?: string;
     spec?: PackageSpecDiagnostics;
 }
 export class Pricing {
     private readonly abort = new AbortController();
     private readonly form: HTMLFormElement;
     private specs: PackageSpecs | null = null;
+    private selectedPackage: typeof PACKAGES[number] | null = null;
     private result: PricingDiagnostics = { sqm: 0, rowIndex: 1, total: 0, perSqm: 0 };
     constructor(private readonly section: HTMLElement) {
         this.form = section.querySelector('#estimate-form')!;
@@ -93,11 +95,18 @@ export class Pricing {
         this.form.addEventListener('submit', e => { e.preventDefault(); this.compute(); }, { signal: this.abort.signal });
         this.form.querySelectorAll<HTMLButtonElement>('[data-sqm]').forEach(b => b.addEventListener('click', () => { this.form.querySelector<HTMLInputElement>('#estimate-sqm')!.value = b.dataset.sqm!; this.compute(); }, { signal: this.abort.signal }));
         const oldCalculator = section.querySelector('#estimate-calculator')!;
-        this.specs = new PackageSpecs(section.querySelector('#package-specs')!, option => { select.value = String(option.priceIndex); this.compute(); });
+        this.specs = new PackageSpecs(section.querySelector('#package-specs')!, option => {
+            select.value = String(option.priceIndex);
+            if(!this.specs?.isPackage) this.selectedPackage=null;
+            this.compute();
+        });
         section.querySelector('.package-estimate-slot')!.append(this.form);
         oldCalculator.remove();
         section.querySelector('.package-estimate-slot')!.id = 'estimate-calculator';
         this.form.querySelector('label[for="estimate-product"]')!.classList.add('estimate-product-source');
+        const options=this.form.querySelector('#estimate-package-options')!;
+        options.innerHTML=`<span>เลือกใช้ราคาแพ็กเกจ</span><div>${PACKAGES.map(p=>`<button type="button" data-estimate-package="${p.id}" aria-pressed="false">${p.title}<small>${money(p.perSqm)}/ตร.ม.</small></button>`).join('')}<button type="button" data-estimate-package="custom" aria-pressed="true">ตามสเปค</button></div>`;
+        options.addEventListener('click',event=>{const button=(event.target as Element).closest<HTMLButtonElement>('[data-estimate-package]');if(button)this.selectPackage(button.dataset.estimatePackage!);},{signal:this.abort.signal});
         this.buildPackages();
         document.addEventListener('coolplan:estimate', this.onEstimateRequest as EventListener, { signal: this.abort.signal });
         this.compute();
@@ -107,11 +116,24 @@ export class Pricing {
     private onEstimateRequest = (event: CustomEvent<{
         seriesId?: string;
         productId?: string;
-    }>): void => { this.specs?.selectProduct(event.detail.productId ?? event.detail.seriesId ?? 'spc-5-180'); };
+    }>): void => { this.specs?.clearPackage();this.specs?.selectProduct(event.detail.productId ?? event.detail.seriesId ?? 'spc-5-180'); };
+    private selectPackage(id:string,scroll=false):void {
+        this.selectedPackage=PACKAGES.find(p=>p.id===id)??null;
+        if(this.selectedPackage){
+            this.form.querySelector<HTMLInputElement>('#estimate-sqm')!.value=String(this.selectedPackage.sqm);
+            this.specs?.usePackage(this.selectedPackage.perSqm);
+        }else{
+            this.specs?.clearPackage();
+            this.compute();
+        }
+        if(scroll)this.section.querySelector('#package-specs')?.scrollIntoView({behavior:reduced()?'auto':'smooth',block:'start'});
+    }
     private compute(): void {
         const sqm = Math.max(0, Math.min(100000, Number(this.form.querySelector<HTMLInputElement>('#estimate-sqm')!.value) || 0)), rowIndex = Number(this.form.querySelector<HTMLSelectElement>('#estimate-product')!.value) || 0, row = PRICE_LIST[rowIndex];
-        const ids = [...this.form.querySelectorAll<HTMLInputElement>('input[name="prep"]:checked')].map(i => i.value), material = sqm * row.pricePerSqm, install = sqm * row.installPerSqm, prep = ids.reduce((s, id) => s + sqm * (PREP_OPTIONS.find(o => o.id === id)?.perSqm ?? 0), 0), travel = sqm > 0 && sqm < TRAVEL_FEE.belowSqm ? TRAVEL_FEE.amount : 0;
-        const nights = this.form.querySelector<HTMLInputElement>('#estimate-night')!.checked ? Math.ceil(sqm / 100) : 0, nightFee = nights * NIGHT_WORK_PER_NIGHT, total = material + install + prep + travel + nightFee;
+        if(this.selectedPackage && sqm!==this.selectedPackage.sqm){this.selectedPackage=null;this.specs?.clearPackage();return;}
+        const offer=this.selectedPackage;
+        const ids = [...this.form.querySelectorAll<HTMLInputElement>('input[name="prep"]:checked')].map(i => i.value), material = sqm * row.pricePerSqm, install = sqm * row.installPerSqm, prep = ids.reduce((s, id) => s + sqm * (PREP_OPTIONS.find(o => o.id === id)?.perSqm ?? 0), 0), travel = !offer && sqm > 0 && sqm < TRAVEL_FEE.belowSqm ? TRAVEL_FEE.amount : 0;
+        const nights = this.form.querySelector<HTMLInputElement>('#estimate-night')!.checked ? Math.ceil(sqm / 100) : 0, nightFee = nights * NIGHT_WORK_PER_NIGHT, total = (offer?.total ?? material + install + travel) + prep + nightFee;
         const set = (id: string, value: string) => { this.form.querySelector(`#${id}`)!.textContent = value; };
         set('estimate-material', money(material));
         set('estimate-install', money(install));
@@ -120,16 +142,21 @@ export class Pricing {
         set('estimate-night-cost', nightFee ? `${money(nightFee)} (${nights} คืน)` : '—');
         set('estimate-total', money(total));
         set('estimate-per-sqm', sqm ? `${money(total / sqm)}/ตร.ม.` : '—');
-        set('estimate-summary', `${row.item} · ${sqm.toLocaleString('th-TH')} ตร.ม.`);
+        set('estimate-summary', offer ? `แพ็กเกจ ${offer.title} · SPC 5 มม.` : `${row.item} · ${sqm.toLocaleString('th-TH')} ตร.ม.`);
+        set('estimate-package-base',offer?money(offer.total):'—');
+        set('estimate-price-note',offer?'แพ็กเกจรวมบัว ตัวจบ และค่าติดตั้ง · งานปรับพื้นและงานกลางคืนคิดเพิ่มเมื่อเลือก ยืนยันราคาจริงหลังสำรวจหน้างาน':'ราคาประเมินเบื้องต้นตามใบราคา 2026 ยังไม่รวมภาษีมูลค่าเพิ่มและงานพิเศษ ยืนยันราคาจริงหลังสำรวจหน้างาน');
+        this.form.querySelector<HTMLElement>('#estimate-package-line')!.hidden=!offer;
+        ['estimate-material','estimate-install','estimate-travel'].forEach(id=>this.form.querySelector<HTMLElement>(`#${id}`)!.parentElement!.hidden=!!offer);
+        this.form.querySelectorAll<HTMLButtonElement>('[data-estimate-package]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.estimatePackage===(offer?.id??'custom'))));
         this.form.querySelector<HTMLElement>('#estimate-travel-note')!.hidden = !travel;
-        this.result = { sqm, rowIndex, total, perSqm: sqm ? total / sqm : 0 };
-        this.form.querySelector<HTMLButtonElement>('[data-contact-open]')!.dataset.contactContext = `${this.specs?.summary ?? row.item} · ${sqm} ตร.ม. · ประเมิน ${money(total)} · ยืนยันสเปคและราคาหลังสำรวจหน้างาน`;
+        this.result = { sqm, rowIndex, total, perSqm: sqm ? total / sqm : 0, packageId:offer?.id };
+        this.form.querySelector<HTMLButtonElement>('[data-contact-open]')!.dataset.contactContext = `${offer?`แพ็กเกจ ${offer.title} · ${money(offer.perSqm)}/ตร.ม. · รวมบัว ตัวจบ และค่าติดตั้ง · `:''}${this.specs?.summary ?? row.item} · ${sqm} ตร.ม. · ประเมิน ${money(total)} · ยืนยันสเปคและราคาหลังสำรวจหน้างาน`;
     }
     private buildPackages(): void {
         const host = this.section.querySelector('#packages')!;
         const names=['ห้องและคอนโด','บ้านของคุณ','งานโครงการ'];
-        host.innerHTML=`<div class="package-plan-grid">${PACKAGES.map((p,i)=>`<article class="package-plan ${p.id==='p100'?'is-recommended':''}" aria-labelledby="plan-${p.id}">${p.id==='p100'?'<span class="package-popular">แพ็กเกจแนะนำ</span>':''}<span class="package-starburst"><span>รวมบัว<br>รวมตัวจบ<br><b>รวมติดตั้ง!</b></span></span><header class="package-plan-heading"><p>${names[i]}</p><h3 id="plan-${p.id}">${p.title}</h3><span>${p.subtitle}</span></header><div class="package-plan-price"><strong>${money(p.perSqm)}</strong><span>/ ตร.ม.</span></div><p class="package-plan-total">ราคาเหมารวม <b>${money(p.total)}</b></p><button type="button" class="primary-button packages-cta" data-package="${p.id}" data-contact-open>${p.id==='p100'?'เลือกแพ็กเกจแนะนำ':'เลือกแพ็กเกจนี้'} <span aria-hidden="true">↗</span></button><div class="package-included"><span aria-hidden="true">✓</span> รวมบัว ตัวจบ และค่าติดตั้ง</div><ul class="package-plan-features"><li><span aria-hidden="true">✓</span> SPC หนารวม 5 มม. พร้อม IXPE</li><li><span aria-hidden="true">✓</span> รับประกันการติดตั้ง 10 ปี</li><li><span aria-hidden="true">✓</span> ระยะเวลาทำงาน ${p.days}</li></ul></article>`).join('')}</div><section class="package-shared-spec" aria-labelledby="package-spec-sheet-title"><div class="package-shared-heading"><span>THE MATERIAL</span><h3 id="package-spec-sheet-title">สเปคเดียวกัน<br>ทุกแพ็กเกจ</h3><p>SPC Click Lock 5 mm</p></div><dl><div><dt>ความหนารวม</dt><dd>5 มม.<small>SPC Core 4 + IXPE 1 มม.</small></dd></div><div><dt>ขนาดแผ่น</dt><dd>1,220 × 180<small>มิลลิเมตร · ระบบ Click Lock</small></dd></div><div><dt>ชั้นป้องกันรอย</dt><dd>0.3 มม.<small>Wear Layer</small></dd></div><div><dt>ผิวลายไม้</dt><dd>UV Layer<small>Printing Layer · ฟิล์มลายไม้</small></dd></div><div><dt>บรรจุต่อกล่อง</dt><dd>10 แผ่น<small>พื้นที่ 2.19 ตร.ม. / กล่อง</small></dd></div></dl></section>`;
-        host.querySelectorAll<HTMLButtonElement>('[data-package]').forEach(b => b.addEventListener('click', () => { const p = PACKAGES.find(p => p.id === b.dataset.package)!; b.dataset.contactContext = `แพ็กเกจ ${p.title} · ${PACKAGE_SPEC.name} · ${PACKAGE_SPEC.composition} · Wear Layer 0.3 มม. · ${money(p.perSqm)}/ตร.ม. · รวม ${money(p.total)} · รวมบัว ตัวจบ และค่าติดตั้ง · ให้ทีมงานยืนยันรายละเอียดหน้างาน`; }, { signal: this.abort.signal }));
+        host.innerHTML=`<div class="package-plan-grid">${PACKAGES.map((p,i)=>`<article class="package-plan ${p.id==='p100'?'is-recommended':''}" aria-labelledby="plan-${p.id}">${p.id==='p100'?'<span class="package-popular">แพ็กเกจแนะนำ</span>':''}<span class="package-starburst"><span>รวมบัว<br>รวมตัวจบ<br><b>รวมติดตั้ง!</b></span></span><header class="package-plan-heading"><p>${names[i]}</p><h3 id="plan-${p.id}">${p.title}</h3><span>${p.subtitle}</span></header><div class="package-plan-price"><strong>${money(p.perSqm)}</strong><span>/ ตร.ม.</span></div><p class="package-plan-total">ราคาเหมารวม <b>${money(p.total)}</b></p><button type="button" class="primary-button packages-cta" data-package="${p.id}">${p.id==='p100'?'เลือกแพ็กเกจแนะนำ':'เลือกแพ็กเกจนี้'} <span aria-hidden="true">↗</span></button><div class="package-included"><span aria-hidden="true">✓</span> รวมบัว ตัวจบ และค่าติดตั้ง</div><ul class="package-plan-features"><li><span aria-hidden="true">✓</span> SPC หนารวม 5 มม. พร้อม IXPE</li><li><span aria-hidden="true">✓</span> รับประกันการติดตั้ง 10 ปี</li><li><span aria-hidden="true">✓</span> ระยะเวลาทำงาน ${p.days}</li></ul></article>`).join('')}</div><section class="package-shared-spec" aria-labelledby="package-spec-sheet-title"><div class="package-shared-heading"><span>THE MATERIAL</span><h3 id="package-spec-sheet-title">สเปคเดียวกัน<br>ทุกแพ็กเกจ</h3><p>SPC Click Lock 5 mm</p></div><dl><div><dt>ความหนารวม</dt><dd>5 มม.<small>SPC Core 4 + IXPE 1 มม.</small></dd></div><div><dt>ขนาดแผ่น</dt><dd>1,220 × 180<small>มิลลิเมตร · ระบบ Click Lock</small></dd></div><div><dt>ชั้นป้องกันรอย</dt><dd>0.3 มม.<small>Wear Layer</small></dd></div><div><dt>ผิวลายไม้</dt><dd>UV Layer<small>Printing Layer · ฟิล์มลายไม้</small></dd></div><div><dt>บรรจุต่อกล่อง</dt><dd>10 แผ่น<small>พื้นที่ 2.19 ตร.ม. / กล่อง</small></dd></div></dl></section>`;
+        host.querySelectorAll<HTMLButtonElement>('[data-package]').forEach(b=>b.addEventListener('click',()=>this.selectPackage(b.dataset.package!,true),{signal:this.abort.signal}));
     }
     dispose(): void { this.specs?.dispose(); this.abort.abort(); }
 }

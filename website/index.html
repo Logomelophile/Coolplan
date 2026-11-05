@@ -123,7 +123,6 @@
       </div>
     </section>
     <section class="pricing" id="pricing" aria-labelledby="pricing-title">
-      <section class="package-specs" id="package-specs" aria-labelledby="package-specs-title"></section>
       <div class="pricing-package-stage">
         <header class="pricing-heading">
           <div><span class="pricing-eyebrow">FLOORING PACKAGES</span><h2 id="pricing-title">แพ็กเกจเหมารวมติดตั้ง</h2></div>
@@ -133,6 +132,7 @@
         <div id="packages" role="region" aria-label="แพ็กเกจ 30, 100 และ 1,000 ตารางเมตร" tabindex="0"></div>
         <p class="packages-footnote">แพ็กเกจอ้างอิง SPC ลายไม้ · สเปคที่เลือกให้ทีมงานยืนยันราคา</p>
       </div>
+      <section class="package-specs" id="package-specs" aria-labelledby="package-specs-title"></section>
       <section class="pricing-calculator" id="estimate-calculator" aria-labelledby="estimate-heading">
         <header class="pricing-calculator-heading">
           <span class="pricing-eyebrow">02 / YOUR SPACE, YOUR ESTIMATE</span>
@@ -143,6 +143,7 @@
         <form class="estimate" id="estimate-form" novalidate>
           <div class="estimate-fields">
             <h3><i>฿</i>ประเมินราคาติดตั้ง</h3>
+            <div id="estimate-package-options" class="estimate-package-options" role="group" aria-label="เลือกใช้ราคาแพ็กเกจ"></div>
             <label for="estimate-sqm">พื้นที่ (ตารางเมตร)<input id="estimate-sqm" name="sqm" type="number" min="1" max="100000" step="1" value="40" inputmode="numeric" /></label>
             <div class="estimate-quick" aria-label="พื้นที่ยอดนิยม"><button type="button" data-sqm="30">30 ตร.ม.</button><button type="button" data-sqm="60">60 ตร.ม.</button><button type="button" data-sqm="100">100 ตร.ม.</button><button type="button" data-sqm="250">250 ตร.ม.</button><button type="button" data-sqm="1000">1,000 ตร.ม.</button></div>
             <label for="estimate-product">รุ่น / ความหนา<select id="estimate-product" name="product"></select></label>
@@ -154,6 +155,7 @@
             <div class="estimate-total" aria-live="polite" aria-atomic="true"><span id="estimate-summary">ใส่พื้นที่เพื่อคำนวณ</span><strong id="estimate-total">฿0</strong></div>
             <p class="estimate-per" id="estimate-per-sqm">—</p>
             <div class="estimate-breakdown" aria-live="polite">
+              <div id="estimate-package-line" hidden><span>ราคาแพ็กเกจรวมติดตั้ง</span><span id="estimate-package-base">—</span></div>
               <div><span>ค่าวัสดุ</span><span id="estimate-material">฿0</span></div>
               <div><span>ค่าติดตั้ง</span><span id="estimate-install">฿0</span></div>
               <div><span>งานปรับพื้น</span><span id="estimate-prep-cost">฿0</span></div>
@@ -161,7 +163,7 @@
               <div><span>งานกลางคืน</span><span id="estimate-night-cost">—</span></div>
             </div>
             <p class="estimate-note" id="estimate-travel-note" hidden>พื้นที่น้อยกว่า 50 ตร.ม. ในเขตกรุงเทพฯ และปริมณฑล มีค่าเดินทาง 2,500 บาท</p>
-            <p class="estimate-note">ราคาประเมินเบื้องต้นตามใบราคา 2026 ยังไม่รวมภาษีมูลค่าเพิ่มและงานพิเศษ ยืนยันราคาจริงหลังสำรวจหน้างาน</p>
+            <p class="estimate-note" id="estimate-price-note">ราคาประเมินเบื้องต้นตามใบราคา 2026 ยังไม่รวมภาษีมูลค่าเพิ่มและงานพิเศษ ยืนยันราคาจริงหลังสำรวจหน้างาน</p>
             <div class="estimate-actions"><button type="button" class="primary-button" data-contact-open>ขอใบเสนอราคา <span data-icon="arrow"></span></button></div>
           </div>
         </form>

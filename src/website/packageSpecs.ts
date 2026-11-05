@@ -1,4 +1,4 @@
-import { PRICE_LIST, money } from './catalog';
+import { PACKAGE_SPEC, PRICE_LIST, money } from './catalog';
 import { catalogueFinishes, FLOOR_SELECTIONS, selectionImage, sizeLabel, formatDimensions, type FloorSelection } from './floorSelections';
 import type { SpecimenModel } from './SpecimenModel';
 import type { CatalogueRoomPreview } from './CatalogueRoomPreview';
@@ -20,6 +20,7 @@ export class PackageSpecs {
     private readonly abort = new AbortController();
     private product = FLOOR_SELECTIONS.find(p => p.id === 'spc-5-180')!;
     private foam = false;
+    private offerRate: number | null = null;
     private shade = 0;
     private model: SpecimenModel | null = null;
     private roomPreview: CatalogueRoomPreview | null = null;
@@ -59,10 +60,18 @@ export class PackageSpecs {
         this.updateModel();
     }
     private finishes() { return this.product.series ? catalogueFinishes(this.product.series) : [{ code: 'ให้ทีมงานยืนยันสีตามรุ่น', image: null }]; }
-    get diagnostics(): PackageSpecDiagnostics { const finish = this.finishes()[this.shade] ?? this.finishes()[0]; return { thicknessMm: this.product.thicknessMm, foam: this.foam, pattern: this.product.family === 'herringbone' ? 'herringbone' : 'straight', seriesId: this.product.id, productId: this.product.id, rowIndex: this.product.priceIndex, code: finish.code, image: finish.image ?? selectionImage(this.product), family: this.product.family, sizeMm: this.product.sizeMm, modelReady: !!this.model }; }
-    get summary(): string { return `${this.product.name} · ${sizeLabel(this.product)} · ${this.diagnostics.code} · ${this.foam ? 'ต้องการโฟมรองพื้น (ยืนยันราคาเพิ่มเติม)' : 'ไม่เพิ่มโฟม'}`; }
+    get isPackage(): boolean { return this.offerRate !== null; }
+    usePackage(rate: number): void {
+        if(this.product.id !== 'spc-5-180') this.shade=0;
+        this.product=FLOOR_SELECTIONS.find(p=>p.id==='spc-5-180')!;
+        this.offerRate=rate;
+        this.render(true);
+    }
+    clearPackage(): void { if(this.isPackage){this.offerRate=null;this.render(false);} }
+    get diagnostics(): PackageSpecDiagnostics { const finish = this.finishes()[this.shade] ?? this.finishes()[0]; return { thicknessMm: this.product.thicknessMm, foam: this.foam || this.isPackage, pattern: this.product.family === 'herringbone' ? 'herringbone' : 'straight', seriesId: this.product.id, productId: this.product.id, rowIndex: this.product.priceIndex, code: finish.code, image: finish.image ?? selectionImage(this.product), family: this.product.family, sizeMm: this.product.sizeMm, modelReady: !!this.model }; }
+    get summary(): string { return this.isPackage ? `${PACKAGE_SPEC.name} · ${PACKAGE_SPEC.composition} · ${PACKAGE_SPEC.size} · ${this.diagnostics.code}` : `${this.product.name} · ${sizeLabel(this.product)} · ${this.diagnostics.code} · ${this.foam ? 'ต้องการโฟมรองพื้น (ยืนยันราคาเพิ่มเติม)' : 'ไม่เพิ่มโฟม'}`; }
     selectProduct(id: string): void { const p = FLOOR_SELECTIONS.find(p => p.id === id); if (!p)
-        return; this.product = p; this.shade = 0; if (p.install === 'glue')
+        return; if(p.id!==this.product.id)this.offerRate=null; this.product = p; this.shade = 0; if (p.install === 'glue')
         this.foam = false; this.render(true); }
     selectPrice(index: number): void { const p = FLOOR_SELECTIONS.find(p => p.priceIndex === index); if (p)
         this.selectProduct(p.id); }
@@ -86,7 +95,7 @@ export class PackageSpecs {
     } };
     private updateModel(): void {
         const s = this.diagnostics;
-        void this.model?.set({ thickness: s.thicknessMm, foam: s.foam, family: s.family, image: s.image, herringbone: s.pattern === 'herringbone' });
+        void this.model?.set({ thickness: this.isPackage ? 4 : s.thicknessMm, foam: s.foam, family: s.family, image: s.image, herringbone: s.pattern === 'herringbone' });
         void this.roomPreview?.set({ code: s.code, image: s.image, sizeMm: s.sizeMm, herringbone: s.pattern === 'herringbone', illustrative: !this.finishes()[this.shade]?.image });
     }
     private render(rebuild: boolean): void {
@@ -103,7 +112,8 @@ export class PackageSpecs {
             this.host.querySelector('.package-shades')!.innerHTML = this.finishes().map((f, i) => `<button type="button" data-spec-shade="${i}" aria-label="${f.code}" title="${f.code}">${f.image ? `<img src="${f.image}" alt="" loading="lazy" decoding="async"/>` : `<span>${f.code}</span>`}</button>`).join('');
         }
         this.host.querySelectorAll<HTMLButtonElement>('[data-spec-shade]').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.specShade) === this.shade)));
-        this.host.querySelectorAll<HTMLButtonElement>('[data-spec-foam]').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.specFoam === 'true') === this.foam)));
+        this.host.querySelectorAll<HTMLButtonElement>('[data-spec-foam]').forEach(b => {b.disabled=this.isPackage;b.setAttribute('aria-pressed', String((b.dataset.specFoam === 'true') === s.foam));});
+        this.host.querySelector('.package-spec-option-note')!.textContent=this.isPackage?'แพ็กเกจรวม IXPE 1 มม. แล้ว':'ให้ทีมงานยืนยันชนิดโฟมและรุ่นที่รองรับ ราคาโฟมยังไม่รวมในยอดประเมิน';
         this.host.querySelector<HTMLElement>('.package-foam-field')!.hidden = this.product.install === 'glue';
         this.host.querySelectorAll<HTMLButtonElement>('[data-spec-pattern]').forEach(b => { const pattern = this.product.family === 'herringbone' ? 'herringbone' : this.product.id === 'lvt-cement' ? 'cement' : 'straight'; b.setAttribute('aria-pressed', String(b.dataset.specPattern === pattern)); b.hidden = b.dataset.specPattern === 'cement' && this.product.family !== 'lvt'; });
         this.host.querySelector<HTMLImageElement>('#package-model-texture')!.src = s.image;
@@ -115,8 +125,8 @@ export class PackageSpecs {
         this.host.querySelector('#package-model-install')!.textContent = this.product.install === 'glue' ? 'ติดตั้งแบบทากาว' : 'ติดตั้งแบบคลิกล็อก';
         this.host.querySelector('#package-selected-spec')!.textContent = this.summary;
         this.host.querySelector('#package-selected-series')!.textContent = this.finishes()[this.shade]?.image ? 'ภาพเฉดสีจากแค็ตตาล็อก 2026' : 'ยังไม่มีภาพของเฉดนี้ ภาพด้านข้างเป็นตัวอย่างตระกูลสินค้า ให้ทีมงานยืนยันสี';
-        this.host.querySelector('#package-spec-size-note')!.textContent = this.product.series?.note ?? (this.product.series && row.sizeMm && row.sizeMm !== this.product.sizeMm ? `ขนาดในใบราคา ${formatDimensions(row.sizeMm)} ต่างจากแค็ตตาล็อก กรุณายืนยันขนาดก่อนสั่งซื้อ` : '');
-        this.host.querySelector('.package-unit-price')!.innerHTML = `<span>วัสดุ ${money(row.pricePerSqm)} + ติดตั้ง ${money(row.installPerSqm)}</span><strong>${money(row.pricePerSqm + row.installPerSqm)}<small> / ตร.ม.</small></strong>`;
+        this.host.querySelector('#package-spec-size-note')!.textContent = this.isPackage ? 'สเปคตามแพ็กเกจ: Wear Layer 0.3 มม. · UV Layer · Click Lock' : this.product.series?.note ?? (this.product.series && row.sizeMm && row.sizeMm !== this.product.sizeMm ? `ขนาดในใบราคา ${formatDimensions(row.sizeMm)} ต่างจากแค็ตตาล็อก กรุณายืนยันขนาดก่อนสั่งซื้อ` : '');
+        this.host.querySelector('.package-unit-price')!.innerHTML = `<span>${this.isPackage?'ราคาแพ็กเกจ · รวมบัว ตัวจบ และค่าติดตั้ง':`วัสดุ ${money(row.pricePerSqm)} + ติดตั้ง ${money(row.installPerSqm)}`}</span><strong>${money(this.offerRate ?? row.pricePerSqm + row.installPerSqm)}<small> / ตร.ม.</small></strong>`;
         this.host.querySelector<HTMLButtonElement>('.package-spec-consult')!.dataset.contactContext = this.summary;
         this.onChange(this.product);
         this.updateModel();

@@ -41,3 +41,11 @@
 @media(max-width:850px){.package-plan-grid{grid-template-columns:1fr;gap:28px;max-width:500px;margin:auto}.package-plan,.package-plan.is-recommended{padding:27px 25px 25px}.package-plan-heading>span{min-height:0}.package-plan-heading h3{font-size:29px}.package-plan-price strong{font-size:46px}.package-plan-price{margin-top:20px}.package-plan-total{margin-bottom:18px}.package-plan-features{gap:10px}.package-starburst{right:-8px;width:96px}.package-starburst>span{font-size:11px}.package-shared-spec{grid-template-columns:1fr;max-width:500px;margin:28px auto 0;gap:18px}.package-shared-heading h3 br{display:none}.package-shared-spec dl{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.package-shared-spec dd{font-size:13px}}
 @media(prefers-reduced-motion:reduce){.package-plan{transition:none}.package-plan:hover{transform:none}}
 @media(max-width:350px){.package-starburst{width:84px}.package-starburst>span{font-size:10px}}
+/* Package rates can also be selected directly in the estimate. */
+.estimate .estimate-breakdown>[hidden]{display:none}
+.estimate-package-options{display:grid;gap:8px;margin:0 0 12px}
+.estimate-package-options>span{font-size:11px;color:#e6d8ed}
+.estimate-package-options>div{display:flex;gap:6px;flex-wrap:wrap}
+.estimate-package-options button{flex:1 1 auto;border:1px solid #ffffff35;border-radius:9px;background:#ffffff0c;color:#fff;padding:7px 8px;font:inherit;font-size:10px;line-height:1.4;white-space:nowrap;cursor:pointer}
+.estimate-package-options button small{display:block;font-size:9px;opacity:.8;margin-top:3px}
+.estimate-package-options button[aria-pressed=true]{border-color:#f6a673;background:#e97739;color:#20151c}
