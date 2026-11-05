@@ -35,8 +35,9 @@
 .collection-actions{display:flex;flex-wrap:wrap;gap:8px}
 .collection-actions button{display:inline-flex;align-items:center;gap:6px;border:1px solid #d9cfe2;border-radius:20px;background:#fff;color:#4d3a5c;font-size:12px;padding:7px 13px;cursor:pointer}
 .collection-actions button svg{width:14px;height:14px}
-.collection-actions .collection-estimate{background:var(--purple);color:#fff;border-color:transparent}
-.collection-actions button:hover{border-color:var(--purple)}
+.collection-actions .collection-expand,.collection-actions .collection-quote{background:#214b80;color:#fff;border-color:#214b80}
+.collection-actions .collection-expand:hover,.collection-actions .collection-quote:hover{background:#173963;border-color:#173963}
+.collection-quote-actions{margin-top:12px}
 .collection-shades{grid-column:1/-1;padding:0 18px 18px}
 .collection-shade-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
 .collection-shade-strip figure{margin:0;display:grid;gap:5px}
