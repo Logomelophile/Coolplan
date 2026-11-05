@@ -1,38 +1,23 @@
-/* Three continuous column frames within the existing comparison table. */
-#packages .package-spec-table{border:0;border-radius:0;overflow:visible;table-layout:fixed;min-width:960px;font-size:13px}
-#packages .package-spec-table th,#packages .package-spec-table td{padding:11px 18px;line-height:1.65}
-#packages .package-spec-table thead th:first-child,#packages .package-spec-table tbody th{width:17%;background:#fff;color:#766180;font-weight:500;position:static}
-#packages .package-spec-table thead th:first-child{vertical-align:bottom;padding-bottom:24px}
-#packages .package-spec-table thead th:first-child small{font-size:10px;color:#9b8ca3}
-#packages .package-spec-table .package-column{--offer:#79558c;border-left:2px solid var(--offer);border-right:2px solid var(--offer);background:#fdfbff}
-#packages .package-spec-table .package-column.is-recommended{--offer:#e97739;background:#fff8f2}
-#packages .package-spec-table thead .package-column{border-top:3px solid var(--offer);border-radius:18px 18px 0 0;padding:20px 18px 16px;vertical-align:top}
-#packages .package-spec-table .package-actions .package-column{border-bottom:3px solid var(--offer);border-radius:0 0 18px 18px;padding-bottom:23px}
-.package-recommendation{display:inline-block;border-radius:20px;background:#eee5f3;color:#765088;padding:4px 10px;font-size:10px;margin-bottom:15px;letter-spacing:.2px}
-.is-recommended .package-recommendation{background:#e97739;color:#fff;font-weight:600}
-#packages .package-spec-table .packages-title{font-size:clamp(24px,2.4vw,35px);color:var(--offer)}
-#packages .package-spec-table .packages-subtitle{font-size:11px;min-height:34px;line-height:1.6;margin-top:7px}
-.package-material{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:15px}
-.package-material>div{display:grid;gap:5px;color:#644576}
-.package-material strong{font:500 45px/1 Arial,sans-serif;letter-spacing:-2px}
-.package-material strong small{font-size:19px;letter-spacing:0}
-.package-material>div>span{font-size:10px;white-space:nowrap;letter-spacing:-.2px}
-.package-starburst{display:grid;place-items:center;flex-shrink:0;width:100px;height:100px;background:#79558c;color:#fff;clip-path:polygon(50% 0%,57% 7%,66% 3%,71% 12%,81% 10%,83% 21%,94% 22%,92% 33%,100% 39%,94% 48%,100% 57%,91% 63%,94% 74%,83% 77%,81% 88%,70% 86%,64% 97%,55% 92%,47% 100%,40% 92%,29% 96%,25% 85%,14% 86%,13% 75%,3% 70%,8% 60%,0% 52%,7% 44%,2% 34%,13% 29%,12% 18%,23% 17%,27% 7%,38% 10%,43% 1%);transform:rotate(-8deg)}
-.package-starburst>span{font-size:11px;line-height:1.55;text-align:center;transform:rotate(8deg);font-weight:500}
-.package-starburst b{font-weight:700;font-size:12px}
+/* Original table sizing; badges are overlays and never participate in row height. */
+#packages .package-spec-table{overflow:visible}
+#packages .package-spec-table .package-column{--offer:#79558c;border-left:2px solid var(--offer);border-right:2px solid var(--offer)}
+#packages .package-spec-table .is-recommended{--offer:#e97739;background:#fff8f2}
+#packages .package-spec-table thead .package-column{position:relative;border-top:2px solid var(--offer)}
+#packages .package-spec-table .package-actions .package-column{border-bottom:2px solid var(--offer)}
+#packages .package-spec-table .packages-title{color:var(--offer)}
+#packages .package-spec-table .packages-subtitle{max-width:calc(100% - 62px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.package-recommendation{display:inline-block;font:500 9px/1.5 'Noto Sans Thai',sans-serif;background:#e97739;color:#fff;border-radius:8px;padding:0 5px;margin-left:6px;vertical-align:middle}
+.package-compact-spec{display:grid;line-height:1.65;font-size:11.5px;gap:0}
+.package-compact-spec b{font-weight:600}
+.package-starburst{position:absolute;z-index:3;right:7px;top:-25px;display:grid;place-items:center;width:64px;height:64px;background:#79558c;color:#fff;clip-path:polygon(50% 0%,57% 7%,66% 3%,71% 12%,81% 10%,83% 21%,94% 22%,92% 33%,100% 39%,94% 48%,100% 57%,91% 63%,94% 74%,83% 77%,81% 88%,70% 86%,64% 97%,55% 92%,47% 100%,40% 92%,29% 96%,25% 85%,14% 86%,13% 75%,3% 70%,8% 60%,0% 52%,7% 44%,2% 34%,13% 29%,12% 18%,23% 17%,27% 7%,38% 10%,43% 1%);transform:rotate(-8deg);pointer-events:none}
+.package-starburst>span{font-size:8px;line-height:1.5;text-align:center;transform:rotate(8deg);font-weight:500}
+.package-starburst b{font-weight:700;font-size:8.5px}
 .is-recommended .package-starburst{background:#e97739}
-#packages .package-spec-table .package-rate td strong{font:600 28px/1.2 Arial,sans-serif;color:var(--offer)}
-.package-rate td>small{font-size:10px;color:#97879f;margin-left:5px}
-#packages .package-spec-table .packages-price td strong{font-size:27px;color:var(--offer)}
-#packages .package-spec-table .packages-cta{background:var(--offer);font-size:12px;padding:11px 15px;width:100%;justify-content:center}
-#packages .package-spec-table .packages-check{color:var(--offer);background:#ece3f0;width:23px;height:23px;font-size:12px}
-#packages .package-spec-table .is-recommended .packages-check{background:#ffdfc9}
-.package-action-label{font-size:11px}
-@media(max-width:1100px){.pricing-package-stage .packages-scroll-hint{display:block;margin-bottom:16px}.package-spec-table caption{padding-top:4px}}
+#packages .package-spec-table .packages-cta{background:var(--offer)}
 @media(max-width:600px){
- #packages .package-spec-table{width:924px;min-width:924px}
- #packages .package-spec-table thead th:first-child,#packages .package-spec-table tbody th{display:none}
- #packages .package-spec-table td::before{content:attr(data-label);display:block;font-size:10px;color:#97849d;margin-bottom:3px;font-weight:400}
- #packages .package-spec-table .package-actions td::before{display:none}
- #packages .package-spec-table td,#packages .package-spec-table thead .package-column{padding-left:17px;padding-right:17px}
+ #packages .package-spec-table .packages-title{font-size:12px;white-space:nowrap}
+ #packages .package-spec-table .packages-subtitle{max-width:calc(100% - 36px)}
+ #packages .package-spec-table .package-recommendation{position:absolute;left:15px;top:3px;font-size:7px;margin:0}
+ .package-starburst{width:54px;height:54px;right:3px;top:-27px}
+ .package-starburst>span{font-size:7px}.package-starburst b{font-size:7.5px}
 }
