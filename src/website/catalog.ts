@@ -116,7 +116,16 @@ export const PRICE_NOTES = [
   'พื้นที่ติดตั้งอยู่ในเขตกรุงเทพฯ และปริมณฑล พื้นที่น้อยกว่า 50 ตร.ม. คิดค่าเดินทาง 2,500 บาท',
 ];
 
-/** Fixed-price packages (SPC wood-look, installation included). */
+/** Package specification supplied by the owner on 5 November 2026 (KS5/KSV sheet). */
+export const PACKAGE_SPEC = {
+  name: 'SPC Click Lock 5 mm', composition: 'SPC 4 มม. + IXPE 1 มม.',
+  thickness: '5 มม. รวมชั้นรอง', size: '1,220 × 180 มม.',
+  surface: 'Printing Layer · ฟิล์มลายไม้', wear: 'Wear Layer 0.3 มม.',
+  core: 'SPC Core 4 มม.', backing: 'IXPE 1 มม.', coating: 'UV Layer',
+  installation: 'Click Lock', packing: '10 แผ่น / 2.19 ตร.ม. ต่อกล่อง',
+} as const;
+
+/** Fixed-price packages, including skirting, trims and installation. */
 export const PACKAGES = [
   { id: 'p30', sqm: 30, title: '30 ตร.ม.', subtitle: 'สำหรับห้องต่าง ๆ ในบ้านหรือคอนโด', perSqm: 750, total: 22500, days: '1 วัน', warrantyYears: 10, description: 'แพ็กเกจปูพื้น SPC 30 ตารางเมตร ตก ตร.ม. ละ 750 บาท รวมบัว ตัวจบ และค่าติดตั้งแล้ว สำหรับคอนโดหรือบ้าน รีโนเวทด้านพื้นด้วย SPC ลายไม้ ให้บรรยากาศอบอุ่น เรียบหรู ดูแลตั้งแต่ให้คำปรึกษา เลือกลายพื้น จนส่งมอบงาน' },
   { id: 'p100', sqm: 100, title: '100 ตร.ม.', subtitle: 'สำหรับรีโนเวทบ้าน', perSqm: 680, total: 68000, days: '1 วัน', warrantyYears: 10, description: 'แพ็กเกจปูพื้น SPC 100 ตารางเมตร ตก ตร.ม. ละ 680 บาท รวมบัว ตัวจบ และค่าติดตั้งแล้ว สำหรับคอนโดหรือบ้าน รีโนเวทด้านพื้นด้วย SPC ลายไม้ ให้บรรยากาศอบอุ่น เรียบหรู ดูแลตั้งแต่ให้คำปรึกษา เลือกลายพื้น จนส่งมอบงาน' },

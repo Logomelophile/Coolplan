@@ -136,7 +136,11 @@ export async function verifyRedesign(page, { initialize, state, check, outputPat
     assert.ok((await page.locator('#contact-selection').innerText()).includes(selected.code));
     await page.keyboard.press('Escape');
     await page.locator('.packages-cta').first().click();
-    assert.ok((await page.locator('#contact-selection').innerText()).includes(selected.code));
+    const packageEnquiry=await page.locator('#contact-selection').innerText();
+    assert.ok(packageEnquiry.includes('SPC Click Lock 5 mm') && packageEnquiry.includes('SPC 4 มม. + IXPE 1 มม.'));
+    assert.ok(!packageEnquiry.includes(selected.code),'Fixed-spec packages must not inherit a different catalogue selection');
+    assert.equal(await page.locator('.package-starburst').count(),3);
+    assert.match(await page.locator('.package-spec-table thead .is-recommended').innerText(),/100 ตร.ม./);
     await page.keyboard.press('Escape');
     await page.locator('[data-spec-family="lvt"]').click();
     await page.locator('[data-spec-row="7"]').click();
