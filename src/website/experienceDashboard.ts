@@ -277,6 +277,10 @@ export class ExperienceIntro {
             return label.getBoundingClientRect().bottom - entranceY;
         })) - lineEntranceY - scene.top;
         const dockTop = labelBottom + 8;
+        const dockPhotoTop = dockTop + dockRing + 6;
+        // On phones, keep archived photos below the shared copy and dashboard row.
+        const phone = this.sticky.clientWidth <= 520 && document.body.classList.contains('mobile-site');
+        const photoEndY = phone ? Math.max(dockPhotoTop, pile.top - scene.top) : dockPhotoTop;
         this.tokenPoses = this.panelHosts.map((host, index) => {
             const node = index < 2 ? this.milestones[index + 1].getBoundingClientRect() : this.section.querySelector('.experience-year-end')!.getBoundingClientRect();
             const center = Math.max(34, Math.min(this.sticky.clientWidth - 34, node.left + node.width / 2 - stage.left)) + stage.left - scene.left;
@@ -292,7 +296,7 @@ export class ExperienceIntro {
             const finalSize = narrow ? Math.min(90, slot.height * .48, slot.width * .7) : Math.min(140, slot.height - 30, slot.width * .36), summaryScale = finalSize / ring.clientWidth;
             return {
                 panel: { x: dashboard.left - scene.left, y: dashboard.top - scene.top, endX: center - dockRing / 2 - (panel.offsetLeft + ring.offsetLeft) * metricScale, endY: dockTop - (panel.offsetTop + ring.offsetTop) * metricScale, scale: metricScale, gatherX: slot.left + (narrow ? (slot.width - finalSize) / 2 : 18) - scene.left - (panel.offsetLeft + ring.offsetLeft) * summaryScale, gatherY: slot.top + (narrow ? 15 : (slot.height - finalSize) / 2) - scene.top - (panel.offsetTop + ring.offsetTop) * summaryScale, gatherScale: summaryScale },
-                photo: { x: pile.left - scene.left, y: pile.top - scene.top, endX: center - dockPhoto / 2 - 5, endY: dockTop + dockRing + 6, scale: photoScale, gatherX: slot.right - (narrow ? 34 : 82) - scene.left, gatherY: slot.top + (narrow ? slot.height * .6 : 10) - scene.top, gatherScale: narrow ? 22 / Math.max(1, this.photos[index * 3].offsetWidth) : photoScale },
+                photo: { x: pile.left - scene.left, y: pile.top - scene.top, endX: center - dockPhoto / 2 - 5, endY: photoEndY, scale: photoScale, gatherX: slot.right - (narrow ? 34 : 82) - scene.left, gatherY: slot.top + (narrow ? slot.height * .6 : 10) - scene.top, gatherScale: narrow ? 22 / Math.max(1, this.photos[index * 3].offsetWidth) : photoScale },
             };
         });
     }
