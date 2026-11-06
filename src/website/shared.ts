@@ -77,7 +77,7 @@ export function mountFooter() {
     <div class="footer-columns">
       <div class="footer-brand"><a class="site-logo" href="/website/" aria-label="COOLPLAN หน้าแรก">COOLPLAN<small>SPC FLOORING</small></a><p>พื้นที่ดี เริ่มต้นจากพื้นฐานที่ดีกว่า<br>ค้นหาสีพื้น วางแผนพื้นที่<br>และเลือกสิ่งที่เข้ากับชีวิตของคุณ</p></div>
       <nav class="footer-menu" aria-label="รู้จัก COOLPLAN"><h3>รู้จัก COOLPLAN</h3><a href="/website/">หน้าแรก</a><a href="/ceo/">CEO & Brand</a><a href="/website/#collections">สินค้าของเรา</a></nav>
-      <nav class="footer-menu" aria-label="วางแผนพื้นของคุณ"><h3>วางแผนพื้นของคุณ</h3><a href="/website/#rooms">ลองสีพื้นในห้อง</a><a href="/website/#package-specs">คำนวณราคาเบื้องต้น</a><a href="/">Material Studio · ดูชั้นวัสดุ</a><a href="/room/">Room Motion · ห้อง 3D</a><button type="button" data-contact-open>ปรึกษาเรื่องพื้น</button></nav>
+      <nav class="footer-menu" aria-label="วางแผนพื้นของคุณ"><h3>วางแผนพื้นของคุณ</h3><a href="/website/#rooms">ลองสีพื้นในห้อง</a><a href="/website/#package-specs">คำนวณราคาเบื้องต้น</a><a href="/room/">Room Motion · ห้อง 3D</a><button type="button" data-contact-open>ปรึกษาเรื่องพื้น</button></nav>
       <address class="footer-contact" id="contact"><h3>ติดต่อเรา</h3><p>${contact.name}</p><a class="footer-phone" href="tel:${contact.tel}">084 670 7551 ${icon('arrow')}</a><a class="footer-email" href="mailto:${contact.email}">${contact.email}</a><button type="button" data-contact-open>ดูช่องทางติดต่อ ${icon('arrow')}</button></address>
     </div>
     <nav class="footer-social" aria-label="ช่องทางออนไลน์ COOLPLAN">${socialLinks(true)}</nav>
