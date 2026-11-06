@@ -32,7 +32,7 @@ for (const folder of ['demo-dist', 'room-dist', 'website-dist']) {
 for (const file of ['LICENSE', 'THIRD_PARTY_NOTICES.txt']) {
   cpSync(resolve(root, file), resolve(output, file));
 }
-for (const route of ['', 'room', 'website', 'calculator', 'ceo', 'next-gen']) {
+for (const route of ['', 'room', 'website', 'calculator', 'ceo', 'next-gen', 'mobile-preview']) {
   if (!existsSync(resolve(output, route, 'index.html'))) {
     throw new Error(`Missing built route: /${route}`);
   }
@@ -40,4 +40,4 @@ for (const route of ['', 'room', 'website', 'calculator', 'ceo', 'next-gen']) {
 if (!readFileSync(resolve(output, 'ceo/index.html'), 'utf8').includes('id="next-gen"')) {
   throw new Error('The combined CEO / Next Gen page is missing');
 }
-console.log('\nComplete V1 site: site-dist/ (6 routes). Run npm run preview:site.');
+console.log('\nComplete V1 site: site-dist/ (7 routes). Run npm run preview:site.');

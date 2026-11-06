@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>พรีวิวมือถือ | COOLPLAN</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: system-ui, sans-serif;
+      color: #252d26;
+      background: #e8e6d8;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100dvh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 24px 12px;
+      background: radial-gradient(ellipse at 50% 12%, #f5f2e8, #e8e6d8 76%);
+    }
+
+    main {
+      width: min(100%, 406px);
+      text-align: center;
+    }
+
+    .brand {
+      margin: 0;
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: .22em;
+    }
+
+    h1 {
+      margin: 6px 0 18px;
+      font-size: 22px;
+      line-height: 1.3;
+    }
+
+    .phone {
+      position: relative;
+      overflow: hidden;
+      border: 8px solid #252d26;
+      border-radius: 42px;
+      background: #fff;
+      box-shadow: 0 26px 46px -20px #252d2680;
+    }
+
+    .phone-top, .phone-bottom {
+      display: grid;
+      place-items: center;
+      height: 17px;
+      background: #fff;
+    }
+
+    .phone-top::before, .phone-bottom::before {
+      content: "";
+      border-radius: 20px;
+      background: #252d26;
+    }
+
+    .phone-top::before { width: 64px; height: 6px; }
+    .phone-bottom::before { width: 96px; height: 4px; }
+
+    iframe {
+      display: block;
+      width: 100%;
+      height: clamp(430px, calc(100dvh - 220px), 844px);
+      border: 0;
+      background: #fff;
+    }
+
+    .live-link {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 8px 12px;
+      color: inherit;
+      font-size: 14px;
+      text-underline-offset: 4px;
+    }
+
+    :focus-visible {
+      outline: 2px solid #9d532b;
+      outline-offset: 3px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="brand">COOLPLAN</p>
+    <h1>พรีวิวเว็บบนมือถือ</h1>
+    <div class="phone">
+      <div class="phone-top" aria-hidden="true"></div>
+      <iframe src="../website/" title="เว็บไซต์ COOLPLAN ในกรอบมือถือ"></iframe>
+      <div class="phone-bottom" aria-hidden="true"></div>
+    </div>
+    <a class="live-link" href="../website/">เปิดเว็บเต็มจอ ↗</a>
+  </main>
+</body>
+</html>
