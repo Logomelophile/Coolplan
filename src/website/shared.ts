@@ -3,7 +3,7 @@ import { localizeSiteLinks, sitePath } from '../sitePath';
 
 export const contact = { name:'คุณคะน้า', phone:'0846707551', tel:'+66846707551', email:'coolplanworkshop@gmail.com' };
 
-const lineUrl: string | null = null;
+const lineUrl = 'https://line.me/ti/p/neKYeuPHQy';
 const quoteSubject = encodeURIComponent('สอบถามพื้น SPC และขอใบเสนอราคา COOLPLAN');
 const quoteEmail = `mailto:${contact.email}?subject=${quoteSubject}`;
 const socialChannels = [
@@ -102,14 +102,10 @@ export function mountContactDialog() {
   const contactEmail = contactDialog.querySelector<HTMLAnchorElement>('a[href^="mailto:"]')!;
   const lineToggle = contactDialog.querySelector<HTMLButtonElement>('[data-line-toggle]')!;
   const linePanel = contactDialog.querySelector<HTMLElement>('#contact-line-panel')!;
-  if (lineUrl) {
-    const qr = qrcode(0, 'M');
-    qr.addData(lineUrl);
-    qr.make();
-    linePanel.innerHTML = `<div class="contact-line-code" role="img" aria-label="QR Code เพิ่มเพื่อน COOLPLAN ทาง LINE">${qr.createSvgTag(4, 16)}</div><p>สแกน QR Code เพื่อเพิ่มเพื่อน</p><a href="${lineUrl}" target="_blank" rel="noopener noreferrer">เปิดใน LINE ${icon('arrow')}</a>`;
-  } else {
-    linePanel.textContent = 'ช่องทาง LINE ยังไม่พร้อมใช้งาน กรุณาเลือกช่องทางอื่น';
-  }
+  const qr = qrcode(0, 'M');
+  qr.addData(lineUrl);
+  qr.make();
+  linePanel.innerHTML = `<div class="contact-line-code" role="img" aria-label="QR Code เพิ่มเพื่อน COOLPLAN ทาง LINE">${qr.createSvgTag(4, 16)}</div><p>สแกน QR Code เพื่อเพิ่มเพื่อน</p><a href="${lineUrl}" target="_blank" rel="noopener noreferrer">เปิดใน LINE ${icon('arrow')}</a>`;
   const showLine = (show: boolean) => {
     linePanel.hidden = !show;
     lineToggle.setAttribute('aria-expanded', String(show));
