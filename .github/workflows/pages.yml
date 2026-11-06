@@ -37,7 +37,7 @@ jobs:
         env:
           COOLPLAN_BASE_PATH: ${{ steps.pages.outputs.base_path }}/
         run: npm run build:site
-      - name: Upload all six website routes
+      - name: Upload website routes
         uses: actions/upload-pages-artifact@v3
         with:
           path: site-dist
@@ -65,5 +65,8 @@ jobs:
           if (!script) throw new Error('Website module is missing');
           const module = await fetch(new URL(script, page));
           if (!module.ok) throw new Error(`Website module returned HTTP ${module.status}`);
+          const preview = new URL('mobile-preview/', process.env.PAGE_URL);
+          const previewResponse = await fetch(preview);
+          if (!previewResponse.ok) throw new Error(`Mobile preview returned HTTP ${previewResponse.status}`);
           console.log(`Verified published website: ${page}`);
           JS
