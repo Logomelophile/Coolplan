@@ -124,16 +124,8 @@ class FeaturedStoryMotion {
             host.replaceChildren(placeholder, typed);
             this.copyLines.push({ host, typed, characters: Array.from(segmenter.segment(text), p => p.segment), count: -1 });
         });
-        const staticGallery = this.id === 'warranty' && document.body.classList.contains('mobile-site');
         const signal = this.abort.signal;
         section.querySelectorAll<HTMLButtonElement>('[data-install-step]').forEach((button,index)=>button.addEventListener('click',()=>{
-            if (staticGallery) {
-                section.querySelectorAll('[data-install-step]').forEach((step, i) => {
-                    step.classList.toggle('is-active', i === index);
-                    step.setAttribute('aria-pressed', String(i === index));
-                });
-                return;
-            }
             if(this.reducedMotion)return;
             const travel=section.offsetHeight-innerHeight;
             scrollTo({top:section.getBoundingClientRect().top+scrollY+(.34+index*.22)*(travel+innerHeight*.45)-innerHeight*.45,behavior:'smooth'});
@@ -146,10 +138,6 @@ class FeaturedStoryMotion {
         window.addEventListener('resize', this.onResize, { signal });
         document.addEventListener('visibilitychange', this.onVisibility, { signal });
         this.cards.forEach((card, index) => {
-            if (staticGallery) {
-                for (const attribute of ['tabindex', 'role', 'aria-pressed', 'aria-label']) card.removeAttribute(attribute);
-                return;
-            }
             card.addEventListener('pointerdown', event => this.startDrag(event, index), { signal });
             card.addEventListener('pointermove', this.moveDrag, { signal });
             card.addEventListener('pointerup', this.endDrag, { signal });
@@ -254,7 +242,6 @@ class FeaturedStoryMotion {
     setReducedMotion(value: boolean): void {
         if (this.disposed)
             return;
-        value ||= this.id === 'warranty' && document.body.classList.contains('mobile-site');
         this.reducedMotion = value;
         this.section.classList.toggle('is-reduced', value);
         if (value) {
@@ -323,6 +310,7 @@ class FeaturedStoryMotion {
             this.section.style.setProperty('--care-reveal',String(care));
             this.section.querySelector('.installation-care strong')!.textContent=String(Math.round(10*care));
         }
+        const phoneCollage = installation && width <= 520 && document.body.classList.contains('mobile-site');
         this.cards.forEach((card, index) => {
             const centreX = (width - card.offsetWidth) / 2 + (index - (this.cards.length - 1) / 2) * 18, centreY = (height - card.offsetHeight) / 2 + index * 10;
             const centerWidth=width<=520?width*.64:Math.min(760,width*.40),lane=(width-centerWidth)/2,gutter=width<=520?6:width<=850?14:32;
@@ -338,15 +326,24 @@ class FeaturedStoryMotion {
             const radians = rotate * Math.PI / 180;
             const extraX = (Math.abs(card.offsetWidth * Math.cos(radians)) + Math.abs(card.offsetHeight * Math.sin(radians)) - card.offsetWidth) / 2;
             const extraY = (Math.abs(card.offsetHeight * Math.cos(radians)) + Math.abs(card.offsetWidth * Math.sin(radians)) - card.offsetHeight) / 2;
-            const minX = installation?Math.min(destinationX,(left?0:width-lane)+8+extraX):8 + extraX - card.offsetLeft;
-            const maxX = installation?Math.max(destinationX,(left?lane:width)-8-extraX-card.offsetWidth):width - 8 - extraX - card.offsetLeft - card.offsetWidth;
-            const minY = installation?Math.min(destinationY,24+extraY):8 + extraY - card.offsetTop;
-            const maxY = installation?Math.max(destinationY,height-28-extraY-card.offsetHeight):height - 44 - extraY - card.offsetTop - card.offsetHeight;
+            let minX = installation?Math.min(destinationX,(left?0:width-lane)+8+extraX):8 + extraX - card.offsetLeft;
+            let maxX = installation?Math.max(destinationX,(left?lane:width)-8-extraX-card.offsetWidth):width - 8 - extraX - card.offsetLeft - card.offsetWidth;
+            let minY = installation?Math.min(destinationY,24+extraY):8 + extraY - card.offsetTop;
+            let maxY = installation?Math.max(destinationY,height-28-extraY-card.offsetHeight):height - 44 - extraY - card.offsetTop - card.offsetHeight;
+            if (phoneCollage) {
+                minX = (left ? 0 : width * .79) + 5 + extraX;
+                maxX = (left ? width * .21 : width) - 5 - extraX - card.offsetWidth;
+                minY = 12 + extraY;
+                maxY = height - 21 - extraY - card.offsetHeight;
+                const row = [0, 0, 1, 2, 1, 3, 2, 4, 3, 4][index];
+                x = left ? minX : maxX;
+                y = minY + (maxY - minY) * (row / 4);
+            }
             const bound = (value: number, min: number, max: number): number => max >= min ? clamp(value, min, max) : (min + max) / 2;
             x = bound(x, minX, maxX);
             y = bound(y, minY, maxY);
-            const flyX = this.id === 'warranty' && !this.reducedMotion ? (1 - entering) * (installation?(left?-width*.06:width*.06):(index % 2 ? -width : width)) : 0;
-            const flyY = this.id === 'warranty' && !this.reducedMotion ? (1 - entering) * (installation?height*.10:height * .7 + index * 35) : 0;
+            const flyX = !phoneCollage && this.id === 'warranty' && !this.reducedMotion ? (1 - entering) * (installation?(left?-width*.06:width*.06):(index % 2 ? -width : width)) : 0;
+            const flyY = !phoneCollage && this.id === 'warranty' && !this.reducedMotion ? (1 - entering) * (installation?height*.10:height * .7 + index * 35) : 0;
             this.offsets[index].x = bound(x + this.offsets[index].x, minX, maxX) - x;
             this.offsets[index].y = bound(y + this.offsets[index].y, minY, maxY) - y;
             card.style.setProperty('--photo-x', `${(x + flyX).toFixed(2)}px`);
