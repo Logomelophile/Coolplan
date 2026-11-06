@@ -124,8 +124,16 @@ class FeaturedStoryMotion {
             host.replaceChildren(placeholder, typed);
             this.copyLines.push({ host, typed, characters: Array.from(segmenter.segment(text), p => p.segment), count: -1 });
         });
+        const staticGallery = this.id === 'warranty' && document.body.classList.contains('mobile-site');
         const signal = this.abort.signal;
         section.querySelectorAll<HTMLButtonElement>('[data-install-step]').forEach((button,index)=>button.addEventListener('click',()=>{
+            if (staticGallery) {
+                section.querySelectorAll('[data-install-step]').forEach((step, i) => {
+                    step.classList.toggle('is-active', i === index);
+                    step.setAttribute('aria-pressed', String(i === index));
+                });
+                return;
+            }
             if(this.reducedMotion)return;
             const travel=section.offsetHeight-innerHeight;
             scrollTo({top:section.getBoundingClientRect().top+scrollY+(.34+index*.22)*(travel+innerHeight*.45)-innerHeight*.45,behavior:'smooth'});
@@ -138,6 +146,10 @@ class FeaturedStoryMotion {
         window.addEventListener('resize', this.onResize, { signal });
         document.addEventListener('visibilitychange', this.onVisibility, { signal });
         this.cards.forEach((card, index) => {
+            if (staticGallery) {
+                for (const attribute of ['tabindex', 'role', 'aria-pressed', 'aria-label']) card.removeAttribute(attribute);
+                return;
+            }
             card.addEventListener('pointerdown', event => this.startDrag(event, index), { signal });
             card.addEventListener('pointermove', this.moveDrag, { signal });
             card.addEventListener('pointerup', this.endDrag, { signal });
@@ -242,6 +254,7 @@ class FeaturedStoryMotion {
     setReducedMotion(value: boolean): void {
         if (this.disposed)
             return;
+        value ||= this.id === 'warranty' && document.body.classList.contains('mobile-site');
         this.reducedMotion = value;
         this.section.classList.toggle('is-reduced', value);
         if (value) {

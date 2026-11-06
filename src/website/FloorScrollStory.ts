@@ -40,7 +40,7 @@ export class FloorScrollStory{
   constructor(private callbacks:Callbacks={}){
     this.host.style.setProperty('--story-scroll-length',String(1+STORY_END*STORY_UNIT));
     this.hero.insertAdjacentHTML('afterbegin','<div id="hero-room-background" aria-hidden="true"></div><div class="story-detail-wash" aria-hidden="true"></div>');
-    this.hero.insertAdjacentHTML('beforeend',`<div class="story-copy" id="story-copy"><span class="story-eyebrow" id="story-eyebrow"></span><h2 id="story-title"></h2><p id="story-description"></p><div class="story-thickness" id="story-thickness"><strong>5<span>MM</span></strong><small>ความหนารวมของแผ่นพื้น</small></div></div><svg class="story-leaders" id="story-leaders" aria-hidden="true">${layers.map((layer,index)=>`<polyline data-leader="${layer.id}"/><circle data-dot="${layer.id}" r="5"/><text data-num="${layer.id}">${index+1}</text>`).join('')}</svg><div class="story-labels" id="story-labels">${layers.map((layer,index)=>`<div class="story-layer" data-layer="${layer.id}" data-shown="false"><span class="story-layer-number">0${index+1}</span><div><strong>${layer.title}</strong><b>${layer.thai}</b><small>${layer.text}</small></div></div>`).join('')}</div><div class="story-rail"><div class="story-rail-top"><span id="story-step-name">เลื่อนเพื่อสำรวจสีและชั้นวัสดุ</span><a href="#rooms" id="story-skip">เลือกสีพื้นด้านล่าง <span aria-hidden="true">↘</span></a></div><div class="story-rail-controls"><button id="story-prev" type="button" aria-label="ขั้นก่อนหน้า">←</button><div class="story-steps" role="group" aria-label="ลำดับการสำรวจ">${STORY_STEPS.map((step,index)=>`<button type="button" data-story-step="${index}" aria-label="ขั้น ${index+1}: ${step.title.replace('\n',' ')}" title="${step.title.replace('\n',' ')}"><span></span></button>`).join('')}</div><button id="story-next" type="button" aria-label="ขั้นถัดไป">→</button></div></div><div class="story-loading" id="story-loading" role="status">กำลังเตรียมห้องและวัสดุ 3D…</div>`);
+    this.hero.insertAdjacentHTML('beforeend',`<div class="story-copy" id="story-copy"><span class="story-eyebrow" id="story-eyebrow"></span><h2 id="story-title"></h2><p id="story-description"></p><div class="story-thickness" id="story-thickness"><strong>5<span>MM</span></strong><small>ความหนารวมของแผ่นพื้น</small></div></div><svg class="story-leaders" id="story-leaders" aria-hidden="true">${layers.map((layer,index)=>`<polyline data-leader="${layer.id}"/><circle data-dot="${layer.id}" r="5"/><text data-num="${layer.id}">${index+1}</text>`).join('')}</svg><div class="story-labels" id="story-labels">${layers.map((layer,index)=>`<div class="story-layer" data-layer="${layer.id}" data-shown="false"><span class="story-layer-number">${document.body.classList.contains('mobile-site') ? index+1 : `0${index+1}`}</span><div><strong>${layer.title}</strong><b>${layer.thai}</b><small>${layer.text}</small></div></div>`).join('')}</div><div class="story-rail"><div class="story-rail-top"><span id="story-step-name">เลื่อนเพื่อสำรวจสีและชั้นวัสดุ</span><a href="#rooms" id="story-skip">เลือกสีพื้นด้านล่าง <span aria-hidden="true">↘</span></a></div><div class="story-rail-controls"><button id="story-prev" type="button" aria-label="ขั้นก่อนหน้า">←</button><div class="story-steps" role="group" aria-label="ลำดับการสำรวจ">${STORY_STEPS.map((step,index)=>`<button type="button" data-story-step="${index}" aria-label="ขั้น ${index+1}: ${step.title.replace('\n',' ')}" title="${step.title.replace('\n',' ')}"><span></span></button>`).join('')}</div><button id="story-next" type="button" aria-label="ขั้นถัดไป">→</button></div></div><div class="story-loading" id="story-loading" role="status">กำลังเตรียมห้องและวัสดุ 3D…</div>`);
     this.panel=document.getElementById('story-labels')!;this.overlay=document.getElementById('story-leaders') as unknown as SVGSVGElement;this.status=document.getElementById('story-loading')!;
     this.overlay.insertAdjacentHTML('beforeend','<g id="story-dimension" opacity="0"><path/><text>5 MM</text></g>');
     this.room=new HeroRoomFloor(document.getElementById('hero-room-background')!);
@@ -113,6 +113,7 @@ export class FloorScrollStory{
       const label=this.panel.querySelector<HTMLElement>(`[data-layer="${anchor.id}"]`),line=this.overlay.querySelector<SVGPolylineElement>(`[data-leader="${anchor.id}"]`),dot=this.overlay.querySelector<SVGCircleElement>(`[data-dot="${anchor.id}"]`);if(!label||!line||!dot)return;
       const rect=label.getBoundingClientRect(),x=anchor.x+sceneRect.left-heroRect.left,y=anchor.y+sceneRect.top-heroRect.top;
       const mobile=innerWidth<=520;
+      const mobileLeaders = mobile && document.body.classList.contains('mobile-site');
       // Lines meet the row beside its number, not its vertical middle, so multi-line rows do not pull lines downward.
       const badge=label.querySelector('.story-layer-number')?.getBoundingClientRect();
       const endX=rect.left-heroRect.left+(mobile?rect.width/2:-12),endY=(badge?badge.top+badge.height/2:rect.top+rect.height/2)-heroRect.top;
@@ -122,7 +123,14 @@ export class FloorScrollStory{
       const num=this.overlay.querySelector<SVGTextElement>(`[data-num="${anchor.id}"]`)!,dotX=mobile?x:endX,dotY=mobile?y:endY;
       // Elbow 18px before the dot; when the layer edge is already past that point, run straight to the dot instead of folding back.
       if(!mobile)line.setAttribute('points',x<endX-24?`${x.toFixed(2)},${y.toFixed(2)} ${(endX-18).toFixed(2)},${endY.toFixed(2)} ${endX.toFixed(2)},${endY.toFixed(2)}`:`${x.toFixed(2)},${y.toFixed(2)} ${endX.toFixed(2)},${endY.toFixed(2)}`);
-      line.style.opacity=String(mobile?0:opacity);dot.style.opacity=String(opacity);num.style.opacity=String(opacity);
+      if (mobileLeaders && badge) {
+        const badgeRight = badge.right - heroRect.left;
+        const lane = Math.min(heroRect.width - 4, Math.max(heroRect.width * .88, x + 6) + index * 4);
+        line.setAttribute('points', `${x},${y} ${lane},${y} ${lane},${endY} ${badgeRight},${endY}`);
+      }
+      line.style.opacity=String(mobile && !mobileLeaders ? 0 : opacity);
+      dot.style.opacity=String(mobileLeaders ? 0 : opacity);
+      num.style.opacity=String(mobileLeaders ? 0 : opacity);
       dot.setAttribute('cx',String(dotX));dot.setAttribute('cy',String(dotY));num.setAttribute('x',String(dotX));num.setAttribute('y',String(dotY));
       dot.classList.toggle('active',this.frame.focus===index);
     });

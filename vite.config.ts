@@ -63,7 +63,7 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {input: resolve(import.meta.dirname, 'v2/index.html')},
   } : mode === 'website' ? {
     outDir: 'website-dist', emptyOutDir: true,
-    rollupOptions: {input: {website: resolve(import.meta.dirname, 'website/index.html'), calculator: resolve(import.meta.dirname, 'calculator/index.html'), ceo: resolve(import.meta.dirname, 'ceo/index.html'), nextGen: resolve(import.meta.dirname, 'next-gen/index.html')}},
+    rollupOptions: {input: {website: resolve(import.meta.dirname, 'website/index.html'), mobile: resolve(import.meta.dirname, 'mobile/index.html'), calculator: resolve(import.meta.dirname, 'calculator/index.html'), ceo: resolve(import.meta.dirname, 'ceo/index.html'), nextGen: resolve(import.meta.dirname, 'next-gen/index.html')}},
   } : mode === 'room' ? {
     outDir: 'room-dist', emptyOutDir: true,
     rollupOptions: {input: resolve(import.meta.dirname, 'room/index.html')},

@@ -1,0 +1,99 @@
+.mobile-row-hint {
+  color: #654a75;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.mobile-site #collections .collections-grid {
+  grid-template-columns: repeat(5, minmax(170px, 1fr));
+  overflow-x: auto;
+  padding-bottom: 12px;
+  scroll-snap-type: x proximity;
+}
+
+.mobile-site #collections .collection-card {
+  scroll-snap-align: start;
+}
+
+.mobile-site #collections .collection-card.is-expanded {
+  grid-column: auto;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.mobile-site .collection-shade-strip {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mobile-site .pricing-package-stage .package-plan-grid {
+  grid-template-columns: repeat(3, minmax(205px, 1fr));
+  max-width: none;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 24px 8px 14px 0;
+  scroll-snap-type: x proximity;
+}
+
+.mobile-site .package-plan-grid .package-plan {
+  padding: 24px 14px 16px;
+  scroll-snap-align: start;
+}
+
+.mobile-site .package-plan-heading { padding-right: 32px; }
+.mobile-site .package-plan-heading h3 { font-size: 22px; }
+.mobile-site .package-starburst { width: 70px; right: -4px; }
+.mobile-site .package-starburst > span { font-size: 8px; }
+.mobile-site .package-plan-total b { font-size: 22px; }
+
+.mobile-site #installation-warranty .featured-media {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mobile-site #installation-warranty .featured-photo figcaption {
+  min-height: 0;
+  padding: 10px;
+}
+
+.mobile-site #installation-warranty .installation-card-copy b,
+.mobile-site #installation-warranty .installation-card-copy > span {
+  font-size: 10px;
+}
+
+@media (max-width: 520px) {
+  .mobile-site #floor-story .story-labels {
+    display: flex;
+    top: min(59%, calc(100% - 240px));
+    left: 6%;
+    right: 15%;
+    width: auto;
+    gap: 3px;
+  }
+
+  .mobile-site #floor-story .story-layer {
+    flex-direction: row-reverse;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 0;
+    gap: 6px;
+    padding: 3px 0 3px 7px;
+    border-bottom: 1px solid #886d9e28;
+    background: #fffc;
+    border-radius: 6px;
+  }
+
+  .mobile-site #floor-story .story-layer strong,
+  .mobile-site #floor-story .story-layer b {
+    display: inline;
+    font-size: 10px;
+    line-height: 1.25;
+  }
+
+  .mobile-site #floor-story .story-layer b { margin-inline-start: 5px; }
+  .mobile-site #floor-story .story-layer small { margin-top: 1px; line-height: 1.25; }
+  .mobile-site #floor-story .story-layer-number { margin-right: 1px; }
+  .mobile-site #floor-story .story-leaders polyline { display: block; stroke-width: 1; }
+  .mobile-site #floor-story .story-leaders circle,
+  .mobile-site #floor-story .story-leaders > text[data-num] { display: none; }
+}
+
+.mobile-site .pricing-package-stage .packages-scroll-hint { display: flex; }
+.mobile-site #installation-warranty .installation-footer { display: none; }
